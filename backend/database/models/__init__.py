@@ -1,28 +1,29 @@
-"""
-Database models package.
-"""
+# database/models/__init__.py
 
 from .user import User
 from .brand import Brand
-from .campaign import Campaign, CampaignInfluencer
+from .campaign import Campaign
+from .transaction import Transaction
 from .influencer import Influencer
 from .department import Department
-from .transaction import Transaction
-from .performance import Performance
 from .tip import Tip
 from .system_logs import SystemLog
 from .secrets import Secret
+from .performance import Performance
+from .ai_registry import AIRegistry, AIModelVersion, AIRecommendationLog
 
 __all__ = [
     "User",
     "Brand", 
     "Campaign",
-    "CampaignInfluencer",
+    "Transaction",
     "Influencer",
     "Department",
-    "Transaction", 
-    "Performance",
     "Tip",
     "SystemLog",
-    "Secret"
+    "Secret",
+    "Performance",
+    "AIRegistry",
+    "AIModelVersion",
+    "AIRecommendationLog"
 ]
