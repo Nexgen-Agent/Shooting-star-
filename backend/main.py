@@ -852,3 +852,14 @@ async def _initialize_marketing_ai_engine():
         logger.warning(f"Marketing AI Engine components not available: {str(e)}")
     except Exception as e:
         logger.error(f"Marketing AI Engine initialization error: {str(e)}")
+
+# Register V17 Marketing AI router if enabled
+if settings.MARKETING_AI_ENABLED:
+    try:
+        from routers.marketing_ai_router import marketing_ai_router
+        app.include_router(marketing_ai_router, prefix="/v17/marketing", tags=["V17 Marketing AI"])
+        logger.info("V17 Marketing AI router registered successfully")
+    except ImportError as e:
+        logger.warning(f"Marketing AI router not available: {str(e)}")
+    except Exception as e:
+        logger.error(f"Failed to register Marketing AI router: {str(e)}")
