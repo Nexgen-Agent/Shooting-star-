@@ -9,6 +9,13 @@ import os
 class Settings(BaseSettings):
     """V16 & V17 AI Engine Settings"""
 
+# Marketing AI Configuration
+MARKETING_AI_ENABLED: bool = Field(True, description="Enable Marketing AI Engine")
+MARKETING_AI_FEATURES: List[str] = Field([
+    "customer_journey", "roi_optimization", "content_prediction", 
+    "influencer_matching", "sentiment_analysis", "seo_strategy"
+], description="Enabled marketing AI features")
+
     # ============================
     # FastAPI Configuration
     # ============================
