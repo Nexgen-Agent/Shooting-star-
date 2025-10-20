@@ -1,296 +1,324 @@
 """
-V16 Enhanced Scheduler - Advanced AI task scheduling and job management
+Background job scheduler using Celery for async task processing.
 """
 
-from typing import Dict, Any, List, Optional, Callable
-from datetime import datetime, timedelta
+from celery import Celery
+from celery.schedules import crontab
 import asyncio
+from typing import Any, Dict, List, Optional
 import logging
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from config.settings import settings
-from config.constants import AITaskType, AITaskStatus
-from services.automation_service import AutomationService
+from core.utils import logger
 
-logger = logging.getLogger(__name__)
+# Configure Celery
+celery_app = Celery(
+    "shooting_star",
+    broker=settings.CELERY_BROKER_URL,
+    backend=settings.CELERY_RESULT_BACKEND
+)
 
-class AIScheduler:
+# Celery configuration
+celery_app.conf.update(
+    task_serializer="json",
+    accept_content=["json"],
+    result_serializer="json",
+    timezone="UTC",
+    enable_utc=True,
+    task_track_started=True,
+    task_time_limit=30 * 60,  # 30 minutes
+    worker_max_tasks_per_child=1000,
+    worker_prefetch_multiplier=1,
+)
+
+
+# Scheduled tasks configuration
+celery_app.conf.beat_schedule = {
+    # Daily performance analytics at 2 AM
+    "daily-performance-analytics": {
+        "task": "daily_performance_analytics",
+        "schedule": crontab(hour=2, minute=0),
+    },
+    # Campaign performance sync every 30 minutes
+    "sync-campaign-performance": {
+        "task": "sync_campaign_performance",
+        "schedule": crontab(minute="*/30"),
+    },
+    # Weekly financial reports on Monday at 3 AM
+    "weekly-financial-reports": {
+        "task": "generate_weekly_financial_reports",
+        "schedule": crontab(day_of_week=1, hour=3, minute=0),
+    },
+    # AI tip generation daily at 4 AM
+    "generate-daily-tips": {
+        "task": "generate_daily_tips",
+        "schedule": crontab(hour=4, minute=0),
+    },
+    # System optimization check every hour
+    "system-optimization-check": {
+        "task": "system_optimization_check",
+        "schedule": crontab(minute=0),
+    },
+    # Clean up old logs weekly on Sunday at 1 AM
+    "cleanup-old-logs": {
+        "task": "cleanup_old_logs",
+        "schedule": crontab(day_of_week=0, hour=1, minute=0),
+    },
+}
+
+
+@celery_app.task(bind=True)
+def daily_performance_analytics(self) -> Dict[str, Any]:
     """
-    Advanced scheduler for AI tasks with intelligent job management,
-    prioritization, and resource optimization.
+    Generate daily performance analytics for all brands.
+    
+    Returns:
+        Task execution results
     """
+    from services.analytics_service import AnalyticsService
+    from database.connection import AsyncSessionLocal
     
-    def __init__(self, db: AsyncSession):
-        self.db = db
-        self.automation_service = AutomationService(db)
-        self.scheduled_jobs = {}
-        self.job_queue = asyncio.Queue()
-        self.is_running = False
-        self.worker_tasks = []
-        
-    async def start_scheduler(self):
-        """Start the AI scheduler and worker processes."""
-        if self.is_running:
-            logger.warning("AI Scheduler is already running")
-            return
-        
-        self.is_running = True
-        
-        # Start worker tasks
-        for i in range(settings.MAX_CONCURRENT_AI_TASKS):
-            worker_task = asyncio.create_task(self._worker_process(f"worker_{i}"))
-            self.worker_tasks.append(worker_task)
-        
-        # Start periodic job scheduler
-        scheduler_task = asyncio.create_task(self._periodic_scheduler())
-        self.worker_tasks.append(scheduler_task)
-        
-        logger.info(f"AI Scheduler started with {settings.MAX_CONCURRENT_AI_TASKS} workers")
+    logger.info("Starting daily performance analytics task")
     
-    async def stop_scheduler(self):
-        """Stop the AI scheduler gracefully."""
-        self.is_running = False
-        
-        # Wait for workers to finish current tasks
-        for task in self.worker_tasks:
-            task.cancel()
-        
-        await asyncio.gather(*self.worker_tasks, return_exceptions=True)
-        self.worker_tasks.clear()
-        
-        logger.info("AI Scheduler stopped")
+    async def run_analytics():
+        async with AsyncSessionLocal() as db:
+            analytics_service = AnalyticsService(db)
+            results = await analytics_service.generate_daily_analytics()
+            logger.info(f"Daily analytics completed for {len(results)} brands")
+            return results
     
-    async def schedule_ai_task(self, task_type: AITaskType, parameters: Dict[str, Any], 
-                             priority: int = 1, delay: int = 0) -> str:
-        """
-        Schedule an AI task for execution.
-        
-        Args:
-            task_type: Type of AI task
-            parameters: Task parameters
-            priority: Task priority (1-10, 10 being highest)
-            delay: Delay in seconds before execution
+    # Run async function in sync context
+    loop = asyncio.get_event_loop()
+    return loop.run_until_complete(run_analytics())
+
+
+@celery_app.task(bind=True)
+def sync_campaign_performance(self) -> Dict[str, Any]:
+    """
+    Sync campaign performance data from various platforms.
+    
+    Returns:
+        Sync results
+    """
+    from services.tracking_service import TrackingService
+    from database.connection import AsyncSessionLocal
+    
+    logger.info("Starting campaign performance sync task")
+    
+    async def run_sync():
+        async with AsyncSessionLocal() as db:
+            tracking_service = TrackingService(db)
+            results = await tracking_service.sync_all_campaigns_performance()
+            logger.info(f"Campaign sync completed: {results}")
+            return results
+    
+    loop = asyncio.get_event_loop()
+    return loop.run_until_complete(run_sync())
+
+
+@celery_app.task(bind=True)
+def generate_weekly_financial_reports(self) -> Dict[str, Any]:
+    """
+    Generate weekly financial reports for all brands.
+    
+    Returns:
+        Report generation results
+    """
+    from services.budgeting_service import BudgetingService
+    from database.connection import AsyncSessionLocal
+    
+    logger.info("Starting weekly financial reports task")
+    
+    async def run_reports():
+        async with AsyncSessionLocal() as db:
+            budgeting_service = BudgetingService(db)
+            results = await budgeting_service.generate_weekly_reports()
+            logger.info(f"Weekly reports generated for {len(results)} brands")
+            return results
+    
+    loop = asyncio.get_event_loop()
+    return loop.run_until_complete(run_reports())
+
+
+@celery_app.task(bind=True)
+def generate_daily_tips(self) -> Dict[str, Any]:
+    """
+    Generate daily AI tips for all active brands.
+    
+    Returns:
+        Tip generation results
+    """
+    from ai.tip_generator import TipGenerator
+    from database.connection import AsyncSessionLocal
+    
+    logger.info("Starting daily tip generation task")
+    
+    async def run_tip_generation():
+        async with AsyncSessionLocal() as db:
+            tip_generator = TipGenerator(db)
+            results = await tip_generator.generate_daily_tips_for_all_brands()
+            logger.info(f"Daily tips generated: {results}")
+            return results
+    
+    loop = asyncio.get_event_loop()
+    return loop.run_until_complete(run_tip_generation())
+
+
+@celery_app.task(bind=True)
+def system_optimization_check(self) -> Dict[str, Any]:
+    """
+    Run system optimization checks and apply improvements.
+    
+    Returns:
+        Optimization results
+    """
+    from ai.system_optimizer import SystemOptimizer
+    from database.connection import AsyncSessionLocal
+    
+    logger.info("Starting system optimization check task")
+    
+    async def run_optimization():
+        async with AsyncSessionLocal() as db:
+            optimizer = SystemOptimizer(db)
+            results = await optimizer.optimize_all_brands()
+            logger.info(f"System optimization completed: {results}")
+            return results
+    
+    loop = asyncio.get_event_loop()
+    return loop.run_until_complete(run_optimization())
+
+
+@celery_app.task(bind=True)
+def cleanup_old_logs(self) -> Dict[str, Any]:
+    """
+    Clean up old system logs to manage database size.
+    
+    Returns:
+        Cleanup results
+    """
+    from database.connection import AsyncSessionLocal
+    from sqlalchemy import delete
+    from datetime import datetime, timedelta
+    from database.models.system_logs import SystemLog
+    
+    logger.info("Starting old logs cleanup task")
+    
+    async def run_cleanup():
+        async with AsyncSessionLocal() as db:
+            # Delete logs older than 90 days
+            cutoff_date = datetime.utcnow() - timedelta(days=90)
             
-        Returns:
-            Task ID
-        """
-        task_id = f"task_{task_type.value}_{datetime.utcnow().timestamp()}"
-        
-        task_data = {
-            "task_id": task_id,
-            "task_type": task_type,
-            "parameters": parameters,
-            "priority": priority,
-            "scheduled_at": datetime.utcnow(),
-            "status": AITaskStatus.PENDING,
-            "delay": delay
-        }
-        
-        self.scheduled_jobs[task_id] = task_data
-        
-        # Add to queue with priority consideration
-        await self.job_queue.put((priority, task_data))
-        
-        logger.info(f"Scheduled AI task {task_id} with priority {priority}")
-        
-        return task_id
-    
-    async def schedule_recurring_task(self, task_type: AITaskType, parameters: Dict[str, Any],
-                                    interval_minutes: int, start_immediately: bool = True) -> str:
-        """
-        Schedule a recurring AI task.
-        
-        Args:
-            task_type: Type of AI task
-            parameters: Task parameters
-            interval_minutes: Execution interval in minutes
-            start_immediately: Whether to run first execution immediately
+            result = await db.execute(
+                delete(SystemLog).where(SystemLog.created_at < cutoff_date)
+            )
+            await db.commit()
             
-        Returns:
-            Recurring task ID
-        """
-        recurring_id = f"recurring_{task_type.value}_{datetime.utcnow().timestamp()}"
-        
-        recurring_task = {
-            "recurring_id": recurring_id,
-            "task_type": task_type,
-            "parameters": parameters,
-            "interval_minutes": interval_minutes,
-            "last_run": None,
-            "next_run": datetime.utcnow() if start_immediately else datetime.utcnow() + timedelta(minutes=interval_minutes),
-            "is_active": True
-        }
-        
-        self.scheduled_jobs[recurring_id] = recurring_task
-        
-        if start_immediately:
-            await self.schedule_ai_task(task_type, parameters)
-        
-        logger.info(f"Scheduled recurring AI task {recurring_id} every {interval_minutes} minutes")
-        
-        return recurring_id
-    
-    async def get_task_status(self, task_id: str) -> Dict[str, Any]:
-        """
-        Get status of a scheduled task.
-        
-        Args:
-            task_id: Task ID to check
+            deleted_count = result.rowcount
+            logger.info(f"Cleaned up {deleted_count} old log entries")
             
-        Returns:
-            Task status information
-        """
-        task_data = self.scheduled_jobs.get(task_id)
-        
-        if not task_data:
-            return {"error": f"Task {task_id} not found"}
-        
-        return {
-            "task_id": task_id,
-            "task_type": task_data.get("task_type"),
-            "status": task_data.get("status", AITaskStatus.PENDING),
-            "scheduled_at": task_data.get("scheduled_at"),
-            "started_at": task_data.get("started_at"),
-            "completed_at": task_data.get("completed_at"),
-            "result": task_data.get("result"),
-            "error": task_data.get("error")
-        }
+            return {"deleted_count": deleted_count}
     
-    async def get_scheduler_status(self) -> Dict[str, Any]:
-        """
-        Get comprehensive scheduler status.
-        
-        Returns:
-            Scheduler status report
-        """
-        pending_tasks = sum(1 for task in self.scheduled_jobs.values() 
-                          if task.get("status") == AITaskStatus.PENDING)
-        running_tasks = sum(1 for task in self.scheduled_jobs.values() 
-                          if task.get("status") == AITaskStatus.PROCESSING)
-        completed_tasks = sum(1 for task in self.scheduled_jobs.values() 
-                            if task.get("status") == AITaskStatus.COMPLETED)
-        failed_tasks = sum(1 for task in self.scheduled_jobs.values() 
-                         if task.get("status") == AITaskStatus.FAILED)
-        
-        return {
-            "is_running": self.is_running,
-            "active_workers": len(self.worker_tasks),
-            "queue_size": self.job_queue.qsize(),
-            "total_jobs": len(self.scheduled_jobs),
-            "job_status": {
-                "pending": pending_tasks,
-                "running": running_tasks,
-                "completed": completed_tasks,
-                "failed": failed_tasks
-            },
-            "scheduler_health": "healthy" if self.is_running and failed_tasks < 10 else "degraded",
-            "last_updated": datetime.utcnow().isoformat()
-        }
+    loop = asyncio.get_event_loop()
+    return loop.run_until_complete(run_cleanup())
+
+
+@celery_app.task(bind=True)
+def process_campaign_analytics(self, campaign_id: str) -> Dict[str, Any]:
+    """
+    Process analytics for a specific campaign.
     
-    # Worker and scheduling methods
-    async def _worker_process(self, worker_name: str):
-        """Worker process for executing AI tasks."""
-        logger.info(f"Starting AI worker {worker_name}")
+    Args:
+        campaign_id: Campaign ID to process
         
-        while self.is_running:
-            try:
-                # Get task from queue with timeout
-                try:
-                    priority, task_data = await asyncio.wait_for(self.job_queue.get(), timeout=1.0)
-                except asyncio.TimeoutError:
-                    continue
-                
-                task_id = task_data["task_id"]
-                
-                # Update task status
-                task_data["status"] = AITaskStatus.PROCESSING
-                task_data["started_at"] = datetime.utcnow()
-                task_data["worker"] = worker_name
-                
-                logger.info(f"Worker {worker_name} processing task {task_id}")
-                
-                try:
-                    # Execute the AI task
-                    result = await self._execute_ai_task(task_data["task_type"], task_data["parameters"])
-                    
-                    # Update task with result
-                    task_data["status"] = AITaskStatus.COMPLETED
-                    task_data["completed_at"] = datetime.utcnow()
-                    task_data["result"] = result
-                    
-                    logger.info(f"Worker {worker_name} completed task {task_id}")
-                    
-                except Exception as e:
-                    # Handle task execution error
-                    task_data["status"] = AITaskStatus.FAILED
-                    task_data["completed_at"] = datetime.utcnow()
-                    task_data["error"] = str(e)
-                    
-                    logger.error(f"Worker {worker_name} failed task {task_id}: {str(e)}")
-                
-                finally:
-                    self.job_queue.task_done()
-                    
-            except Exception as e:
-                logger.error(f"Worker {worker_name} error: {str(e)}")
-                await asyncio.sleep(1)  # Prevent tight loop on errors
+    Returns:
+        Analytics results
+    """
+    from services.analytics_service import AnalyticsService
+    from database.connection import AsyncSessionLocal
     
-    async def _periodic_scheduler(self):
-        """Periodic scheduler for recurring tasks."""
-        logger.info("Starting periodic AI task scheduler")
+    logger.info(f"Processing analytics for campaign: {campaign_id}")
+    
+    async def run_campaign_analytics():
+        async with AsyncSessionLocal() as db:
+            analytics_service = AnalyticsService(db)
+            results = await analytics_service.analyze_campaign_performance(campaign_id)
+            return results
+    
+    loop = asyncio.get_event_loop()
+    return loop.run_until_complete(run_campaign_analytics())
+
+
+@celery_app.task(bind=True)
+def send_bulk_messages(self, message_data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Send bulk messages to multiple users.
+    
+    Args:
+        message_data: Message data including recipients and content
         
-        while self.is_running:
-            try:
-                current_time = datetime.utcnow()
-                
-                # Check recurring tasks
-                for recurring_id, recurring_task in self.scheduled_jobs.items():
-                    if not recurring_id.startswith("recurring_"):
-                        continue
-                    
-                    if not recurring_task.get("is_active", True):
-                        continue
-                    
-                    next_run = recurring_task.get("next_run")
-                    if next_run and current_time >= next_run:
-                        # Schedule the recurring task
-                        await self.schedule_ai_task(
-                            recurring_task["task_type"],
-                            recurring_task["parameters"],
-                            priority=5  # Medium priority for recurring tasks
-                        )
-                        
-                        # Update next run time
-                        recurring_task["last_run"] = current_time
-                        recurring_task["next_run"] = current_time + timedelta(
-                            minutes=recurring_task["interval_minutes"]
-                        )
-                
-                # Wait before next check
-                await asyncio.sleep(60)  # Check every minute
-                
-            except Exception as e:
-                logger.error(f"Periodic scheduler error: {str(e)}")
-                await asyncio.sleep(60)
+    Returns:
+        Sending results
+    """
+    from services.messaging_service import MessagingService
+    from database.connection import AsyncSessionLocal
     
-    async def _execute_ai_task(self, task_type: AITaskType, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Execute specific AI task based on type."""
-        try:
-            if task_type == AITaskType.GROWTH_PREDICTION:
-                return await self.automation_service.execute_ai_workflow("daily_brand_analysis", parameters)
-            elif task_type == AITaskType.SENTIMENT_ANALYSIS:
-                return await self.automation_service.execute_ai_workflow("sentiment_analysis", parameters)
-            elif task_type == AITaskType.BUDGET_OPTIMIZATION:
-                return await self.automation_service.execute_ai_workflow("budget_reallocation", parameters)
-            elif task_type == AITaskType.CAMPAIGN_SUGGESTION:
-                return await self.automation_service.execute_ai_workflow("campaign_optimization", parameters)
-            elif task_type == AITaskType.INFLUENCER_MATCHING:
-                return await self.automation_service.execute_ai_workflow("influencer_discovery", parameters)
-            elif task_type == AITaskType.PERFORMANCE_FORECAST:
-                return await self.automation_service.execute_ai_workflow("performance_review", parameters)
-            else:
-                return {"error": f"Unknown task type: {task_type}"}
-                
-        except Exception as e:
-            logger.error(f"AI task execution failed for {task_type}: {str(e)}")
-            return {"error": str(e)}
+    logger.info("Starting bulk message sending task")
+    
+    async def run_bulk_messages():
+        async with AsyncSessionLocal() as db:
+            messaging_service = MessagingService(db)
+            results = await messaging_service.send_bulk_messages(message_data)
+            logger.info(f"Bulk messages sent: {results}")
+            return results
+    
+    loop = asyncio.get_event_loop()
+    return loop.run_until_complete(run_bulk_messages())
+
+
+def schedule_campaign_analysis(campaign_id: str) -> str:
+    """
+    Schedule campaign analysis task.
+    
+    Args:
+        campaign_id: Campaign ID to analyze
+        
+    Returns:
+        Task ID
+    """
+    task = process_campaign_analytics.delay(campaign_id)
+    return task.id
+
+
+def schedule_bulk_messages(message_data: Dict[str, Any]) -> str:
+    """
+    Schedule bulk message sending.
+    
+    Args:
+        message_data: Message data
+        
+    Returns:
+        Task ID
+    """
+    task = send_bulk_messages.delay(message_data)
+    return task.id
+
+
+def get_task_status(task_id: str) -> Dict[str, Any]:
+    """
+    Get status of a Celery task.
+    
+    Args:
+        task_id: Task ID
+        
+    Returns:
+        Task status information
+    """
+    task_result = celery_app.AsyncResult(task_id)
+    
+    return {
+        "task_id": task_id,
+        "status": task_result.status,
+        "result": task_result.result if task_result.ready() else None,
+        "successful": task_result.successful(),
+        "failed": task_result.failed()
+    }
