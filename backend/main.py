@@ -8,6 +8,7 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 import logging
 import time
 
+from marketing.marketing_ai_engine import MarketingAIEngine
 from config.settings import settings
 from database.connection import create_tables
 from routers import (
@@ -784,3 +785,70 @@ if __name__ == "__main__":
         reload=settings.DEBUG,
         log_level="info"
     )
+
+# Add global variable after v17_ai_engine
+marketing_ai_engine = None
+
+# Update startup event
+async def startup_event():
+    """Initialize application on startup."""
+    logger.info(f"Starting {settings.APP_NAME} v{settings.APP_VERSION}...")
+
+    try:
+        # Create database tables
+        await create_tables()
+        logger.info("Database tables created/verified successfully")
+
+        # Initialize V16 AI modules (existing functionality)
+        if settings.AI_ENGINE_ENABLED:
+            await _initialize_v16_ai_engine()
+        
+        # Initialize V17 AI Engine (new scalable features)
+        if settings.V17_AI_ENGINE_ENABLED:
+            await _initialize_v17_ai_engine()
+
+        # Initialize Marketing AI Engine
+        if settings.MARKETING_AI_ENABLED:
+            await _initialize_marketing_ai_engine()
+
+        logger.info(f"{settings.APP_NAME} v{settings.APP_VERSION} is ready!")
+        logger.info(f"V16 AI Engine Status: {'ENABLED' if settings.AI_ENGINE_ENABLED else 'DISABLED'}")
+        logger.info(f"V17 AI Engine Status: {'ENABLED' if settings.V17_AI_ENGINE_ENABLED else 'DISABLED'}")
+        logger.info(f"Marketing AI Engine Status: {'ENABLED' if settings.MARKETING_AI_ENABLED else 'DISABLED'}")
+
+    except Exception as e:
+        logger.error(f"Startup error: {str(e)}")
+        raise
+
+async def _initialize_marketing_ai_engine():
+    """Initialize Marketing AI Engine"""
+    global marketing_ai_engine
+    
+    try:
+        from marketing.marketing_ai_engine import MarketingAIEngine
+        marketing_ai_engine = MarketingAIEngine()
+        # Note: If MarketingAIEngine has async initialization, call it here
+        # await marketing_ai_engine.initialize()
+        
+        logger.info("✅ Marketing AI Engine initialized successfully")
+        
+        # Log marketing capabilities
+        marketing_capabilities = [
+            "Customer Journey Mapping & Analysis",
+            "ROI Optimization & Budget Allocation",
+            "Content Performance Prediction",
+            "Influencer Matchmaking Engine",
+            "Social Media Sentiment Analysis",
+            "Customer Lifetime Value Prediction",
+            "A/B Testing Optimization",
+            "SEO Strategy Development",
+            "Real-time Marketing Dashboard"
+        ]
+        
+        for capability in marketing_capabilities:
+            logger.info(f"📊 Marketing AI: {capability}")
+            
+    except ImportError as e:
+        logger.warning(f"Marketing AI Engine components not available: {str(e)}")
+    except Exception as e:
+        logger.error(f"Marketing AI Engine initialization error: {str(e)}")
