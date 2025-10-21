@@ -878,3 +878,19 @@ app.include_router(admin_router_v16, prefix="/v16/admin", tags=["Admin V16"])
 from extensions.api_v16.analytics_router_v16 import router as analytics_router_v16
 
 app.include_router(analytics_router_v16, prefix="/v16/analytics", tags=["Analytics V16"])
+
+# V16 Monitoring Extension - Controlled Upgrade
+from monitoring.telemetry_v16 import telemetry_v16
+from monitoring.system_health import system_health
+from monitoring.alerts_handler import alerts_handler
+
+# Start monitoring services on startup
+@app.on_event("startup")
+async def startup_monitoring():
+    await telemetry_v16.start_monitoring()
+    logger.info("V16 Telemetry monitoring started")
+
+@app.on_event("shutdown")
+async def shutdown_monitoring():
+    await telemetry_v16.stop_monitoring()
+    logger.info("V16 Telemetry monitoring stopped")
