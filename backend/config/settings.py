@@ -272,3 +272,9 @@ MARKETING_AI_FEATURES: List[str] = Field([
 
 # Global settings instance
 settings = Settings()
+
+# V16 AI Engine Settings
+V16_AI_MAX_CONCURRENT_REQUESTS = 10
+V16_AI_REQUEST_TIMEOUT = 30
+V16_AI_ENABLE_REAL_TIME_ENGINE = True
+V16_AI_ANALYTICS_RETENTION_DAYS = 30
