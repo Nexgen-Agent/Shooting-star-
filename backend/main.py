@@ -868,3 +868,8 @@ if settings.MARKETING_AI_ENABLED:
 from extensions.api_v16.ai_router_v16 import router as ai_router_v16
 
 app.include_router(ai_router_v16, prefix="/v16/ai", tags=["AI V16"])
+
+# V16 Admin Extension - Controlled Upgrade
+from extensions.api_v16.admin_router_v16 import router as admin_router_v16
+
+app.include_router(admin_router_v16, prefix="/v16/admin", tags=["Admin V16"])
