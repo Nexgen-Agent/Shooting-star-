@@ -863,3 +863,8 @@ if settings.MARKETING_AI_ENABLED:
         logger.warning(f"Marketing AI router not available: {str(e)}")
     except Exception as e:
         logger.error(f"Failed to register Marketing AI router: {str(e)}")
+
+# V16 AI Extension - Controlled Upgrade
+from extensions.api_v16.ai_router_v16 import router as ai_router_v16
+
+app.include_router(ai_router_v16, prefix="/v16/ai", tags=["AI V16"])
