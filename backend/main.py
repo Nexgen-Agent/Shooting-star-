@@ -873,3 +873,8 @@ app.include_router(ai_router_v16, prefix="/v16/ai", tags=["AI V16"])
 from extensions.api_v16.admin_router_v16 import router as admin_router_v16
 
 app.include_router(admin_router_v16, prefix="/v16/admin", tags=["Admin V16"])
+
+# V16 Analytics Extension - Controlled Upgrade
+from extensions.api_v16.analytics_router_v16 import router as analytics_router_v16
+
+app.include_router(analytics_router_v16, prefix="/v16/analytics", tags=["Analytics V16"])
