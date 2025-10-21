@@ -894,3 +894,35 @@ async def startup_monitoring():
 async def shutdown_monitoring():
     await telemetry_v16.stop_monitoring()
     logger.info("V16 Telemetry monitoring stopped")
+
+# V16 Services Extension - Controlled Upgrade
+from extensions.services_v16.realtime_monitor import realtime_monitor
+from extensions.services_v16.automation_director import automation_director
+from extensions.services_v16.notification_center import notification_center
+
+# Start services on startup
+@app.on_event("startup")
+async def startup_services():
+    # Initialize real-time monitor with Redis
+    await realtime_monitor.initialize_redis()
+    
+    # Configure notification channels
+    await notification_center.configure_channel(
+        DeliveryChannel.EMAIL,
+        {
+            "smtp_server": "localhost",
+            "smtp_port": 587,
+            "from_address": "notifications@shootingstar.com",
+            "enabled": True
+        }
+    )
+    
+    logger.info("V16 Services initialized")
+
+@app.on_event("shutdown")
+async def shutdown_services():
+    # Stop monitoring tasks
+    for stream_id in list(realtime_monitor.monitoring_tasks.keys()):
+        await realtime_monitor.stop_stream(stream_id)
+    
+    logger.info("V16 Services shutdown")
