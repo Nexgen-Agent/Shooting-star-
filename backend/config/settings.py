@@ -305,3 +305,6 @@ V16_SERVICES_NOTIFICATION_EMAIL_FROM = "notifications@shootingstar.com"
 V16_SERVICES_AUTOMATION_ENABLED = True
 V16_SERVICES_REALTIME_MONITORING = True
 V16_SERVICES_DELIVERY_RATE_LIMIT = 100  # notifications per minute
+
+# Add this to your existing settings
+V16_AI_MODULES_ENABLED: bool = getenv("V16_AI_MODULES_ENABLED", "True").lower() == "true"
