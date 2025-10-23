@@ -782,6 +782,50 @@ app.include_router(finance_router.router)
 app.include_router(message_router.router)
 app.include_router(employee_router.router)
 
+# ======= VBE INTEGRATION START =======
+# Virtual Business Engine Integration - Phase 0
+# Add these lines to integrate VBE without modifying core functionality
+
+try:
+    from extensions.vbe.config_vbe import get_vbe_settings
+    from extensions.vbe.api_vbe.vbe_router import router as vbe_router
+    
+    # Initialize VBE settings
+    vbe_settings = get_vbe_settings()
+    
+    # Register VBE router
+    app.include_router(vbe_router, prefix="/vbe", tags=["VBE"])
+    
+    # Configure VBE logging
+    vbe_logger = logging.getLogger("vbe")
+    vbe_logger.setLevel(logging.INFO)
+    
+    # Add VBE status to health check
+    @app.get("/vbe/health")
+    async def vbe_health_check():
+        """VBE-specific health check"""
+        return {
+            "status": "operational",
+            "version": "0.1.0",
+            "phase": 0,
+            "features": {
+                "cheese_method": True,
+                "lead_hunter": True,
+                "outreach_queue": True,
+                "schedule_manager": True,
+                "admin_approval": vbe_settings.VBE_APPROVAL_REQUIRED
+            }
+        }
+    
+    logger.info("✅ Virtual Business Engine (VBE) Phase 0 integrated successfully")
+    
+except ImportError as e:
+    logger.warning(f"VBE integration not available: {str(e)}")
+except Exception as e:
+    logger.error(f"VBE integration error: {str(e)}")
+
+# ======= VBE INTEGRATION END =======
+
 # Register V16 AI router if enabled
 if settings.AI_ENGINE_ENABLED:
     try:
