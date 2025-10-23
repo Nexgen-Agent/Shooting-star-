@@ -1,0 +1,84 @@
+# extensions/vbe/README.md
+
+# Virtual Business Engine (VBE) - Phase 0
+
+The Virtual Business Engine is an AI-powered business automation system that handles lead generation, outreach, scheduling, and task management.
+
+## Phase 0 Components
+
+### Core Modules
+
+1. **config_vbe.py** - Centralized configuration management using Pydantic
+2. **cheese_method.py** - Advanced outreach template system 
+3. **lead_hunter.py** - 24/7 lead discovery and qualification
+4. **outreach_queue.py** - Draft management with approval workflow
+5. **schedule_manager.py** - Daily 9-hour schedule optimization
+6. **api_vbe/vbe_router.py** - REST API endpoints for all operations
+7. **tests/test_vbe_phase0.py** - Comprehensive test suite
+
+## The Cheese Method
+
+The Cheese Method is a proven outreach framework that structures messages for maximum engagement:
+
+### Framework Structure:
+- **Hook**: Personalized opener based on public details
+- **Value**: Clear value proposition tied to services
+- **Social Proof**: Short case study with results
+- **Offer**: Low-friction next step (15-min audit/call)
+- **CTA**: Time-limited invitation with scarcity
+
+### Tone Variants:
+- **Confident**: Direct, results-focused language
+- **Humble**: Respectful, collaborative approach  
+- **Playful**: Engaging, energetic tone
+
+### Editing Templates:
+Modify `cheese_method.py` functions:
+- `_generate_hook()` - Personalization logic
+- `_generate_value_proposition()` - Service-specific benefits
+- `_generate_social_proof()` - Case studies and results
+- `_generate_offer()` - Call-to-action variants
+
+## Business Services List
+
+Available services for outreach (embedded in message generation):
+
+1. **Creator growth services** (scripting, content creation, audience growth)
+2. **Digital marketing** (ads management, organic social, conversion optimization)  
+3. **Website builds** (surface, middle, premium / white-glove resell)
+4. **Graphic design** (social kits, branding assets)
+5. **Branding & Positioning** (brand strategy)
+6. **Professional photoshoots & editing**
+7. **Cybersecurity & 24/7 website maintenance**
+8. **Influencer matchmaking & campaign management**
+9. **Subscription products** (monthly growth packages, tiers incl. flagship R500k/month plan)
+10. **Marketplace & outsourcing** (freelancer marketplace and task dispatch)
+11. **AI-powered trend & sentiment reports** (daily tips)
+12. **Financing & implementation loans** (structured deals converting to equity on default)
+
+## Integration Instructions
+
+### Manual Wiring into main.py
+
+```python
+# INTEGRATION INSTRUCTION FOR HUMAN (DO NOT AUTO-APPLY)
+# 1) Add VBE settings to config/settings.py (or import from extensions.vbe.config_vbe):
+#    from extensions.vbe.config_vbe import get_vbe_settings
+#    vbe_settings = get_vbe_settings()
+#
+# 2) Register the VBE router in main.py:
+#    from extensions.vbe.api_vbe.vbe_router import router as vbe_router
+#    app.include_router(vbe_router, prefix="/vbe", tags=["VBE"])
+#
+# 3) Ensure logging config loads extensions/vbe logs or create a handler:
+#    logger = logging.getLogger("vbe")
+#    logger.setLevel(logging.INFO)
+#
+# 4) Add VBE env keys to .env:
+#    VBE_MODEL_DIR=/path/to/vbe_models
+#    VBE_STREAM_BROKER=redis://localhost:6379/0
+#    VBE_CACHE_URL=redis://localhost:6379/1
+#    VBE_APPROVAL_REQUIRED=true
+#
+# After applying these manual edits, restart the app and run:
+#    pytest extensions/vbe/tests/test_vbe_phase0.py -q
