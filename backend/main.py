@@ -1,5 +1,6 @@
 """
-Main FastAPI application entry point with V17 AI Engine Integration.
+Main FastAPI application entry point with V16 & V17 AI Engine Integration.
+Enhanced with 15 new AI modules for comprehensive intelligence.
 """
 
 from fastapi import FastAPI, Depends, HTTPException
@@ -31,7 +32,7 @@ logger = logging.getLogger("shooting_star")
 # Create FastAPI application
 app = FastAPI(
     title=settings.APP_NAME,
-    description="Shooting Star V17 AI Engine - Enterprise Scalable AI Platform with Advanced Intelligence",
+    description="Shooting Star V17 AI Engine - Enterprise Scalable AI Platform with Advanced Intelligence + V16 AI Modules",
     version=settings.APP_VERSION,
     docs_url="/docs",
     redoc_url="/redoc",
@@ -52,8 +53,10 @@ app.add_middleware(
     allowed_hosts=["*"]  # In production, specify actual hosts
 )
 
-# Global V17 AI Engine instance
+# Global AI Engine instances
 v17_ai_engine = None
+v16_ai_engine = None
+marketing_ai_engine = None
 
 # Add startup and shutdown events
 @app.on_event("startup")
@@ -69,14 +72,24 @@ async def startup_event():
         # Initialize V16 AI modules (existing functionality)
         if settings.AI_ENGINE_ENABLED:
             await _initialize_v16_ai_engine()
-        
+
+        # Initialize NEW V16 AI Modules (15 advanced modules)
+        if settings.V16_AI_MODULES_ENABLED:
+            await _initialize_v16_ai_modules()
+
         # Initialize V17 AI Engine (new scalable features)
         if settings.V17_AI_ENGINE_ENABLED:
             await _initialize_v17_ai_engine()
 
+        # Initialize Marketing AI Engine
+        if settings.MARKETING_AI_ENABLED:
+            await _initialize_marketing_ai_engine()
+
         logger.info(f"{settings.APP_NAME} v{settings.APP_VERSION} is ready!")
         logger.info(f"V16 AI Engine Status: {'ENABLED' if settings.AI_ENGINE_ENABLED else 'DISABLED'}")
+        logger.info(f"V16 AI Modules Status: {'ENABLED' if settings.V16_AI_MODULES_ENABLED else 'DISABLED'}")
         logger.info(f"V17 AI Engine Status: {'ENABLED' if settings.V17_AI_ENGINE_ENABLED else 'DISABLED'}")
+        logger.info(f"Marketing AI Engine Status: {'ENABLED' if settings.MARKETING_AI_ENABLED else 'DISABLED'}")
 
     except Exception as e:
         logger.error(f"Startup error: {str(e)}")
@@ -143,20 +156,60 @@ async def _initialize_v16_ai_engine():
     except Exception as e:
         logger.error(f"V16 AI module initialization warning: {str(e)}")
 
+async def _initialize_v16_ai_modules():
+    """Initialize the 15 new V16 AI modules."""
+    global v16_ai_engine
+    
+    try:
+        # Import and initialize the integrated V16 AI engine
+        from main_integration_updater import AIBackendIntegration
+        
+        # Create the integrated engine
+        v16_ai_engine = AIBackendIntegration()
+        
+        logger.info("✅ V16 AI Modules (15 modules) initialized successfully")
+        
+        # Log all 15 new modules
+        v16_modules = [
+            "Market Shift Predictor",
+            "Viral Content Forecaster", 
+            "Sentiment Reaction Model",
+            "Campaign Success Predictor",
+            "Creative Impact Analyzer",
+            "Real-time Strategy Engine",
+            "Task Automation Director",
+            "Decision Feedback Loop",
+            "AI Personal Assistant Core",
+            "Conversation Context Manager", 
+            "Voice Command Integration",
+            "Load Prediction Engine",
+            "Auto-healing Manager",
+            "Semantic Cache Manager",
+            "Query Vectorizer"
+        ]
+        
+        for module in v16_modules:
+            logger.info(f"🧠 V16 Module: {module}")
+
+    except ImportError as e:
+        logger.warning(f"V16 AI modules not available: {str(e)}")
+    except Exception as e:
+        logger.error(f"V16 AI modules initialization error: {str(e)}")
+
 async def _initialize_v17_ai_engine():
     """Initialize the new V17 Scalable AI Engine components."""
     global v17_ai_engine
-    
+
     try:
         # Import V17 AI Engine components
         from main_v17_engine import V17ScalableAIEngine
-        
+
         # Initialize the V17 engine
         v17_ai_engine = V17ScalableAIEngine()
         await v17_ai_engine.initialize()
-        
+
         logger.info("✅ V17 Scalable AI Engine initialized successfully")
-        
+
         # Log V17 capabilities
         v17_capabilities = [
             "Microservices Architecture & Distributed Orchestration",
@@ -168,19 +221,52 @@ async def _initialize_v17_ai_engine():
             "Predictive Scaling & Auto-Scaling",
             "AI Governance & Compliance Engine"
         ]
-        
+
         for capability in v17_capabilities:
             logger.info(f"🚀 V17: {capability}")
-            
+
     except ImportError as e:
         logger.warning(f"V17 AI Engine components not available: {str(e)}")
     except Exception as e:
         logger.error(f"V17 AI Engine initialization error: {str(e)}")
 
+async def _initialize_marketing_ai_engine():
+    """Initialize Marketing AI Engine"""
+    global marketing_ai_engine
+
+    try:
+        from marketing.marketing_ai_engine import MarketingAIEngine
+        marketing_ai_engine = MarketingAIEngine()
+        # Note: If MarketingAIEngine has async initialization, call it here
+        # await marketing_ai_engine.initialize()
+
+        logger.info("✅ Marketing AI Engine initialized successfully")
+
+        # Log marketing capabilities
+        marketing_capabilities = [
+            "Customer Journey Mapping & Analysis",
+            "ROI Optimization & Budget Allocation",
+            "Content Performance Prediction",
+            "Influencer Matchmaking Engine",
+            "Social Media Sentiment Analysis",
+            "Customer Lifetime Value Prediction",
+            "A/B Testing Optimization",
+            "SEO Strategy Development",
+            "Real-time Marketing Dashboard"
+        ]
+
+        for capability in marketing_capabilities:
+            logger.info(f"📊 Marketing AI: {capability}")
+
+    except ImportError as e:
+        logger.warning(f"Marketing AI Engine components not available: {str(e)}")
+    except Exception as e:
+        logger.error(f"Marketing AI Engine initialization error: {str(e)}")
+
 @app.on_event("shutdown")
 async def shutdown_event():
     """Cleanup on application shutdown."""
-    logger.info("Shutting down Shooting Star V17 AI Engine...")
+    logger.info("Shutting down Shooting Star AI Engines...")
 
     # Clean up V16 AI resources if they were initialized
     if settings.AI_ENGINE_ENABLED:
@@ -196,6 +282,15 @@ async def shutdown_event():
             logger.info("V16 AI resources cleaned up")
         except Exception as e:
             logger.warning(f"V16 AI cleanup warning: {str(e)}")
+
+    # Clean up V16 AI Modules if initialized
+    global v16_ai_engine
+    if v16_ai_engine and settings.V16_AI_MODULES_ENABLED:
+        try:
+            # Add any cleanup logic for V16 modules if needed
+            logger.info("V16 AI Modules shutdown complete")
+        except Exception as e:
+            logger.warning(f"V16 AI Modules shutdown warning: {str(e)}")
 
     # Clean up V17 AI Engine if initialized
     global v17_ai_engine
@@ -233,8 +328,10 @@ async def root():
         "version": settings.APP_VERSION,
         "status": "healthy",
         "ai_engine_enabled": settings.AI_ENGINE_ENABLED,
+        "v16_ai_modules_enabled": settings.V16_AI_MODULES_ENABLED,
         "v17_ai_engine_enabled": settings.V17_AI_ENGINE_ENABLED,
         "ai_capabilities": await _get_ai_capabilities_list(),
+        "v16_modules": await _get_v16_modules_list(),
         "v17_capabilities": await _get_v17_capabilities_list(),
         "timestamp": time.time()
     }
@@ -251,6 +348,7 @@ async def health_check():
         "timestamp": time.time(),
         "version": settings.APP_VERSION,
         "ai_engine_enabled": settings.AI_ENGINE_ENABLED,
+        "v16_ai_modules_enabled": settings.V16_AI_MODULES_ENABLED,
         "v17_ai_engine_enabled": settings.V17_AI_ENGINE_ENABLED,
         "checks": {}
     }
@@ -294,6 +392,17 @@ async def health_check():
             health_status["checks"]["v16_ai_engine"] = f"unhealthy: {str(e)}"
             logger.warning(f"V16 AI health check warning: {str(e)}")
 
+    # V16 AI Modules health check (if enabled)
+    if settings.V16_AI_MODULES_ENABLED and v16_ai_engine:
+        try:
+            v16_status = await v16_ai_engine._get_system_health()
+            health_status["checks"]["v16_ai_modules"] = v16_status.get("status", "unknown")
+            health_status["v16_modules_loaded"] = v16_status.get("modules", {}).get("healthy", 0)
+            health_status["v16_modules_active"] = True
+        except Exception as e:
+            health_status["checks"]["v16_ai_modules"] = f"unhealthy: {str(e)}"
+            logger.warning(f"V16 AI Modules health check warning: {str(e)}")
+
     # V17 AI Engine health check (if enabled)
     if settings.V17_AI_ENGINE_ENABLED and v17_ai_engine:
         try:
@@ -318,10 +427,12 @@ async def system_info():
         "version": settings.APP_VERSION,
         "environment": "production" if not settings.DEBUG else "development",
         "ai_engine_enabled": settings.AI_ENGINE_ENABLED,
+        "v16_ai_modules_enabled": settings.V16_AI_MODULES_ENABLED,
         "v17_ai_engine_enabled": settings.V17_AI_ENGINE_ENABLED,
         "supported_user_roles": [role.value for role in UserRole],
         "available_ai_models": list(AI_MODELS.keys()) if settings.AI_ENGINE_ENABLED else [],
         "ai_capabilities": await _get_ai_capabilities_list(),
+        "v16_modules": await _get_v16_modules_list(),
         "v17_capabilities": await _get_v17_capabilities_list(),
         "features": {
             # Core Platform Features
@@ -340,6 +451,23 @@ async def system_info():
             "automated_workflows": settings.AI_ENGINE_ENABLED,
             "smart_campaign_suggestions": settings.AI_ENGINE_ENABLED,
 
+            # V16 Advanced AI Modules (NEW)
+            "market_shift_prediction": settings.V16_AI_MODULES_ENABLED,
+            "viral_content_forecasting": settings.V16_AI_MODULES_ENABLED,
+            "sentiment_reaction_modeling": settings.V16_AI_MODULES_ENABLED,
+            "campaign_success_prediction": settings.V16_AI_MODULES_ENABLED,
+            "creative_impact_analysis": settings.V16_AI_MODULES_ENABLED,
+            "real_time_strategy_engine": settings.V16_AI_MODULES_ENABLED,
+            "task_automation_director": settings.V16_AI_MODULES_ENABLED,
+            "decision_feedback_loops": settings.V16_AI_MODULES_ENABLED,
+            "ai_personal_assistant": settings.V16_AI_MODULES_ENABLED,
+            "conversation_context_management": settings.V16_AI_MODULES_ENABLED,
+            "voice_command_integration": settings.V16_AI_MODULES_ENABLED,
+            "load_prediction_engine": settings.V16_AI_MODULES_ENABLED,
+            "auto_healing_system": settings.V16_AI_MODULES_ENABLED,
+            "semantic_caching": settings.V16_AI_MODULES_ENABLED,
+            "query_vectorization": settings.V16_AI_MODULES_ENABLED,
+
             # V17 Advanced AI Capabilities
             "microservices_architecture": settings.V17_AI_ENGINE_ENABLED,
             "distributed_ai_orchestration": settings.V17_AI_ENGINE_ENABLED,
@@ -356,6 +484,7 @@ async def system_info():
             "human_approval_required": settings.REQUIRE_HUMAN_APPROVAL,
             "max_ai_budget_recommendation": settings.AI_MAX_BUDGET_RECOMMENDATION,
             "ai_safety_guardrails": settings.AI_ENGINE_ENABLED,
+            "v16_ai_governance": settings.V16_AI_MODULES_ENABLED,
             "v17_ai_governance_engine": settings.V17_AI_ENGINE_ENABLED,
             "decision_audit_trails": True
         },
@@ -363,6 +492,7 @@ async def system_info():
             "ai_prediction_timeout": settings.AI_PREDICTION_TIMEOUT,
             "max_concurrent_ai_tasks": settings.MAX_CONCURRENT_AI_TASKS,
             "analytics_update_interval": settings.ANALYTICS_UPDATE_INTERVAL,
+            "v16_semantic_caching": settings.V16_AI_MODULES_ENABLED,
             "v17_horizontal_scaling": settings.V17_AI_ENGINE_ENABLED,
             "v17_predictive_scaling": settings.V17_AI_ENGINE_ENABLED
         }
@@ -370,17 +500,105 @@ async def system_info():
 
     return system_info
 
+# V16 AI Modules Status endpoint
+@app.get("/v16/ai/modules/status")
+async def v16_ai_modules_status():
+    """Get V16 AI Modules detailed status."""
+    if not settings.V16_AI_MODULES_ENABLED:
+        raise HTTPException(status_code=403, detail="V16 AI Modules are disabled")
+
+    global v16_ai_engine
+    if not v16_ai_engine:
+        raise HTTPException(status_code=503, detail="V16 AI Modules not initialized")
+
+    try:
+        status = await v16_ai_engine._get_modules_status()
+        return status
+    except Exception as e:
+        logger.error(f"V16 AI Modules status check failed: {str(e)}")
+        raise HTTPException(status_code=503, detail="V16 AI Modules temporarily unavailable")
+
+# V16 AI Modules Health endpoint
+@app.get("/v16/ai/modules/health")
+async def v16_ai_modules_health():
+    """Get V16 AI Modules health status."""
+    if not settings.V16_AI_MODULES_ENABLED:
+        raise HTTPException(status_code=403, detail="V16 AI Modules are disabled")
+
+    global v16_ai_engine
+    if not v16_ai_engine:
+        raise HTTPException(status_code=503, detail="V16 AI Modules not initialized")
+
+    try:
+        health = await v16_ai_engine._get_system_health()
+        return health
+    except Exception as e:
+        logger.error(f"V16 AI Modules health check failed: {str(e)}")
+        raise HTTPException(status_code=503, detail="V16 AI Modules health check failed")
+
+# V16 AI Modules Capabilities endpoint
+@app.get("/v16/ai/modules/capabilities")
+async def v16_ai_modules_capabilities():
+    """Get V16 AI Modules capabilities."""
+    if not settings.V16_AI_MODULES_ENABLED:
+        raise HTTPException(status_code=403, detail="V16 AI Modules are disabled")
+
+    capabilities = {
+        "v16_modules_status": "active",
+        "version": "v16.0.0",
+        "total_modules": 15,
+        "modules": {
+            "intelligence": [
+                "Market Shift Predictor - Market trend forecasting",
+                "Viral Content Forecaster - Viral content prediction",
+                "Sentiment Reaction Model - Audience response forecasting",
+                "Real-time Strategy Engine - Dynamic campaign optimization"
+            ],
+            "automation": [
+                "Task Automation Director - Workflow orchestration", 
+                "Decision Feedback Loop - Continuous learning system"
+            ],
+            "analytics": [
+                "Campaign Success Predictor - Campaign performance forecasting",
+                "Creative Impact Analyzer - Creative content analysis"
+            ],
+            "assistant": [
+                "AI Personal Assistant Core - Intelligent assistant engine",
+                "Conversation Context Manager - Multi-turn dialogue management",
+                "Voice Command Integration - Voice interface layer"
+            ],
+            "scalability": [
+                "Load Prediction Engine - Resource scaling predictions",
+                "Auto-healing Manager - Self-healing system"
+            ],
+            "caching": [
+                "Semantic Cache Manager - Intelligent semantic caching",
+                "Query Vectorizer - Advanced text vectorization"
+            ]
+        },
+        "api_endpoints": {
+            "intelligence": "/v16/ai/intelligence/*",
+            "automation": "/v16/ai/automation/*", 
+            "analytics": "/v16/ai/analytics/*",
+            "assistant": "/v16/ai/assistant/*",
+            "scalability": "/v16/system/scalability/*",
+            "caching": "/v16/ai/caching/*"
+        }
+    }
+
+    return capabilities
+
 # V17 AI Engine Status endpoint
 @app.get("/v17/ai/status")
 async def v17_ai_status():
     """Get V17 AI Engine detailed status."""
     if not settings.V17_AI_ENGINE_ENABLED:
         raise HTTPException(status_code=403, detail="V17 AI Engine is disabled")
-    
+
     global v17_ai_engine
     if not v17_ai_engine:
         raise HTTPException(status_code=503, detail="V17 AI Engine not initialized")
-    
+
     try:
         status = await v17_ai_engine.get_system_status()
         return status
@@ -394,7 +612,7 @@ async def v17_ai_capabilities():
     """Get V17 AI Engine capabilities."""
     if not settings.V17_AI_ENGINE_ENABLED:
         raise HTTPException(status_code=403, detail="V17 AI Engine is disabled")
-    
+
     capabilities = {
         "v17_engine_status": "active",
         "version": "v17.0.0",
@@ -432,7 +650,7 @@ async def v17_ai_capabilities():
             "Multi-tenant AI isolation"
         ]
     }
-    
+
     return capabilities
 
 # V17 AI Request Processing endpoint
@@ -441,11 +659,11 @@ async def v17_ai_process(request_data: dict):
     """Process AI request through V17 engine."""
     if not settings.V17_AI_ENGINE_ENABLED:
         raise HTTPException(status_code=403, detail="V17 AI Engine is disabled")
-    
+
     global v17_ai_engine
     if not v17_ai_engine:
         raise HTTPException(status_code=503, detail="V17 AI Engine not initialized")
-    
+
     try:
         result = await v17_ai_engine.process_ai_request(
             request_type=request_data.get("type", "generic"),
@@ -464,11 +682,11 @@ async def v17_scaling_forecast(hours_ahead: int = 24):
     """Get predictive scaling forecast."""
     if not settings.V17_AI_ENGINE_ENABLED:
         raise HTTPException(status_code=403, detail="V17 AI Engine is disabled")
-    
+
     global v17_ai_engine
     if not v17_ai_engine:
         raise HTTPException(status_code=503, detail="V17 AI Engine not initialized")
-    
+
     try:
         forecast = await v17_ai_engine.predictive_scaler.get_capacity_forecast(
             hours_ahead=hours_ahead
@@ -484,21 +702,21 @@ async def v17_governance_compliance(framework: str = None):
     """Get AI governance compliance report."""
     if not settings.V17_AI_ENGINE_ENABLED:
         raise HTTPException(status_code=403, detail="V17 AI Engine is disabled")
-    
+
     global v17_ai_engine
     if not v17_ai_engine:
         raise HTTPException(status_code=503, detail="V17 AI Engine not initialized")
-    
+
     try:
         from security.ai_governance_engine import ComplianceFramework
-        
+
         comp_framework = None
         if framework:
             try:
                 comp_framework = ComplianceFramework(framework)
             except ValueError:
                 raise HTTPException(status_code=400, detail=f"Unknown framework: {framework}")
-        
+
         report = await v17_ai_engine.governance_engine.generate_compliance_report(comp_framework)
         return report
     except Exception as e:
@@ -519,6 +737,7 @@ async def ai_capabilities():
         "capabilities": await _get_ai_capabilities_detailed(),
         "performance_metrics": await _get_ai_performance_metrics(),
         "model_registry": await _get_ai_model_registry(),
+        "v16_modules_available": settings.V16_AI_MODULES_ENABLED,
         "v17_available": settings.V17_AI_ENGINE_ENABLED
     }
 
@@ -545,6 +764,7 @@ async def ai_status():
                 "ai_engine_version": "v16.0.0",
                 "model_count": len(status.get("modules_loaded", [])),
                 "active_since": time.time(),
+                "v16_modules_enabled": settings.V16_AI_MODULES_ENABLED,
                 "v17_engine_available": settings.V17_AI_ENGINE_ENABLED
             }
 
@@ -596,6 +816,17 @@ if settings.AI_ENGINE_ENABLED:
     except Exception as e:
         logger.error(f"Failed to register V16 AI router: {str(e)}")
 
+# Register V16 AI Modules routers if enabled
+if settings.V16_AI_MODULES_ENABLED and v16_ai_engine:
+    try:
+        # The v16_ai_engine already includes all the routers from main_integration_updater.py
+        # We just need to include its app router
+        app.include_router(v16_ai_engine.app)
+        logger.info("V16 AI Modules routers registered successfully")
+        
+    except Exception as e:
+        logger.error(f"Failed to register V16 AI Modules routers: {str(e)}")
+
 # Register V17 AI routers if enabled
 if settings.V17_AI_ENGINE_ENABLED:
     try:
@@ -603,21 +834,114 @@ if settings.V17_AI_ENGINE_ENABLED:
         from routers.v17_ai_router import v17_ai_router
         app.include_router(v17_ai_router, prefix="/v17/ai", tags=["V17 AI Engine"])
         logger.info("V17 AI router registered successfully")
-        
+
         # V17 Analytics Router
         from routers.v17_analytics_router import v17_analytics_router
         app.include_router(v17_analytics_router, prefix="/v17/analytics", tags=["V17 Analytics"])
         logger.info("V17 Analytics router registered successfully")
-        
+
         # V17 Governance Router
         from routers.v17_governance_router import v17_governance_router
         app.include_router(v17_governance_router, prefix="/v17/governance", tags=["V17 Governance"])
         logger.info("V17 Governance router registered successfully")
-        
+
     except ImportError as e:
         logger.warning(f"V17 routers not available: {str(e)}")
     except Exception as e:
         logger.error(f"Failed to register V17 routers: {str(e)}")
+
+# Register Marketing AI router if enabled
+if settings.MARKETING_AI_ENABLED:
+    try:
+        from routers.marketing_ai_router import marketing_ai_router
+        app.include_router(marketing_ai_router, prefix="/v17/marketing", tags=["V17 Marketing AI"])
+        logger.info("V17 Marketing AI router registered successfully")
+    except ImportError as e:
+        logger.warning(f"Marketing AI router not available: {str(e)}")
+    except Exception as e:
+        logger.error(f"Failed to register Marketing AI router: {str(e)}")
+
+# V16 AI Extension - Controlled Upgrade
+try:
+    from extensions.api_v16.ai_router_v16 import router as ai_router_v16
+    app.include_router(ai_router_v16, prefix="/v16/ai", tags=["AI V16"])
+    logger.info("V16 AI Extension router registered successfully")
+except ImportError as e:
+    logger.warning(f"V16 AI Extension router not available: {str(e)}")
+
+# V16 Admin Extension - Controlled Upgrade
+try:
+    from extensions.api_v16.admin_router_v16 import router as admin_router_v16
+    app.include_router(admin_router_v16, prefix="/v16/admin", tags=["Admin V16"])
+    logger.info("V16 Admin Extension router registered successfully")
+except ImportError as e:
+    logger.warning(f"V16 Admin Extension router not available: {str(e)}")
+
+# V16 Analytics Extension - Controlled Upgrade
+try:
+    from extensions.api_v16.analytics_router_v16 import router as analytics_router_v16
+    app.include_router(analytics_router_v16, prefix="/v16/analytics", tags=["Analytics V16"])
+    logger.info("V16 Analytics Extension router registered successfully")
+except ImportError as e:
+    logger.warning(f"V16 Analytics Extension router not available: {str(e)}")
+
+# V16 Monitoring Extension - Controlled Upgrade
+try:
+    from monitoring.telemetry_v16 import telemetry_v16
+    from monitoring.system_health import system_health
+    from monitoring.alerts_handler import alerts_handler
+
+    # Start monitoring services on startup
+    @app.on_event("startup")
+    async def startup_monitoring():
+        await telemetry_v16.start_monitoring()
+        logger.info("V16 Telemetry monitoring started")
+
+    @app.on_event("shutdown")
+    async def shutdown_monitoring():
+        await telemetry_v16.stop_monitoring()
+        logger.info("V16 Telemetry monitoring stopped")
+
+    logger.info("V16 Monitoring Extension initialized successfully")
+except ImportError as e:
+    logger.warning(f"V16 Monitoring Extension not available: {str(e)}")
+
+# V16 Services Extension - Controlled Upgrade
+try:
+    from extensions.services_v16.realtime_monitor import realtime_monitor
+    from extensions.services_v16.automation_director import automation_director
+    from extensions.services_v16.notification_center import notification_center
+
+    # Start services on startup
+    @app.on_event("startup")
+    async def startup_services():
+        # Initialize real-time monitor with Redis
+        await realtime_monitor.initialize_redis()
+
+        # Configure notification channels
+        await notification_center.configure_channel(
+            DeliveryChannel.EMAIL,
+            {
+                "smtp_server": "localhost",
+                "smtp_port": 587,
+                "from_address": "notifications@shootingstar.com",
+                "enabled": True
+            }
+        )
+
+        logger.info("V16 Services initialized")
+
+    @app.on_event("shutdown")
+    async def shutdown_services():
+        # Stop monitoring tasks
+        for stream_id in list(realtime_monitor.monitoring_tasks.keys()):
+            await realtime_monitor.stop_stream(stream_id)
+
+        logger.info("V16 Services shutdown")
+
+    logger.info("V16 Services Extension initialized successfully")
+except ImportError as e:
+    logger.warning(f"V16 Services Extension not available: {str(e)}")
 
 # Global exception handler
 @app.exception_handler(500)
@@ -634,12 +958,14 @@ async def internal_server_error_handler(request, exc):
     }
 
 # AI-specific exception handler (if AI is enabled)
-if settings.AI_ENGINE_ENABLED or settings.V17_AI_ENGINE_ENABLED:
+if settings.AI_ENGINE_ENABLED or settings.V16_AI_MODULES_ENABLED or settings.V17_AI_ENGINE_ENABLED:
     @app.exception_handler(Exception)
     async def ai_exception_handler(request, exc):
         """Handle AI-related exceptions gracefully."""
         # Check if this is an AI-related request
-        if request.url.path.startswith('/ai/') or request.url.path.startswith('/v17/ai/'):
+        if (request.url.path.startswith('/ai/') or 
+            request.url.path.startswith('/v16/ai/') or 
+            request.url.path.startswith('/v17/ai/')):
             logger.error(f"AI engine error in {request.url.path}: {str(exc)}")
             return {
                 "success": False,
@@ -648,8 +974,9 @@ if settings.AI_ENGINE_ENABLED or settings.V17_AI_ENGINE_ENABLED:
                     "message": "AI service temporarily unavailable",
                     "timestamp": time.time(),
                     "v16_ai_engine_enabled": settings.AI_ENGINE_ENABLED,
+                    "v16_ai_modules_enabled": settings.V16_AI_MODULES_ENABLED,
                     "v17_ai_engine_enabled": settings.V17_AI_ENGINE_ENABLED,
-                    "suggestion": "Check AI system status at /ai/status or /v17/ai/status"
+                    "suggestion": "Check AI system status at /ai/status, /v16/ai/modules/status, or /v17/ai/status"
                 }
             }
         # Let other exceptions be handled by the default handler
@@ -676,6 +1003,29 @@ async def _get_ai_capabilities_list():
         "Sentiment Analysis",
         "Growth Opportunity Identification",
         "Smart Recommendation Engine"
+    ]
+
+async def _get_v16_modules_list():
+    """Get list of V16 AI modules."""
+    if not settings.V16_AI_MODULES_ENABLED:
+        return []
+
+    return [
+        "Market Shift Predictor",
+        "Viral Content Forecaster",
+        "Sentiment Reaction Model", 
+        "Campaign Success Predictor",
+        "Creative Impact Analyzer",
+        "Real-time Strategy Engine",
+        "Task Automation Director",
+        "Decision Feedback Loop",
+        "AI Personal Assistant Core",
+        "Conversation Context Manager",
+        "Voice Command Integration", 
+        "Load Prediction Engine",
+        "Auto-healing Manager",
+        "Semantic Cache Manager",
+        "Query Vectorizer"
     ]
 
 async def _get_v17_capabilities_list():
@@ -785,144 +1135,3 @@ if __name__ == "__main__":
         reload=settings.DEBUG,
         log_level="info"
     )
-
-# Add global variable after v17_ai_engine
-marketing_ai_engine = None
-
-# Update startup event
-async def startup_event():
-    """Initialize application on startup."""
-    logger.info(f"Starting {settings.APP_NAME} v{settings.APP_VERSION}...")
-
-    try:
-        # Create database tables
-        await create_tables()
-        logger.info("Database tables created/verified successfully")
-
-        # Initialize V16 AI modules (existing functionality)
-        if settings.AI_ENGINE_ENABLED:
-            await _initialize_v16_ai_engine()
-        
-        # Initialize V17 AI Engine (new scalable features)
-        if settings.V17_AI_ENGINE_ENABLED:
-            await _initialize_v17_ai_engine()
-
-        # Initialize Marketing AI Engine
-        if settings.MARKETING_AI_ENABLED:
-            await _initialize_marketing_ai_engine()
-
-        logger.info(f"{settings.APP_NAME} v{settings.APP_VERSION} is ready!")
-        logger.info(f"V16 AI Engine Status: {'ENABLED' if settings.AI_ENGINE_ENABLED else 'DISABLED'}")
-        logger.info(f"V17 AI Engine Status: {'ENABLED' if settings.V17_AI_ENGINE_ENABLED else 'DISABLED'}")
-        logger.info(f"Marketing AI Engine Status: {'ENABLED' if settings.MARKETING_AI_ENABLED else 'DISABLED'}")
-
-    except Exception as e:
-        logger.error(f"Startup error: {str(e)}")
-        raise
-
-async def _initialize_marketing_ai_engine():
-    """Initialize Marketing AI Engine"""
-    global marketing_ai_engine
-    
-    try:
-        from marketing.marketing_ai_engine import MarketingAIEngine
-        marketing_ai_engine = MarketingAIEngine()
-        # Note: If MarketingAIEngine has async initialization, call it here
-        # await marketing_ai_engine.initialize()
-        
-        logger.info("✅ Marketing AI Engine initialized successfully")
-        
-        # Log marketing capabilities
-        marketing_capabilities = [
-            "Customer Journey Mapping & Analysis",
-            "ROI Optimization & Budget Allocation",
-            "Content Performance Prediction",
-            "Influencer Matchmaking Engine",
-            "Social Media Sentiment Analysis",
-            "Customer Lifetime Value Prediction",
-            "A/B Testing Optimization",
-            "SEO Strategy Development",
-            "Real-time Marketing Dashboard"
-        ]
-        
-        for capability in marketing_capabilities:
-            logger.info(f"📊 Marketing AI: {capability}")
-            
-    except ImportError as e:
-        logger.warning(f"Marketing AI Engine components not available: {str(e)}")
-    except Exception as e:
-        logger.error(f"Marketing AI Engine initialization error: {str(e)}")
-
-# Register V17 Marketing AI router if enabled
-if settings.MARKETING_AI_ENABLED:
-    try:
-        from routers.marketing_ai_router import marketing_ai_router
-        app.include_router(marketing_ai_router, prefix="/v17/marketing", tags=["V17 Marketing AI"])
-        logger.info("V17 Marketing AI router registered successfully")
-    except ImportError as e:
-        logger.warning(f"Marketing AI router not available: {str(e)}")
-    except Exception as e:
-        logger.error(f"Failed to register Marketing AI router: {str(e)}")
-
-# V16 AI Extension - Controlled Upgrade
-from extensions.api_v16.ai_router_v16 import router as ai_router_v16
-
-app.include_router(ai_router_v16, prefix="/v16/ai", tags=["AI V16"])
-
-# V16 Admin Extension - Controlled Upgrade
-from extensions.api_v16.admin_router_v16 import router as admin_router_v16
-
-app.include_router(admin_router_v16, prefix="/v16/admin", tags=["Admin V16"])
-
-# V16 Analytics Extension - Controlled Upgrade
-from extensions.api_v16.analytics_router_v16 import router as analytics_router_v16
-
-app.include_router(analytics_router_v16, prefix="/v16/analytics", tags=["Analytics V16"])
-
-# V16 Monitoring Extension - Controlled Upgrade
-from monitoring.telemetry_v16 import telemetry_v16
-from monitoring.system_health import system_health
-from monitoring.alerts_handler import alerts_handler
-
-# Start monitoring services on startup
-@app.on_event("startup")
-async def startup_monitoring():
-    await telemetry_v16.start_monitoring()
-    logger.info("V16 Telemetry monitoring started")
-
-@app.on_event("shutdown")
-async def shutdown_monitoring():
-    await telemetry_v16.stop_monitoring()
-    logger.info("V16 Telemetry monitoring stopped")
-
-# V16 Services Extension - Controlled Upgrade
-from extensions.services_v16.realtime_monitor import realtime_monitor
-from extensions.services_v16.automation_director import automation_director
-from extensions.services_v16.notification_center import notification_center
-
-# Start services on startup
-@app.on_event("startup")
-async def startup_services():
-    # Initialize real-time monitor with Redis
-    await realtime_monitor.initialize_redis()
-    
-    # Configure notification channels
-    await notification_center.configure_channel(
-        DeliveryChannel.EMAIL,
-        {
-            "smtp_server": "localhost",
-            "smtp_port": 587,
-            "from_address": "notifications@shootingstar.com",
-            "enabled": True
-        }
-    )
-    
-    logger.info("V16 Services initialized")
-
-@app.on_event("shutdown")
-async def shutdown_services():
-    # Stop monitoring tasks
-    for stream_id in list(realtime_monitor.monitoring_tasks.keys()):
-        await realtime_monitor.stop_stream(stream_id)
-    
-    logger.info("V16 Services shutdown")
