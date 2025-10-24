@@ -317,3 +317,10 @@ We are prepared to provide:
 **PREPARED FOR**: {{lea_agency_name}}  
 **CASE NUMBER**: {{lea_case_number}}  
 **PREPARED DATE**: {{preparation_date}}
+
+# EVIDENCE DELIVERY PROTOCOL FOR LAW ENFORCEMENT
+
+## SECURE TRANSFER METHODS
+
+### 1. Encrypted Digital Transfer
+**SFTP/SCP to Agency Portal**
