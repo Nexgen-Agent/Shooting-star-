@@ -1,0 +1,79 @@
+{
+  "incident_brief_schema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "CHAMELEON_CYBER Incident Brief",
+    "type": "object",
+    "properties": {
+      "incident_id": {
+        "type": "string",
+        "description": "Unique identifier for the incident"
+      },
+      "severity": {
+        "type": "string",
+        "enum": ["low", "medium", "high", "critical"]
+      },
+      "detection_time": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "summary": {
+        "type": "string",
+        "description": "Brief description of the incident"
+      },
+      "immediate_action_taken": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "recommended_next_steps": {
+        "type": "array", 
+        "items": {
+          "type": "string"
+        }
+      },
+      "owner_notification_status": {
+        "type": "string",
+        "enum": ["sent", "pending", "failed"]
+      },
+      "forensic_packet_location": {
+        "type": "string",
+        "format": "uri"
+      },
+      "audit_log_refs": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "required": [
+      "incident_id",
+      "severity", 
+      "detection_time",
+      "summary"
+    ]
+  },
+  "alert_payload_example": {
+    "incident_id": "inc-20231201-143022",
+    "severity": "high",
+    "detection_time": "2023-12-01T14:30:22Z",
+    "summary": "Suspicious data exfiltration detected from staging-db-01",
+    "immediate_action_taken": [
+      "immutable_backup:backup-20231201-143025",
+      "soft_isolation:iso-20231201-143027",
+      "egress_firewall_rules:block-198.51.100.1"
+    ],
+    "recommended_next_steps": [
+      "Preserve memory forensics from affected host",
+      "Rotate database credentials",
+      "Review access logs for suspicious activity"
+    ],
+    "owner_notification_status": "sent",
+    "forensic_packet_location": "s3://forensics-bucket/inc-20231201-143022/evidence.tar.gpg",
+    "audit_log_refs": [
+      "audit-20231201-143022-001",
+      "audit-20231201-143023-002"
+    ]
+  }
+}
