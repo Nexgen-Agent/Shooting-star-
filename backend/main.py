@@ -3,6 +3,8 @@ Main FastAPI application entry point with V16 & V17 AI Engine Integration.
 Enhanced with 15 new AI modules for comprehensive intelligence.
 """
 
+from routers.brand_management_router import router as brand_router
+from routers.one_time_router import router as one_time_router
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
@@ -1179,3 +1181,10 @@ if __name__ == "__main__":
         reload=settings.DEBUG,
         log_level="info"
     )
+
+
+
+
+# Add these lines to include the routers in the FastAPI app
+app.include_router(brand_router)
+app.include_router(one_time_router)
