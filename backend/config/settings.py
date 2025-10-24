@@ -1,4 +1,4 @@
-"""
+5"""
 V16 & V17 AI Engine Configuration
 """
 
@@ -314,3 +314,34 @@ V16_AI_MODULES_ENABLED: bool = getenv("V16_AI_MODULES_ENABLED", "True").lower() 
 AI_INSIGHT_QUEUE_ENABLED = True
 CROSSOVER_LOGIC_ENABLED = True
 RETARGETING_DAYS_LOOKBACK = 90
+
+# Financial System Configuration
+PROFIT_ALLOCATION_RULES = {
+    "growth_fund": 0.30,
+    "operations": 0.60, 
+    "vault_reserves": 0.10
+}
+
+# Growth Engine Settings
+GROWTH_CYCLE_CONFIG = {
+    "daily_cycle_enabled": True,
+    "weekly_cycle_enabled": True,
+    "monthly_cycle_enabled": True,
+    "underperformance_threshold": 0.8,
+    "profit_threshold_increase_reinvestment": 50000
+}
+
+# Forecasting Settings
+FORECASTING_CONFIG = {
+    "default_growth_rate": 0.05,
+    "confidence_threshold": 0.7,
+    "historical_data_months": 36,
+    "projection_horizon_years": 5
+}
+
+# Dashboard Settings
+DASHBOARD_CONFIG = {
+    "update_frequency_minutes": 5,
+    "cache_duration_minutes": 10,
+    "max_data_points": 1000
+}
