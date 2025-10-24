@@ -308,3 +308,9 @@ V16_SERVICES_DELIVERY_RATE_LIMIT = 100  # notifications per minute
 
 # Add this to your existing settings
 V16_AI_MODULES_ENABLED: bool = getenv("V16_AI_MODULES_ENABLED", "True").lower() == "true"
+
+# Add any necessary configuration for the new modules
+# For example, if you need to configure AI integration settings:
+AI_INSIGHT_QUEUE_ENABLED = True
+CROSSOVER_LOGIC_ENABLED = True
+RETARGETING_DAYS_LOOKBACK = 90
