@@ -324,3 +324,37 @@ We are prepared to provide:
 
 ### 1. Encrypted Digital Transfer
 **SFTP/SCP to Agency Portal**
+
+
+**Encrypted Email**
+- Use PGP encryption with agency's public key
+- Split large files into manageable chunks
+- Include checksum verification in body
+
+### 2. Physical Media
+**Encrypted USB Drives**
+- Use FIPS 140-2 validated encrypted drives
+- Ship via tracked courier with signature required
+- Include printed chain of custody documentation
+
+**Hard Drives**
+- Encrypt with LUKS or BitLocker
+- Use tamper-evident packaging
+- Maintain custody during transport
+
+### 3. Secure Cloud Transfer
+**Agency Cloud Portal**
+- Use agency-provided upload credentials
+- Enable client-side encryption
+- Verify upload completion and checksums
+
+## EVIDENCE PACKAGE CONTENTS
+
+### Required Documentation
+1. Chain of Custody form
+2. Incident summary report
+3. Evidence inventory list
+4. Cryptographic checksums
+5. Contact information sheet
+
+### Evidence Structure
