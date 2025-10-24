@@ -1,0 +1,243 @@
+# orchestrator/adaptive_orchestrator.py
+"""
+DEFENSIVE ONLY - NO OFFENSIVE ACTIONS
+Main adaptive defense orchestrator that continuously hardens infrastructure in real-time.
+All actions are logged, verifiable, and non-destructive where possible.
+"""
+
+import asyncio
+from datetime import datetime
+from enum import Enum
+from typing import Dict, List, Optional
+from pydantic import BaseModel, Field
+import numpy as np
+
+class ThreatLevel(str, Enum):
+    NORMAL = "normal"
+    ELEVATED = "elevated"
+    HIGH = "high"
+    CRITICAL = "critical"
+
+class DefenseAction(BaseModel):
+    action_id: str
+    type: str
+    target: str
+    parameters: Dict
+    confidence: float = Field(..., ge=0, le=1)
+    cost_impact: float = Field(..., ge=0)
+    requires_approval: bool = False
+    approval_status: str = "pending"
+
+class OrchestrationState(BaseModel):
+    current_threat_level: ThreatLevel
+    active_defenses: List[DefenseAction]
+    resource_utilization: Dict
+    last_escalation: Optional[str] = None
+    simulation_mode: bool = False
+
+class AdaptiveDefenseOrchestrator:
+    def __init__(self):
+        self.state = OrchestrationState(
+            current_threat_level=ThreatLevel.NORMAL,
+            active_defenses=[],
+            resource_utilization={},
+            simulation_mode=False
+        )
+        self.telemetry_sensor = TelemetryIngest()
+        self.edge_protector = EdgeProtector()
+        self.identity_manager = IdentityManager()
+        self.key_manager = KeyManager()
+        self.host_protector = HostProtector()
+        self.backup_service = ForensicBackup()
+        self.deception_service = DeceptionService()
+        self.forensic_packager = ForensicPackager()
+        self.resource_guard = ResourceGuard()
+        
+    async def start_continuous_defense(self):
+        """Main defense loop - continuously monitors and adapts defenses"""
+        while True:
+            try:
+                # Collect current telemetry
+                telemetry = await self.telemetry_sensor.get_current_metrics()
+                
+                # Calculate threat score
+                threat_score = await self._calculate_threat_score(telemetry)
+                
+                # Determine appropriate threat level
+                new_threat_level = self._determine_threat_level(threat_score)
+                
+                # Adjust defenses if threat level changed
+                if new_threat_level != self.state.current_threat_level:
+                    await self._escalate_defenses(new_threat_level, telemetry)
+                
+                # Check resource utilization
+                await self._optimize_resource_usage()
+                
+                await asyncio.sleep(10)  # Check every 10 seconds
+                
+            except Exception as e:
+                print(f"Defense orchestration error: {e}")
+                await asyncio.sleep(30)  # Back off on error
+    
+    async def _calculate_threat_score(self, telemetry: Dict) -> float:
+        """Calculate comprehensive threat score from multiple telemetry sources"""
+        scores = []
+        
+        # Authentication anomalies
+        if telemetry.get('auth_anomaly_score', 0) > 0.7:
+            scores.append(0.8)
+        
+        # Network anomalies
+        if telemetry.get('network_anomaly_score', 0) > 0.6:
+            scores.append(0.7)
+            
+        # Resource anomalies
+        if telemetry.get('resource_anomaly_score', 0) > 0.8:
+            scores.append(0.9)
+            
+        # Threat intelligence matches
+        if telemetry.get('threat_intel_matches', 0) > 0:
+            scores.append(0.6)
+        
+        return max(scores) if scores else 0.0
+    
+    def _determine_threat_level(self, threat_score: float) -> ThreatLevel:
+        """Determine threat level based on score"""
+        if threat_score >= 0.8:
+            return ThreatLevel.CRITICAL
+        elif threat_score >= 0.6:
+            return ThreatLevel.HIGH
+        elif threat_score >= 0.4:
+            return ThreatLevel.ELEVATED
+        else:
+            return ThreatLevel.NORMAL
+    
+    async def _escalate_defenses(self, new_level: ThreatLevel, telemetry: Dict):
+        """Escalate or de-escalate defenses based on threat level"""
+        print(f"🛡️ Escalating defenses to: {new_level}")
+        
+        if new_level == ThreatLevel.CRITICAL:
+            await self._activate_critical_defenses(telemetry)
+        elif new_level == ThreatLevel.HIGH:
+            await self._activate_high_defenses(telemetry)
+        elif new_level == ThreatLevel.ELEVATED:
+            await self._activate_elevated_defenses(telemetry)
+        else:
+            await self._activate_normal_defenses()
+        
+        self.state.current_threat_level = new_level
+        self.state.last_escalation = datetime.utcnow().isoformat()
+    
+    async def _activate_critical_defenses(self, telemetry: Dict):
+        """Activate critical threat level defenses"""
+        actions = []
+        
+        # 1. Maximum edge protection
+        edge_action = await self.edge_protector.maximum_protection(telemetry)
+        actions.append(edge_action)
+        
+        # 2. Enforce step-up authentication
+        auth_action = await self.identity_manager.enforce_step_up_auth()
+        actions.append(auth_action)
+        
+        # 3. Initiate traffic scrubbing
+        scrub_action = await self.edge_protector.activate_scrubbing()
+        actions.append(scrub_action)
+        
+        # 4. Snapshot and backup critical systems
+        backup_action = await self.backup_service.emergency_snapshot()
+        actions.append(backup_action)
+        
+        # 5. Cordon potentially compromised hosts
+        host_action = await self.host_protector.cordon_hosts(telemetry.get('suspicious_hosts', []))
+        actions.append(host_action)
+        
+        # 6. Deploy honeypot diversion
+        honeypot_action = await self.deception_service.deploy_diversion()
+        actions.append(honeypot_action)
+        
+        # 7. Rotate critical keys
+        key_action = await self.key_manager.emergency_rotation()
+        actions.append(key_action)
+        
+        self.state.active_defenses = actions
+        
+        # Log critical activation
+        await self._log_defense_activation("critical", actions)
+    
+    async def _activate_high_defenses(self, telemetry: Dict):
+        """Activate high threat level defenses"""
+        actions = []
+        
+        # Enhanced edge protection
+        edge_action = await self.edge_protector.enhanced_protection(telemetry)
+        actions.append(edge_action)
+        
+        # Additional authentication requirements
+        auth_action = await self.identity_manager.enhance_auth_requirements()
+        actions.append(auth_action)
+        
+        # Selective host protection
+        if telemetry.get('suspicious_hosts'):
+            host_action = await self.host_protector.enhance_monitoring(
+                telemetry['suspicious_hosts']
+            )
+            actions.append(host_action)
+        
+        self.state.active_defenses = actions
+        await self._log_defense_activation("high", actions)
+    
+    async def _activate_elevated_defenses(self, telemetry: Dict):
+        """Activate elevated threat level defenses"""
+        actions = []
+        
+        # Standard edge hardening
+        edge_action = await self.edge_protector.harden_edge()
+        actions.append(edge_action)
+        
+        # Increased monitoring
+        monitor_action = await self.host_protector.increase_monitoring()
+        actions.append(monitor_action)
+        
+        self.state.active_defenses = actions
+        await self._log_defense_activation("elevated", actions)
+    
+    async def _activate_normal_defenses(self):
+        """Activate normal threat level defenses"""
+        # Maintain baseline protections
+        baseline_action = await self.edge_protector.baseline_protection()
+        self.state.active_defenses = [baseline_action]
+        await self._log_defense_activation("normal", [baseline_action])
+    
+    async def _optimize_resource_usage(self):
+        """Optimize resource usage based on current threat level"""
+        utilization = await self.resource_guard.check_utilization()
+        self.state.resource_utilization = utilization
+        
+        # Scale back non-essential defenses if resource constrained
+        if utilization.get('cpu', 0) > 0.8 or utilization.get('memory', 0) > 0.8:
+            await self._optimize_defense_resources()
+    
+    async def _optimize_defense_resources(self):
+        """Optimize defense resources when constrained"""
+        # Implementation would prioritize critical defenses
+        # and scale back less critical ones
+        pass
+    
+    async def _log_defense_activation(self, level: str, actions: List[DefenseAction]):
+        """Log defense activation for audit purposes"""
+        log_entry = {
+            "timestamp": datetime.utcnow().isoformat(),
+            "threat_level": level,
+            "actions_activated": [a.dict() for a in actions],
+            "orchestrator_state": self.state.dict()
+        }
+        print(f"DEFENSE_LOG: {log_entry}")
+
+# Example usage
+async def main():
+    orchestrator = AdaptiveDefenseOrchestrator()
+    await orchestrator.start_continuous_defense()
+
+if __name__ == "__main__":
+    asyncio.run(main())
