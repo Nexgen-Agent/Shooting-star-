@@ -1,0 +1,58 @@
+# Automated audit job description
+"""
+DAILY/WEEKLY AUTOMATED AUDIT JOB - CHAMELEON CYBER SENTINEL
+
+Purpose: Regular health checks and compliance validation for the cybersecurity system.
+
+Daily Jobs (00:00 UTC):
+1. Backup Integrity Verification
+   - Verify checksums of recent backups
+   - Test backup restoration in isolated environment
+   - Validate retention policy compliance
+
+2. Security Control Health Check
+   - Verify WAF, firewall, and EDR systems operational status
+   - Check SIEM log ingestion and correlation rules
+   - Validate intrusion detection system alerts
+
+3. Credential Rotation Check
+   - Audit credential age and rotation compliance
+   - Verify MFA enforcement on critical accounts
+   - Check for hardcoded credentials in logs
+
+4. Incident Response Readiness
+   - Verify isolation service functionality
+   - Test notification systems (SMS, email, push)
+   - Validate forensic storage availability
+
+Weekly Jobs (Sunday 02:00 UTC):
+1. Comprehensive System Audit
+   - Review all access logs for suspicious activity
+   - Audit privilege escalation events
+   - Verify immutable audit trail integrity
+
+2. Playbook Testing
+   - Run simulated incidents in staging
+   - Validate playbook execution times
+   - Update playbooks based on lessons learned
+
+3. Compliance Reporting
+   - Generate compliance reports (SOC2, ISO27001, etc.)
+   - Review legal and regulatory requirements
+   - Archive audit logs for long-term retention
+
+4. System Hardening Review
+   - Check for new security patches
+   - Review and update security baselines
+   - Validate network segmentation
+
+Alerting:
+- Immediate alert if any critical control is non-functional
+- Daily summary report to SOC team
+- Weekly comprehensive report to CISO and legal counsel
+
+Integration:
+- Integrates with cloud provider health checks
+- Uses same immutable audit trail as incident response
+- Includes legal counsel in compliance reporting
+"""
