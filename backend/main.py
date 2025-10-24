@@ -2,7 +2,7 @@
 Main FastAPI application entry point with V16 & V17 AI Engine Integration.
 Enhanced with 15 new AI modules for comprehensive intelligence.
 """
-
+from routers.reception_router import router 
 from routers.finance_router import router as finance_router
 from routers.dashboard_router import router as dashboard_router
 # Add background task for periodic growth cycles (optional)
@@ -795,6 +795,9 @@ app.include_router(brand_router)
 app.include_router(one_time_router)
 app.include_router(finance_router)
 app.include_router(dashboard_router)
+app.include_router(reception_router)
+app.include_router(brand_router)
+app.include_router(one_time_router)
 
 
 # ======= VBE INTEGRATION START =======
@@ -1194,10 +1197,11 @@ if __name__ == "__main__":
         reload=settings.DEBUG,
         log_level="info"
     )
+@app.on_event("startup")
+async def startup_event():
+    # Initialize AI Receptionist background tasks
+    # This would schedule weekly growth cycles and daily audits
+    pass
 
 
 
-
-# Add these lines to include the routers in the FastAPI app
-app.include_router(brand_router)
-app.include_router(one_time_router)
