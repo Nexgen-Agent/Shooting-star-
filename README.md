@@ -358,3 +358,30 @@ We are prepared to provide:
 5. Contact information sheet
 
 ### Evidence Structure
+
+
+## VERIFICATION PROCEDURES
+
+### Pre-Transfer Verification
+- [ ] All evidence checksums verified
+- [ ] Chain of custody complete
+- [ ] Encryption tested and working
+- [ ] Legal review completed
+
+### Post-Transfer Verification
+- [ ] Receipt confirmation obtained
+- [ ] Transfer checksums verified by recipient
+- [ ] Case number recorded
+- [ ] Follow-up schedule established
+
+## LEGAL CONSIDERATIONS
+
+### Jurisdictional Compliance
+- Verify evidence handling meets agency requirements
+- Document any international transfer considerations
+- Maintain records of all communications
+
+### Privacy Protections
+- Redact personal information where required
+- Document redaction procedures
+- Maintain unredacted originals per retention policy
