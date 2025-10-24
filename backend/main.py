@@ -783,6 +783,8 @@ app.include_router(dashboard_router.router)
 app.include_router(finance_router.router)
 app.include_router(message_router.router)
 app.include_router(employee_router.router)
+app.include_router(brand_router)
+app.include_router(one_time_router)
 
 # ======= VBE INTEGRATION START =======
 # Virtual Business Engine Integration - Phase 0
