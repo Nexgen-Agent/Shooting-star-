@@ -1,7 +1,9 @@
 """
 Finance router for budget management and financial operations.
 """
-
+from services.profit_allocator import ProfitAllocator
+from services.finance_forecaster import FinanceForecaster
+from services.growth_predictor import GrowthPredictor
 from typing import Dict, Any, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -596,5 +598,220 @@ async def generate_monthly_report(
         raise response_formatter.error(
             message="Error generating monthly report",
             error_code="MONTHLY_REPORT_FAILED",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+# =============================================================================
+# PROJECT SKYROCKET - AUTONOMOUS GROWTH ENGINE ENDPOINTS
+# =============================================================================
+
+@router.post("/profit-allocation/calculate", response_model=Dict[str, Any])
+async def calculate_profit_allocation(
+    year: int = Query(..., description="Year for allocation"),
+    month: int = Query(..., description="Month for allocation"),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_roles([UserRole.SUPER_ADMIN]))
+):
+    """Calculate and allocate profits according to Project Skyrocket rules"""
+    try:
+        allocator = ProfitAllocator(db)
+        allocation = await allocator.allocate_profits(year, month)
+        
+        logger.info(f"Profit allocation completed by {current_user.email} for {year}-{month}")
+        return response_formatter.success(
+            data=allocation.to_dict() if hasattr(allocation, 'to_dict') else allocation,
+            message="Profit allocation completed successfully"
+        )
+    except ValueError as e:
+        raise response_formatter.error(
+            message=str(e),
+            error_code="PROFIT_ALLOCATION_FAILED",
+            status_code=status.HTTP_400_BAD_REQUEST
+        )
+    except Exception as e:
+        logger.error(f"Error in profit allocation: {str(e)}")
+        raise response_formatter.error(
+            message="Error calculating profit allocation",
+            error_code="PROFIT_ALLOCATION_ERROR",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+@router.get("/profit-allocation/history", response_model=Dict[str, Any])
+async def get_profit_allocation_history(
+    months: int = Query(12, description="Number of months to retrieve"),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_roles([UserRole.SUPER_ADMIN]))
+):
+    """Get profit allocation history"""
+    try:
+        allocator = ProfitAllocator(db)
+        allocations = await allocator.get_allocation_history(months)
+        
+        return response_formatter.success(
+            data=[alloc.to_dict() if hasattr(alloc, 'to_dict') else alloc for alloc in allocations],
+            message="Profit allocation history retrieved successfully"
+        )
+    except Exception as e:
+        logger.error(f"Error fetching allocation history: {str(e)}")
+        raise response_formatter.error(
+            message="Error retrieving allocation history",
+            error_code="ALLOCATION_HISTORY_ERROR",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+@router.get("/projection", response_model=Dict[str, Any])
+async def get_financial_projection(
+    projection_type: str = Query("five_year", description="Type of projection (five_year, monthly)"),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Get AI-powered financial projections"""
+    try:
+        forecaster = FinanceForecaster(db)
+        
+        if projection_type == "five_year":
+            projection = await forecaster.generate_five_year_projection()
+        elif projection_type == "monthly":
+            projection = await forecaster.generate_monthly_projection(12)
+        else:
+            raise response_formatter.error(
+                message="Invalid projection type. Use 'five_year' or 'monthly'",
+                error_code="INVALID_PROJECTION_TYPE",
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
+        
+        return response_formatter.success(
+            data=projection,
+            message="Financial projection generated successfully"
+        )
+    except Exception as e:
+        logger.error(f"Error generating financial projection: {str(e)}")
+        raise response_formatter.error(
+            message="Error generating financial projection",
+            error_code="PROJECTION_ERROR",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+@router.get("/income-streams", response_model=Dict[str, Any])
+async def get_income_streams_analysis(
+    limit: int = Query(10, description="Number of streams to return"),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Get AI-analyzed income streams ranked by profit velocity"""
+    try:
+        predictor = GrowthPredictor(db)
+        streams = await predictor.identify_fastest_income_streams(limit)
+        
+        return response_formatter.success(
+            data={"income_streams": streams},
+            message="Income streams analysis completed successfully"
+        )
+    except Exception as e:
+        logger.error(f"Error analyzing income streams: {str(e)}")
+        raise response_formatter.error(
+            message="Error analyzing income streams",
+            error_code="INCOME_STREAMS_ERROR",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+@router.get("/growth-actions", response_model=Dict[str, Any])
+async def get_growth_actions_recommendations(
+    confidence_threshold: float = Query(0.7, description="Minimum confidence score"),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Get AI-recommended growth actions with ROI confidence scores"""
+    try:
+        predictor = GrowthPredictor(db)
+        actions = await predictor.generate_growth_actions(confidence_threshold)
+        
+        return response_formatter.success(
+            data={"growth_actions": actions},
+            message="Growth actions recommendations generated successfully"
+        )
+    except Exception as e:
+        logger.error(f"Error generating growth actions: {str(e)}")
+        raise response_formatter.error(
+            message="Error generating growth actions",
+            error_code="GROWTH_ACTIONS_ERROR",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+@router.post("/optimize-allocation", response_model=Dict[str, Any])
+async def optimize_resource_allocation(
+    available_budget: float = Query(..., description="Available budget for allocation"),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Optimize resource allocation across income streams for maximum ROI"""
+    try:
+        predictor = GrowthPredictor(db)
+        optimization = await predictor.optimize_resource_allocation(available_budget)
+        
+        return response_formatter.success(
+            data=optimization,
+            message="Resource allocation optimized successfully"
+        )
+    except Exception as e:
+        logger.error(f"Error optimizing resource allocation: {str(e)}")
+        raise response_formatter.error(
+            message="Error optimizing resource allocation",
+            error_code="ALLOCATION_OPTIMIZATION_ERROR",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+@router.get("/dashboard-summary", response_model=Dict[str, Any])
+async def get_financial_dashboard_summary(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Get comprehensive financial dashboard summary for Project Skyrocket"""
+    try:
+        allocator = ProfitAllocator(db)
+        forecaster = FinanceForecaster(db)
+        predictor = GrowthPredictor(db)
+        
+        # Get current period
+        from datetime import datetime
+        current_date = datetime.utcnow()
+        current_period = current_date.strftime("%Y-%m")
+        
+        # Get latest allocation
+        allocations = await allocator.get_allocation_history(1)
+        latest_allocation = allocations[0] if allocations else None
+        
+        # Get 5-year projection summary
+        projection_summary = await forecaster.generate_five_year_projection()
+        
+        # Get top growth actions
+        growth_actions = await predictor.generate_growth_actions(0.7)
+        
+        # Get top income streams
+        income_streams = await predictor.identify_fastest_income_streams(5)
+        
+        summary_data = {
+            "current_period": current_period,
+            "latest_allocation": latest_allocation.to_dict() if latest_allocation and hasattr(latest_allocation, 'to_dict') else latest_allocation,
+            "projection_summary": {
+                "five_year_revenue": projection_summary.get("key_metrics", {}).get("estimated_5yr_revenue", 0),
+                "five_year_profit": projection_summary.get("key_metrics", {}).get("estimated_5yr_profit", 0),
+                "confidence": projection_summary.get("overall_confidence", 0)
+            },
+            "top_growth_actions": growth_actions[:3],
+            "top_income_streams": income_streams,
+            "last_updated": current_date.isoformat()
+        }
+        
+        return response_formatter.success(
+            data=summary_data,
+            message="Financial dashboard summary retrieved successfully"
+        )
+        
+    except Exception as e:
+        logger.error(f"Error generating dashboard summary: {str(e)}")
+        raise response_formatter.error(
+            message="Error generating dashboard summary",
+            error_code="DASHBOARD_SUMMARY_ERROR",
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
