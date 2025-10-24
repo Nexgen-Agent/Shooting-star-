@@ -134,3 +134,186 @@ And every contributor becomes part of its evolution.
 MIT License — open source, but ethically guided.
 If you fork it, respect the code, the mission, and the people.
 
+# docs/LEA_contact_template.md
+# LAW ENFORCEMENT AGENCY CONTACT TEMPLATE
+# FOR CYBERSECURITY INCIDENT REPORTING
+
+**IMPORTANT**: Consult with legal counsel before contacting law enforcement.  
+This template is a starting point and should be customized for your specific situation.
+
+---
+
+## INCIDENT REPORT SUMMARY
+
+**Date Prepared**: {{current_date}}  
+**Prepared By**: {{prepared_by_name}}, {{prepared_by_title}}  
+**Organization**: {{organization_name}}  
+**Legal Counsel**: {{legal_counsel_name}}, {{legal_counsel_firm}}  
+
+**Incident Reference**: {{incident_id}}  
+**Date Detected**: {{detection_date}}  
+**Current Status**: {{incident_status}}  
+
+## EXECUTIVE SUMMARY
+
+**What Happened**:  
+{{incident_summary}}
+
+**Suspected Threat Actor**:  
+{{threat_actor_information}}  
+*Note: Attribution is probabilistic and based on available technical indicators*
+
+**Known Impact**:  
+{{impact_assessment}}
+
+**Evidence Collected**:  
+- [ ] System and application logs
+- [ ] Network traffic captures (PCAP)
+- [ ] Memory forensics
+- [ ] Disk images
+- [ ] Database transaction logs
+- [ ] Authentication records
+- [ ] Other: {{other_evidence}}
+
+## TECHNICAL DETAILS
+
+### Indicators of Compromise (IOCs)
+
+| Type | Value | Confidence | First Seen | Last Seen |
+|------|-------|------------|------------|-----------|
+{{ioc_table}}
+
+### Attack Timeline
+
+{{attack_timeline}}
+
+### Infrastructure Analysis
+
+**Suspicious IP Addresses**:  
+{{suspicious_ips}}
+
+**Command and Control Infrastructure**:  
+{{c2_infrastructure}}
+
+**Data Exfiltration Points**:  
+{{exfiltration_points}}
+
+## EVIDENCE PRESERVATION
+
+### Chain of Custody
+
+All evidence has been preserved with maintained chain of custody:
+
+1. **Collection**: {{collection_method}}  
+2. **Preservation**: Encrypted storage with cryptographic signing  
+3. **Retention**: Immutable storage (S3 Object Lock)  
+4. **Verification**: Checksum validation completed
+
+### Evidence Package Details
+
+- **Location**: {{evidence_storage_location}}  
+- **Access Method**: {{evidence_access_method}}  
+- **Encryption**: AES-256 with KMS key rotation  
+- **Size**: {{evidence_package_size}}  
+- **Format**: {{evidence_package_format}}
+
+## REQUEST FOR ASSISTANCE
+
+We are seeking law enforcement assistance with the following:
+
+- [ ] Technical investigation of attack infrastructure
+- [ ] Attribution analysis and actor identification  
+- [ ] Coordination with international law enforcement
+- [ ] Preservation orders for relevant infrastructure
+- [ ] Criminal investigation and prosecution
+- [ ] Other: {{other_assistance_request}}
+
+## LEGAL DISCLAIMERS & CAVEATS
+
+### Attribution Limitations
+
+- IP address geolocation is approximate and not definitive
+- Network infrastructure may be compromised or rented
+- Threat actors may use VPNs, proxies, or Tor
+- Technical indicators alone are not sufficient for definitive attribution
+
+### Evidence Collection
+
+- All evidence collected from our own systems and networks
+- No unauthorized access to third-party systems
+- Collection performed in accordance with applicable laws
+- Chain of custody maintained for all materials
+
+### Jurisdictional Considerations
+
+- Primary jurisdiction: {{primary_jurisdiction}}
+- Potential cross-border aspects: {{cross_border_considerations}}
+- Applicable treaties: {{applicable_treaties}}
+
+## CONTACT INFORMATION
+
+### Primary Point of Contact
+**Name**: {{primary_contact_name}}  
+**Title**: {{primary_contact_title}}  
+**Email**: {{primary_contact_email}}  
+**Phone**: {{primary_contact_phone}}  
+**PGP Key**: {{pgp_key_fingerprint}}
+
+### Legal Counsel
+**Name**: {{legal_counsel_name}}  
+**Firm**: {{legal_counsel_firm}}  
+**Email**: {{legal_counsel_email}}  
+**Phone**: {{legal_counsel_phone}}
+
+### Technical Contact
+**Name**: {{technical_contact_name}}  
+**Title**: {{technical_contact_title}}  
+**Email**: {{technical_contact_email}}  
+**Phone**: {{technical_contact_phone}}
+
+## SUBMISSION INSTRUCTIONS
+
+### Preferred Submission Methods
+
+1. **Secure File Transfer**
+   - Portal: {{lea_secure_portal}}
+   - Instructions: {{portal_instructions}}
+
+2. **Encrypted Email**
+   - PGP Key: {{lea_pgp_key}}
+   - Maximum attachment size: {{max_attachment_size}}
+
+3. **Physical Media**
+   - Address: {{lea_mailing_address}}
+   - Contact required before shipping
+
+### Evidence Handling Requirements
+
+- Maintain chain of custody documentation
+- Preserve original evidence integrity
+- Limit access to authorized personnel only
+- Provide receipt confirmation
+
+## FOLLOW-UP PROCEDURES
+
+### Status Updates
+We request periodic updates on:
+- [ ] Evidence receipt confirmation
+- [ ] Case number assignment
+- [ ] Investigation status
+- [ ] Potential prosecution decisions
+
+### Additional Information
+We are prepared to provide:
+- [ ] Additional technical analysis
+- [ ] Expert testimony if required
+- [ ] Coordination with other victims
+- [ ] International cooperation support
+
+---
+
+**CONFIDENTIALITY NOTICE**: This document contains sensitive information about an ongoing cybersecurity incident. Distribution should be limited to authorized law enforcement personnel directly involved in the investigation.
+
+**PREPARED FOR**: {{lea_agency_name}}  
+**CASE NUMBER**: {{lea_case_number}}  
+**PREPARED DATE**: {{preparation_date}}
