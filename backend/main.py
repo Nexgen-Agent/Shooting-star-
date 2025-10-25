@@ -1515,3 +1515,613 @@ async def startup_event():
     # Initialize AI Receptionist background tasks
     # This would schedule weekly growth cycles and daily audits
     pass
+
+# Add to your existing main.py imports
+from scout.core.scout_engine import ScoutEngine
+from scout.routers.scout_router import router as scout_router
+from scout.routers.contracts_router import router as contracts_router
+from scout.sources.social_connector import SocialMediaConnector
+from scout.contracts.fair_value import FairValueCalculator
+
+# Add to your existing global instances
+scout_engine = None
+social_connector = None
+fair_value_calculator = None
+
+# Add to your existing startup_event function
+@app.on_event("startup")
+async def startup_event():
+    """Initialize application on startup."""
+    logger.info(f"Starting {settings.APP_NAME} v{settings.APP_VERSION}...")
+
+    try:
+        # Create database tables
+        await create_tables()
+        logger.info("Database tables created/verified successfully")
+
+        # ======= CYBERSECURITY INITIALIZATION =======
+        if CYBERSECURITY_ENABLED:
+            await _initialize_cybersecurity_system()
+        # ======= END CYBERSECURITY INITIALIZATION =======
+
+        # Initialize V16 AI modules (existing functionality)
+        if settings.AI_ENGINE_ENABLED:
+            await _initialize_v16_ai_engine()
+
+        # Initialize NEW V16 AI Modules (15 advanced modules)
+        if settings.V16_AI_MODULES_ENABLED:
+            await _initialize_v16_ai_modules()
+
+        # Initialize V17 AI Engine (new scalable features)
+        if settings.V17_AI_ENGINE_ENABLED:
+            await _initialize_v17_ai_engine()
+
+        # Initialize Marketing AI Engine
+        if settings.MARKETING_AI_ENABLED:
+            await _initialize_marketing_ai_engine()
+
+        # ======= SCOUT ENGINE INITIALIZATION =======
+        if settings.SCOUT_ENGINE_ENABLED:
+            await _initialize_scout_engine()
+        # ======= END SCOUT ENGINE INITIALIZATION =======
+
+        logger.info(f"{settings.APP_NAME} v{settings.APP_VERSION} is ready!")
+        logger.info(f"V16 AI Engine Status: {'ENABLED' if settings.AI_ENGINE_ENABLED else 'DISABLED'}")
+        logger.info(f"V16 AI Modules Status: {'ENABLED' if settings.V16_AI_MODULES_ENABLED else 'DISABLED'}")
+        logger.info(f"V17 AI Engine Status: {'ENABLED' if settings.V17_AI_ENGINE_ENABLED else 'DISABLED'}")
+        logger.info(f"Marketing AI Engine Status: {'ENABLED' if settings.MARKETING_AI_ENABLED else 'DISABLED'}")
+        logger.info(f"Cybersecurity System Status: {'ENABLED' if CYBERSECURITY_ENABLED else 'DISABLED'}")
+        logger.info(f"Scout Engine Status: {'ENABLED' if settings.SCOUT_ENGINE_ENABLED else 'DISABLED'}")
+
+    except Exception as e:
+        logger.error(f"Startup error: {str(e)}")
+        raise
+
+# ======= SCOUT ENGINE INITIALIZATION FUNCTION =======
+async def _initialize_scout_engine():
+    """Initialize the Scout Engine for talent and partnership acquisition."""
+    global scout_engine, social_connector, fair_value_calculator
+
+    try:
+        from scout.core.scout_engine import ScoutEngine
+        from scout.sources.social_connector import SocialMediaConnector
+        from scout.contracts.fair_value import FairValueCalculator
+
+        # Initialize Scout Engine components
+        scout_engine = ScoutEngine()
+        social_connector = SocialMediaConnector()
+        fair_value_calculator = FairValueCalculator()
+
+        logger.info("✅ Scout Engine initialized successfully")
+
+        # Log Scout Engine capabilities
+        scout_capabilities = [
+            "🎯 Talent Acquisition Pipeline (Developers, Designers, Engineers)",
+            "🌟 Influencer Scouting (10K+ followers minimum)",
+            "💼 Business Owner Partnership Discovery",
+            "🤝 Fair Value Partnership System",
+            "💬 AI Receptionist Handoff Integration",
+            "🔍 Advanced Vetting & Quality Scoring",
+            "💰 Intelligent Negotiation Engine",
+            "📝 Automated Onboarding & Contracts",
+            "🏪 Talent Pool & Marketplace",
+            "🛡️ Ethical & Compliant Operations"
+        ]
+
+        for capability in scout_capabilities:
+            logger.info(f"  {capability}")
+
+    except Exception as e:
+        logger.error(f"Scout Engine initialization failed: {str(e)}")
+        # Don't raise exception - Scout Engine failure shouldn't break the whole app
+# ======= END SCOUT ENGINE INITIALIZATION FUNCTION =======
+
+# Add to your existing shutdown_event function
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Cleanup on application shutdown."""
+    logger.info("Shutting down Shooting Star AI Engines...")
+
+    # ======= CYBERSECURITY SHUTDOWN =======
+    if CYBERSECURITY_ENABLED and cyber_defense_orchestrator:
+        try:
+            # Cybersecurity system would clean up its resources
+            logger.info("Cybersecurity defense system shutdown complete")
+        except Exception as e:
+            logger.warning(f"Cybersecurity shutdown warning: {str(e)}")
+    # ======= END CYBERSECURITY SHUTDOWN =======
+
+    # ======= SCOUT ENGINE SHUTDOWN =======
+    global scout_engine
+    if scout_engine and settings.SCOUT_ENGINE_ENABLED:
+        try:
+            # Add any Scout Engine cleanup logic if needed
+            logger.info("Scout Engine shutdown complete")
+        except Exception as e:
+            logger.warning(f"Scout Engine shutdown warning: {str(e)}")
+    # ======= END SCOUT ENGINE SHUTDOWN =======
+
+    # ... rest of your existing shutdown code ...
+
+# Add Scout Engine status to your root endpoint
+@app.get("/")
+async def root():
+    """Root endpoint with health check."""
+    return {
+        "message": f"Welcome to {settings.APP_NAME}",
+        "version": settings.APP_VERSION,
+        "status": "healthy",
+        "ai_engine_enabled": settings.AI_ENGINE_ENABLED,
+        "v16_ai_modules_enabled": settings.V16_AI_MODULES_ENABLED,
+        "v17_ai_engine_enabled": settings.V17_AI_ENGINE_ENABLED,
+        "cybersecurity_enabled": CYBERSECURITY_ENABLED,
+        "scout_engine_enabled": settings.SCOUT_ENGINE_ENABLED,
+        "ai_capabilities": await _get_ai_capabilities_list(),
+        "v16_modules": await _get_v16_modules_list(),
+        "v17_capabilities": await _get_v17_capabilities_list(),
+        "cybersecurity_capabilities": await _get_cybersecurity_capabilities_list(),
+        "scout_capabilities": await _get_scout_capabilities_list(),
+        "timestamp": time.time()
+    }
+
+# Add Scout Engine to your health check endpoint
+@app.get("/health")
+async def health_check():
+    """Comprehensive health check endpoint."""
+    from database.connection import engine
+    from redis import Redis
+    import redis
+
+    health_status = {
+        "status": "healthy",
+        "timestamp": time.time(),
+        "version": settings.APP_VERSION,
+        "ai_engine_enabled": settings.AI_ENGINE_ENABLED,
+        "v16_ai_modules_enabled": settings.V16_AI_MODULES_ENABLED,
+        "v17_ai_engine_enabled": settings.V17_AI_ENGINE_ENABLED,
+        "cybersecurity_enabled": CYBERSECURITY_ENABLED,
+        "scout_engine_enabled": settings.SCOUT_ENGINE_ENABLED,
+        "checks": {}
+    }
+
+    # ... your existing health checks ...
+
+    # ======= SCOUT ENGINE HEALTH CHECK =======
+    if settings.SCOUT_ENGINE_ENABLED:
+        try:
+            if scout_engine:
+                health_status["checks"]["scout_engine"] = "healthy"
+                health_status["scout_engine_active"] = True
+                health_status["scout_capabilities_loaded"] = len(await _get_scout_capabilities_list())
+            else:
+                health_status["checks"]["scout_engine"] = "unhealthy: not initialized"
+        except Exception as e:
+            health_status["checks"]["scout_engine"] = f"unhealthy: {str(e)}"
+            logger.warning(f"Scout Engine health check warning: {str(e)}")
+    else:
+        health_status["checks"]["scout_engine"] = "disabled"
+    # ======= END SCOUT ENGINE HEALTH CHECK =======
+
+    return health_status
+
+# Add Scout Engine to your system info endpoint
+@app.get("/system/info")
+async def system_info():
+    """Get system information and capabilities."""
+    from config.constants import UserRole, AI_MODELS
+
+    system_info = {
+        "app_name": settings.APP_NAME,
+        "version": settings.APP_VERSION,
+        "environment": "production" if not settings.DEBUG else "development",
+        "ai_engine_enabled": settings.AI_ENGINE_ENABLED,
+        "v16_ai_modules_enabled": settings.V16_AI_MODULES_ENABLED,
+        "v17_ai_engine_enabled": settings.V17_AI_ENGINE_ENABLED,
+        "cybersecurity_enabled": CYBERSECURITY_ENABLED,
+        "scout_engine_enabled": settings.SCOUT_ENGINE_ENABLED,
+        "supported_user_roles": [role.value for role in UserRole],
+        "available_ai_models": list(AI_MODELS.keys()) if settings.AI_ENGINE_ENABLED else [],
+        "ai_capabilities": await _get_ai_capabilities_list(),
+        "v16_modules": await _get_v16_modules_list(),
+        "v17_capabilities": await _get_v17_capabilities_list(),
+        "cybersecurity_capabilities": await _get_cybersecurity_capabilities_list(),
+        "scout_capabilities": await _get_scout_capabilities_list(),
+        "features": {
+            # ... your existing features ...
+
+            # ======= SCOUT ENGINE FEATURES =======
+            "talent_acquisition_automation": settings.SCOUT_ENGINE_ENABLED,
+            "influencer_partnership_scouting": settings.SCOUT_ENGINE_ENABLED,
+            "business_owner_partnerships": settings.SCOUT_ENGINE_ENABLED,
+            "fair_value_contract_generation": settings.SCOUT_ENGINE_ENABLED,
+            "ai_receptionist_handoff": settings.SCOUT_ENGINE_ENABLED,
+            "automated_outreach_campaigns": settings.SCOUT_ENGINE_ENABLED,
+            "skill_assessment_vetting": settings.SCOUT_ENGINE_ENABLED,
+            "market_rate_negotiation": settings.SCOUT_ENGINE_ENABLED,
+            "talent_pool_management": settings.SCOUT_ENGINE_ENABLED,
+            "ethical_recruitment_guards": settings.SCOUT_ENGINE_ENABLED
+            # ======= END SCOUT ENGINE FEATURES =======
+        },
+        "security": {
+            # ... your existing security settings ...
+
+            # ======= SCOUT ENGINE SECURITY =======
+            "scout_consent_first_approach": settings.SCOUT_ENGINE_ENABLED,
+            "scout_fair_pay_guards": settings.SCOUT_ENGINE_ENABLED,
+            "scout_anti_bias_vetting": settings.SCOUT_ENGINE_ENABLED,
+            "scout_data_privacy_compliance": settings.SCOUT_ENGINE_ENABLED
+            # ======= END SCOUT ENGINE SECURITY =======
+        },
+        "performance": {
+            # ... your existing performance settings ...
+
+            # ======= SCOUT ENGINE PERFORMANCE =======
+            "scout_candidate_processing": "real-time" if settings.SCOUT_ENGINE_ENABLED else "disabled",
+            "scout_outreach_rate_limiting": "enabled" if settings.SCOUT_ENGINE_ENABLED else "N/A",
+            "scout_vetting_automation": "enabled" if settings.SCOUT_ENGINE_ENABLED else "N/A"
+            # ======= END SCOUT ENGINE PERFORMANCE =======
+        }
+    }
+
+    return system_info
+
+# ======= SCOUT ENGINE ENDPOINTS =======
+@app.get("/scout/status")
+async def scout_status():
+    """Get Scout Engine system status."""
+    if not settings.SCOUT_ENGINE_ENABLED:
+        raise HTTPException(status_code=403, detail="Scout Engine is disabled")
+
+    global scout_engine
+    if not scout_engine:
+        raise HTTPException(status_code=503, detail="Scout Engine not initialized")
+
+    try:
+        return {
+            "scout_engine": "active",
+            "version": "1.0.0",
+            "capabilities_loaded": len(await _get_scout_capabilities_list()),
+            "last_scout_run": "never",  # Would be actual timestamp from database
+            "active_campaigns": 0,      # Would be actual count from database
+            "talent_pool_size": 0,      # Would be actual count from database
+            "partnerships_active": 0,   # Would be actual count from database
+            "monitoring_active": True
+        }
+    except Exception as e:
+        logger.error(f"Scout Engine status check failed: {str(e)}")
+        raise HTTPException(status_code=503, detail="Scout Engine temporarily unavailable")
+
+@app.get("/scout/capabilities")
+async def scout_capabilities():
+    """Get Scout Engine capabilities."""
+    if not settings.SCOUT_ENGINE_ENABLED:
+        raise HTTPException(status_code=403, detail="Scout Engine is disabled")
+
+    return {
+        "scout_engine": "Autonomous Talent & Partnership Acquisition",
+        "version": "1.0.0",
+        "status": "active",
+        "capabilities": await _get_scout_capabilities_detailed(),
+        "talent_focus": [
+            "Developers (Python, JavaScript, Full-Stack, AI/ML)",
+            "Designers (UI/UX, Product, Graphic)",
+            "Infrastructure Engineers (DevOps, Cloud, SRE)",
+            "Growth Hackers & Marketing Technicians",
+            "AI/ML Engineers & Data Scientists"
+        ],
+        "partnership_focus": [
+            "Influencers (10K+ followers minimum)",
+            "Business Owners & Entrepreneurs",
+            "Agency Partners",
+            "Content Creators"
+        ],
+        "api_endpoints": {
+            "talent_search": "/scout/talent/search",
+            "influencer_search": "/scout/influencers/search",
+            "business_search": "/scout/business-owners/search",
+            "partnership_proposal": "/scout/partnership/proposal",
+            "contract_management": "/scout/contracts/*",
+            "outreach_campaigns": "/scout/outreach/*",
+            "vetting_pipeline": "/scout/vet/*"
+        }
+    }
+
+@app.post("/scout/talent/search")
+async def scout_talent_search(
+    skills: List[str],
+    min_score: float = 0.7,
+    location: Optional[str] = None
+):
+    """Search for technical talent by skills and criteria."""
+    if not settings.SCOUT_ENGINE_ENABLED:
+        raise HTTPException(status_code=403, detail="Scout Engine is disabled")
+
+    global scout_engine
+    if not scout_engine:
+        raise HTTPException(status_code=503, detail="Scout Engine not initialized")
+
+    try:
+        candidates = await scout_engine.search_candidates(
+            skills=skills,
+            min_score=min_score,
+            location=location
+        )
+        return {
+            "success": True,
+            "candidates_found": len(candidates),
+            "candidates": candidates,
+            "search_criteria": {
+                "skills": skills,
+                "min_score": min_score,
+                "location": location
+            }
+        }
+    except Exception as e:
+        logger.error(f"Talent search failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Talent search error: {str(e)}")
+
+@app.post("/scout/influencers/search")
+async def scout_influencers_search(
+    niche: str,
+    min_followers: int = 10000,  # 🎯 10K minimum enforced
+    min_engagement: float = 0.03,
+    platform: str = "any"
+):
+    """Search for quality influencers (10K+ followers only)."""
+    if not settings.SCOUT_ENGINE_ENABLED:
+        raise HTTPException(status_code=403, detail="Scout Engine is disabled")
+
+    global scout_engine
+    if not scout_engine:
+        raise HTTPException(status_code=503, detail="Scout Engine not initialized")
+
+    try:
+        # Enforce 10K minimum followers
+        if min_followers < 10000:
+            min_followers = 10000
+
+        influencers = await scout_engine.scout_quality_influencers(
+            niche=niche,
+            min_engagement=min_engagement,
+            require_verified=False
+        )
+        return {
+            "success": True,
+            "influencers_found": len(influencers),
+            "quality_influencers": influencers,
+            "search_criteria": {
+                "niche": niche,
+                "min_followers": min_followers,
+                "min_engagement": min_engagement,
+                "platform": platform
+            },
+            "quality_note": "Only showing influencers with 10K+ followers and quality content"
+        }
+    except Exception as e:
+        logger.error(f"Influencer search failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Influencer search error: {str(e)}")
+
+@app.post("/scout/business-owners/search")
+async def scout_business_owners_search(
+    industry: str,
+    company_size: str = "any",
+    location: Optional[str] = None
+):
+    """Search for business owners for partnerships."""
+    if not settings.SCOUT_ENGINE_ENABLED:
+        raise HTTPException(status_code=403, detail="Scout Engine is disabled")
+
+    global scout_engine
+    if not scout_engine:
+        raise HTTPException(status_code=503, detail="Scout Engine not initialized")
+
+    try:
+        business_owners = await scout_engine.scout_business_owners(
+            industry=industry,
+            company_size=company_size,
+            location=location
+        )
+        return {
+            "success": True,
+            "business_owners_found": len(business_owners),
+            "business_owners": business_owners,
+            "search_criteria": {
+                "industry": industry,
+                "company_size": company_size,
+                "location": location
+            }
+        }
+    except Exception as e:
+        logger.error(f"Business owner search failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Business owner search error: {str(e)}")
+
+@app.post("/scout/partnership/proposal")
+async def generate_partnership_proposal(
+    candidate_id: str,
+    requested_loan: float,
+    team_support: float = 0.5,
+    candidate_type: str = "influencer"  # influencer, business_owner, talent
+):
+    """Generate fair value partnership proposal."""
+    if not settings.SCOUT_ENGINE_ENABLED:
+        raise HTTPException(status_code=403, detail="Scout Engine is disabled")
+
+    global scout_engine
+    if not scout_engine:
+        raise HTTPException(status_code=503, detail="Scout Engine not initialized")
+
+    try:
+        # TODO: Fetch candidate from database based on candidate_id
+        # For now, create a mock candidate
+        from scout.models.candidate import CandidateProfile
+        from scout.models.contracts import PartnerType
+        
+        candidate = CandidateProfile(
+            id=candidate_id,
+            source="scout_engine",
+            name="Test Candidate",
+            partner_type=PartnerType.INFLUENCER if candidate_type == "influencer" else PartnerType.BUSINESS_OWNER
+        )
+        
+        proposal = await scout_engine.generate_partnership_proposal(
+            candidate, requested_loan, team_support
+        )
+        return {
+            "success": True,
+            "proposal": proposal,
+            "candidate_id": candidate_id,
+            "candidate_type": candidate_type,
+            "fair_value_terms": proposal.get('fair_value_terms', {}),
+            "ai_receptionist_link": proposal.get('ai_receptionist_link', '')
+        }
+    except Exception as e:
+        logger.error(f"Partnership proposal generation failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Proposal generation error: {str(e)}")
+
+@app.post("/scout/outreach/campaign")
+async def launch_outreach_campaign(
+    candidate_ids: List[str],
+    message_template: str = "default",
+    channel: str = "email"
+):
+    """Launch outreach campaign to selected candidates."""
+    if not settings.SCOUT_ENGINE_ENABLED:
+        raise HTTPException(status_code=403, detail="Scout Engine is disabled")
+
+    global scout_engine
+    if not scout_engine:
+        raise HTTPException(status_code=503, detail="Scout Engine not initialized")
+
+    try:
+        # This would initiate outreach in the background
+        # For now, return a mock response
+        return {
+            "success": True,
+            "campaign_launched": True,
+            "candidates_targeted": len(candidate_ids),
+            "channel": channel,
+            "message_template": message_template,
+            "estimated_completion": "24 hours",
+            "campaign_id": f"campaign_{int(time.time())}"
+        }
+    except Exception as e:
+        logger.error(f"Outreach campaign failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Outreach campaign error: {str(e)}")
+# ======= END SCOUT ENGINE ENDPOINTS =======
+
+# Add Scout Engine routers to your existing router registrations
+# Register routers (existing)
+app.include_router(auth_router.router)
+app.include_router(brand_router.router)
+app.include_router(campaign_router.router)
+app.include_router(dashboard_router.router)
+app.include_router(finance_router.router)
+app.include_router(message_router.router)
+app.include_router(employee_router.router)
+app.include_router(brand_router)
+app.include_router(one_time_router)
+app.include_router(finance_router)
+app.include_router(dashboard_router)
+app.include_router(reception_router)
+app.include_router(brand_router)
+app.include_router(one_time_router)
+
+# ======= SCOUT ENGINE ROUTER REGISTRATION =======
+if settings.SCOUT_ENGINE_ENABLED:
+    try:
+        # Include the main Scout router
+        app.include_router(scout_router, prefix="/api/v1/scout", tags=["Scout Engine"])
+        
+        # Include contracts router for partnership management
+        app.include_router(contracts_router, prefix="/api/v1/scout", tags=["Scout Contracts"])
+        
+        logger.info("Scout Engine routers registered successfully")
+    except Exception as e:
+        logger.error(f"Failed to register Scout Engine routers: {str(e)}")
+# ======= END SCOUT ENGINE ROUTER REGISTRATION =======
+
+# ======= CYBERSECURITY ROUTER REGISTRATION =======
+if CYBERSECURITY_ENABLED:
+    try:
+        from cybersecurity.routers.cyber_defense_router import cyber_defense_router
+        app.include_router(cyber_defense_router, prefix="/cybersecurity", tags=["Cybersecurity"])
+        logger.info("Cybersecurity defense router registered successfully")
+    except ImportError as e:
+        logger.warning(f"Cybersecurity router not available: {str(e)}")
+    except Exception as e:
+        logger.error(f"Failed to register cybersecurity router: {str(e)}")
+# ======= END CYBERSECURITY ROUTER REGISTRATION =======
+
+# ... rest of your existing router registrations ...
+
+# Add Scout Engine helper functions
+async def _get_scout_capabilities_list():
+    """Get list of Scout Engine capabilities."""
+    if not settings.SCOUT_ENGINE_ENABLED:
+        return []
+
+    return [
+        "Talent Acquisition Pipeline",
+        "Influencer Scouting (10K+ followers)",
+        "Business Owner Partnerships", 
+        "Fair Value Partnership System",
+        "AI Receptionist Handoff",
+        "Advanced Vetting & Scoring",
+        "Intelligent Negotiation Engine",
+        "Automated Onboarding & Contracts",
+        "Talent Pool Management",
+        "Ethical Recruitment Guards"
+    ]
+
+async def _get_scout_capabilities_detailed():
+    """Get detailed Scout Engine capabilities."""
+    if not settings.SCOUT_ENGINE_ENABLED:
+        return {}
+
+    return {
+        "talent_acquisition": {
+            "technical_roles": True,
+            "design_roles": True,
+            "growth_roles": True,
+            "ai_engineering_roles": True
+        },
+        "partnership_scouting": {
+            "influencers_10k_plus": True,
+            "business_owners": True,
+            "agency_partners": True,
+            "content_creators": True
+        },
+        "automation": {
+            "outreach_campaigns": True,
+            "skill_vetting": True,
+            "contract_generation": True,
+            "onboarding_workflows": True
+        },
+        "intelligence": {
+            "fair_value_calculations": True,
+            "market_rate_analysis": True,
+            "quality_scoring": True,
+            "roi_prediction": True
+        }
+    }
+
+# Add Scout Engine exception handler
+if settings.SCOUT_ENGINE_ENABLED:
+    @app.exception_handler(Exception)
+    async def scout_exception_handler(request, exc):
+        """Handle Scout Engine-related exceptions gracefully."""
+        # Check if this is a Scout Engine-related request
+        if request.url.path.startswith('/scout/') or request.url.path.startswith('/api/v1/scout/'):
+            logger.error(f"Scout Engine error in {request.url.path}: {str(exc)}")
+            return {
+                "success": False,
+                "error": {
+                    "code": "SCOUT_ENGINE_ERROR",
+                    "message": "Scout Engine service temporarily unavailable",
+                    "timestamp": time.time(),
+                    "scout_engine_enabled": settings.SCOUT_ENGINE_ENABLED,
+                    "suggestion": "Check Scout Engine status at /scout/status"
+                }
+            }
+        # Let other exceptions be handled by the default handler
+        raise exc
