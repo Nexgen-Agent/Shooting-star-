@@ -209,3 +209,48 @@ class PrivateLedger:
             "current_hash": entry.current_hash,
             "signature": entry.signature
         }
+
+"""
+Private Ledger - Updated with Auto-Action Recording
+Enhanced to record AI auto-actions with model metadata and signatures.
+"""
+
+class PrivateLedger:
+    """Enhanced private ledger with auto-action recording."""
+    
+    async def record_auto_action(self, decision_id: str, model_version: str,
+                               predicted_action: str, confidence: float,
+                               evidence: Dict, ai_signature: str) -> str:
+        """
+        Record AI auto-action in the private ledger.
+        """
+        try:
+            entry_id = f"auto_action_{decision_id}"
+            
+            ledger_data = {
+                "decision_id": decision_id,
+                "model_version": model_version,
+                "predicted_action": predicted_action,
+                "confidence": confidence,
+                "evidence": evidence,
+                "ai_signature": ai_signature,
+                "timestamp": self._current_timestamp()
+            }
+            
+            # Log to ledger chain
+            await self.log_innovation_event(
+                event_type="ai_auto_action",
+                proposal_id=decision_id,
+                actor="auto_delegate",
+                metadata=ledger_data
+            )
+            
+            logger.info(f"Auto action recorded for decision {decision_id}")
+            
+            return entry_id
+            
+        except Exception as e:
+            logger.error(f"Auto action recording failed: {e}")
+            raise
+    
+    # ... rest of existing private ledger implementation ...
