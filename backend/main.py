@@ -4,16 +4,12 @@ Enhanced with 15 new AI modules for comprehensive intelligence.
 INTEGRATED WITH CHAMELEON CYBER DEFENSE SYSTEM - DEFENSIVE ONLY
 INTEGRATED WITH UNSTOPPABLE MISSION DIRECTOR - 20-YEAR AUTONOMOUS MISSION
 INTEGRATED WITH DAILY MISSION CONTROLLER - DAILY EXECUTION SYSTEM
+INTEGRATED WITH AI CEO DOMINION PROTOCOL - AUTONOMOUS EXECUTIVE GOVERNANCE
+INTEGRATED WITH AI SOCIAL MEDIA MANAGER - AUTONOMOUS SOCIAL MEDIA MANAGEMENT
 """
-from routers.reception_router import router 
+from routers.reception_router import router as reception_router
 from routers.finance_router import router as finance_router
 from routers.dashboard_router import router as dashboard_router
-# Add background task for periodic growth cycles (optional)
-@app.on_event("startup")
-async def startup_event():
-    # Initialize financial system
-    # Schedule periodic growth cycles
-    pass
 from routers.brand_management_router import router as brand_router
 from routers.one_time_router import router as one_time_router
 from fastapi import FastAPI, Depends, HTTPException
@@ -34,19 +30,6 @@ from routers import (
     message_router, 
     employee_router
 )
-
-# ======= AI CEO & SOCIAL MANAGER IMPORT =======
-try:
-    from ai.ai_ceo_dominion import DominionAI_CEO
-    from ai.social_manager.social_manager_core import SocialManagerCore
-    from services.social_media_service import SocialMediaService
-    from routers.social_router import router as social_router
-    from routers.ceo_router import router as ceo_router
-    AI_CEO_SOCIAL_ENABLED = True
-except ImportError as e:
-    AI_CEO_SOCIAL_ENABLED = False
-    logger.warning(f"AI CEO & Social Manager modules not available: {str(e)}")
-# ======= END AI CEO & SOCIAL MANAGER IMPORT =======
 
 # ======= MISSION SYSTEMS IMPORT =======
 try:
@@ -75,6 +58,20 @@ except Exception as e:
     logger.error(f"Cybersecurity configuration error: {str(e)}")
 # ======= END CYBERSECURITY INTEGRATION =======
 
+# ======= AI CEO & SOCIAL MANAGER IMPORT =======
+try:
+    from ai.ai_ceo_dominion import DominionAI_CEO
+    from ai.ceo_integration_layer import ShootingStarCEOIntegration
+    from ai.social_manager.social_manager_core import SocialManagerCore
+    from services.social_media_service import SocialMediaService
+    from routers.social_router import router as social_router
+    from routers.ceo_router import router as ceo_router
+    AI_CEO_SOCIAL_ENABLED = True
+except ImportError as e:
+    AI_CEO_SOCIAL_ENABLED = False
+    logger.warning(f"AI CEO & Social Manager modules not available: {str(e)}")
+# ======= END AI CEO & SOCIAL MANAGER IMPORT =======
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -85,7 +82,7 @@ logger = logging.getLogger("shooting_star")
 # Create FastAPI application
 app = FastAPI(
     title=settings.APP_NAME,
-    description="Shooting Star V17 AI Engine - Enterprise Scalable AI Platform with Advanced Intelligence + V16 AI Modules + INTEGRATED CYBERSECURITY + UNSTOPPABLE MISSION DIRECTOR + DAILY MISSION CONTROLLER",
+    description="Shooting Star V17 AI Engine - Enterprise Scalable AI Platform with Advanced Intelligence + V16 AI Modules + INTEGRATED CYBERSECURITY + UNSTOPPABLE MISSION DIRECTOR + DAILY MISSION CONTROLLER + AI CEO DOMINION PROTOCOL + AI SOCIAL MEDIA MANAGER",
     version=settings.APP_VERSION,
     docs_url="/docs",
     redoc_url="/redoc",
@@ -106,12 +103,6 @@ app.add_middleware(
     allowed_hosts=["*"]  # In production, specify actual hosts
 )
 
-# ======= AI CEO & SOCIAL MANAGER GLOBAL INSTANCES =======
-ai_ceo = None
-social_manager = None
-social_media_service = None
-# ======= END AI CEO & SOCIAL MANAGER GLOBAL INSTANCES =======
-
 # Global AI Engine instances
 v17_ai_engine = None
 v16_ai_engine = None
@@ -125,6 +116,13 @@ daily_controller = None
 # ======= CYBERSECURITY GLOBAL INSTANCE =======
 cyber_defense_orchestrator = None
 # ======= END CYBERSECURITY GLOBAL INSTANCE =======
+
+# ======= AI CEO & SOCIAL MANAGER GLOBAL INSTANCES =======
+ai_ceo = None
+ceo_integration = None
+social_manager = None
+social_media_service = None
+# ======= END AI CEO & SOCIAL MANAGER GLOBAL INSTANCES =======
 
 # Add startup and shutdown events
 @app.on_event("startup")
@@ -141,6 +139,11 @@ async def startup_event():
         if CYBERSECURITY_ENABLED:
             await _initialize_cybersecurity_system()
         # ======= END CYBERSECURITY INITIALIZATION =======
+
+        # ======= AI CEO & SOCIAL MANAGER INITIALIZATION =======
+        if settings.AI_CEO_ENABLED or settings.SOCIAL_MANAGER_ENABLED:
+            await _initialize_ai_ceo_and_social_manager()
+        # ======= END AI CEO & SOCIAL MANAGER INITIALIZATION =======
 
         # Initialize V16 AI modules (existing functionality)
         if settings.AI_ENGINE_ENABLED:
@@ -182,92 +185,21 @@ async def startup_event():
         logger.info(f"Scout Engine Status: {'ENABLED' if settings.SCOUT_ENGINE_ENABLED else 'DISABLED'}")
         logger.info(f"Unstoppable Mission Status: {'ENABLED' if settings.UNSTOPPABLE_MISSION_ENABLED else 'DISABLED'}")
         logger.info(f"Daily Mission Controller Status: {'ENABLED' if settings.DAILY_MISSION_CONTROLLER_ENABLED else 'DISABLED'}")
+        logger.info(f"AI CEO Status: {'ENABLED' if settings.AI_CEO_ENABLED else 'DISABLED'}")
+        logger.info(f"Social Manager Status: {'ENABLED' if settings.SOCIAL_MANAGER_ENABLED else 'DISABLED'}")
 
     except Exception as e:
         logger.error(f"Startup error: {str(e)}")
         raise
 
-# ======= UNSTOPPABLE MISSION INITIALIZATION FUNCTION =======
-async def _initialize_unstoppable_mission():
-    """Initialize the Unstoppable 20-Year Mission Director"""
-    global mission_director
-
-    try:
-        from mission_director import UnstoppableMissionDirector
-        
-        mission_director = UnstoppableMissionDirector()
-        
-        # Start unstoppable mission in background
-        import asyncio
-        asyncio.create_task(mission_director.activate_unstoppable_mission())
-        
-        logger.info("🌌 UNSTOPPABLE 20-YEAR MISSION DIRECTOR INITIALIZED")
-        logger.info("🎯 MISSION: Achieve $7.8T valuation while making global economy thrive")
-        
-        mission_capabilities = [
-            "Exponential AI Self-Evolution Engine",
-            "20-Year Detailed Economic Blueprint", 
-            "Unstoppable Execution Protocol",
-            "Global Economic Impact Optimization",
-            "Civilization-Scale Infrastructure Planning",
-            "Post-Scarcity Economic Design",
-            "Emergency Recovery Systems",
-            "Infinite Growth Trajectory"
-        ]
-
-        for capability in mission_capabilities:
-            logger.info(f"  ⚡ {capability}")
-
-    except Exception as e:
-        logger.error(f"Unstoppable Mission Director initialization failed: {str(e)}")
-# ======= END UNSTOPPABLE MISSION INITIALIZATION FUNCTION =======
-
-# ======= DAILY MISSION CONTROLLER INITIALIZATION FUNCTION =======
-async def _initialize_daily_mission_controller():
-    """Initialize the Daily Mission Controller"""
-    global daily_controller, mission_director
-
-    try:
-        if mission_director:
-            from daily_mission_controller import DailyMissionController
-            daily_controller = DailyMissionController(mission_director)
-            
-            # Start daily execution cycle
-            import asyncio
-            asyncio.create_task(daily_controller.execute_daily_mission_cycle())
-            
-            logger.info("🗓️ DAILY MISSION CONTROLLER INITIALIZED")
-            logger.info("🎯 Mission: Execute daily tasks to achieve 20-year blueprint")
-            
-            daily_capabilities = [
-                "Daily Task Generation & Optimization",
-                "AI Module Task Delegation", 
-                "Real-time Progress Tracking",
-                "Dynamic Schedule Adjustment",
-                "Resource Allocation Optimization",
-                "Bottleneck Identification & Resolution",
-                "Mission Alignment Verification",
-                "Next-Day Preparation & Planning"
-            ]
-
-            for capability in daily_capabilities:
-                logger.info(f"  ⚡ {capability}")
-
-    except Exception as e:
-        logger.error(f"Daily Mission Controller initialization failed: {str(e)}")
-# ======= END DAILY MISSION CONTROLLER INITIALIZATION FUNCTION =======
-
 # ======= AI CEO & SOCIAL MANAGER INITIALIZATION FUNCTION =======
 async def _initialize_ai_ceo_and_social_manager():
     """Initialize AI CEO Dominion Protocol and Social Media Manager"""
-    global ai_ceo, social_manager, social_media_service
+    global ai_ceo, ceo_integration, social_manager, social_media_service
 
     try:
         # Initialize AI CEO
         if settings.AI_CEO_ENABLED:
-            from ai.ai_ceo_dominion import DominionAI_CEO
-            from ai.ceo_integration_layer import ShootingStarCEOIntegration
-            
             ai_ceo = DominionAI_CEO()
             ceo_integration = ShootingStarCEOIntegration()
             
@@ -290,9 +222,6 @@ async def _initialize_ai_ceo_and_social_manager():
 
         # Initialize Social Media Manager
         if settings.SOCIAL_MANAGER_ENABLED:
-            from ai.social_manager.social_manager_core import SocialManagerCore
-            from services.social_media_service import SocialMediaService
-            
             # Create social manager with CEO integration
             social_manager = SocialManagerCore(ceo_integration if settings.AI_CEO_ENABLED else None)
             social_media_service = SocialMediaService(ceo_integration if settings.AI_CEO_ENABLED else None)
@@ -321,29 +250,98 @@ async def _initialize_ai_ceo_and_social_manager():
 
     except Exception as e:
         logger.error(f"AI CEO & Social Manager initialization failed: {str(e)}")
-        # Don't raise - these systems shouldn't break the whole app
 # ======= END AI CEO & SOCIAL MANAGER INITIALIZATION FUNCTION =======
+
+# ======= UNSTOPPABLE MISSION INITIALIZATION FUNCTION =======
+async def _initialize_unstoppable_mission():
+    """Initialize the Unstoppable 20-Year Mission Director"""
+    global mission_director
+
+    try:
+        from mission_director import UnstoppableMissionDirector
+
+        mission_director = UnstoppableMissionDirector()
+
+        # Start unstoppable mission in background
+        import asyncio
+        asyncio.create_task(mission_director.activate_unstoppable_mission())
+
+        logger.info("🌌 UNSTOPPABLE 20-YEAR MISSION DIRECTOR INITIALIZED")
+        logger.info("🎯 MISSION: Achieve $7.8T valuation while making global economy thrive")
+
+        mission_capabilities = [
+            "Exponential AI Self-Evolution Engine",
+            "20-Year Detailed Economic Blueprint", 
+            "Unstoppable Execution Protocol",
+            "Global Economic Impact Optimization",
+            "Civilization-Scale Infrastructure Planning",
+            "Post-Scarcity Economic Design",
+            "Emergency Recovery Systems",
+            "Infinite Growth Trajectory"
+        ]
+
+        for capability in mission_capabilities:
+            logger.info(f"  ⚡ {capability}")
+
+    except Exception as e:
+        logger.error(f"Unstoppable Mission Director initialization failed: {str(e)}")
+# ======= END UNSTOPPABLE MISSION INITIALIZATION FUNCTION =======
+
+# ======= DAILY MISSION CONTROLLER INITIALIZATION FUNCTION =======
+async def _initialize_daily_mission_controller():
+    """Initialize the Daily Mission Controller"""
+    global daily_controller, mission_director
+
+    try:
+        if mission_director:
+            from daily_mission_controller import DailyMissionController
+            daily_controller = DailyMissionController(mission_director)
+
+            # Start daily execution cycle
+            import asyncio
+            asyncio.create_task(daily_controller.execute_daily_mission_cycle())
+
+            logger.info("🗓️ DAILY MISSION CONTROLLER INITIALIZED")
+            logger.info("🎯 Mission: Execute daily tasks to achieve 20-year blueprint")
+
+            daily_capabilities = [
+                "Daily Task Generation & Optimization",
+                "AI Module Task Delegation", 
+                "Real-time Progress Tracking",
+                "Dynamic Schedule Adjustment",
+                "Resource Allocation Optimization",
+                "Bottleneck Identification & Resolution",
+                "Mission Alignment Verification",
+                "Next-Day Preparation & Planning"
+            ]
+
+            for capability in daily_capabilities:
+                logger.info(f"  ⚡ {capability}")
+
+    except Exception as e:
+        logger.error(f"Daily Mission Controller initialization failed: {str(e)}")
+# ======= END DAILY MISSION CONTROLLER INITIALIZATION FUNCTION =======
 
 # ======= CYBERSECURITY INITIALIZATION FUNCTION =======
 async def _initialize_cybersecurity_system():
     """Initialize the cybersecurity defense system."""
     global cyber_defense_orchestrator
-    
+
     try:
         from cybersecurity.core.adaptive_defense_orchestrator import AdaptiveDefenseOrchestrator
         from cybersecurity.sensors.telemetry_ingest import TelemetryIngest
         from cybersecurity.edge.edge_protector import EdgeProtector
         from cybersecurity.auth.identity_manager import IdentityManager
-        
+
         # Initialize the main cybersecurity orchestrator
         cyber_defense_orchestrator = AdaptiveDefenseOrchestrator()
-        
+
         # Start continuous defense monitoring (in background)
         import asyncio
         asyncio.create_task(cyber_defense_orchestrator.start_continuous_defense())
-        
+
         logger.info("✅ Cybersecurity Defense System initialized successfully")
-        
+
         # Log cybersecurity capabilities
         cyber_capabilities = [
             "Real-time Threat Detection & Response",
@@ -355,10 +353,10 @@ async def _initialize_cybersecurity_system():
             "Automated Incident Response",
             "Continuous Security Validation"
         ]
-        
+
         for capability in cyber_capabilities:
             logger.info(f"🛡️  Cyber: {capability}")
-            
+
     except Exception as e:
         logger.error(f"Cybersecurity system initialization failed: {str(e)}")
         # Don't raise exception - cybersecurity failure shouldn't break the whole app
@@ -576,19 +574,20 @@ async def shutdown_event():
     """Cleanup on application shutdown."""
     logger.info("Shutting down Shooting Star AI Engines...")
 
-# ======= AI CEO & SOCIAL MANAGER SHUTDOWN =======
-if settings.AI_CEO_ENABLED and ai_ceo:
-    try:
-        logger.info("AI CEO Dominion Protocol shutdown complete")
-    except Exception as e:
-        logger.warning(f"AI CEO shutdown warning: {str(e)}")
+    # ======= AI CEO & SOCIAL MANAGER SHUTDOWN =======
+    if settings.AI_CEO_ENABLED and ai_ceo:
+        try:
+            logger.info("AI CEO Dominion Protocol shutdown complete")
+        except Exception as e:
+            logger.warning(f"AI CEO shutdown warning: {str(e)}")
 
-if settings.SOCIAL_MANAGER_ENABLED and social_media_service:
-    try:
-        logger.info("AI Social Media Manager shutdown complete")
-    except Exception as e:
-        logger.warning(f"Social Manager shutdown warning: {str(e)}")
-# ======= END AI CEO & SOCIAL MANAGER SHUTDOWN =======
+    if settings.SOCIAL_MANAGER_ENABLED and social_media_service:
+        try:
+            logger.info("AI Social Media Manager shutdown complete")
+        except Exception as e:
+            logger.warning(f"Social Manager shutdown warning: {str(e)}")
+    # ======= END AI CEO & SOCIAL MANAGER SHUTDOWN =======
+
     # ======= CYBERSECURITY SHUTDOWN =======
     if CYBERSECURITY_ENABLED and cyber_defense_orchestrator:
         try:
@@ -695,12 +694,16 @@ async def root():
         "scout_engine_enabled": settings.SCOUT_ENGINE_ENABLED,
         "unstoppable_mission_enabled": settings.UNSTOPPABLE_MISSION_ENABLED,
         "daily_mission_controller_enabled": settings.DAILY_MISSION_CONTROLLER_ENABLED,
+        "ai_ceo_enabled": settings.AI_CEO_ENABLED,
+        "social_manager_enabled": settings.SOCIAL_MANAGER_ENABLED,
         "ai_capabilities": await _get_ai_capabilities_list(),
         "v16_modules": await _get_v16_modules_list(),
         "v17_capabilities": await _get_v17_capabilities_list(),
         "cybersecurity_capabilities": await _get_cybersecurity_capabilities_list(),
         "scout_capabilities": await _get_scout_capabilities_list(),
         "mission_capabilities": await _get_mission_capabilities_list(),
+        "ai_ceo_capabilities": await _get_ai_ceo_capabilities_list(),
+        "social_manager_capabilities": await _get_social_manager_capabilities_list(),
         "timestamp": time.time()
     }
 
@@ -722,6 +725,8 @@ async def health_check():
         "scout_engine_enabled": settings.SCOUT_ENGINE_ENABLED,
         "unstoppable_mission_enabled": settings.UNSTOPPABLE_MISSION_ENABLED,
         "daily_mission_controller_enabled": settings.DAILY_MISSION_CONTROLLER_ENABLED,
+        "ai_ceo_enabled": settings.AI_CEO_ENABLED,
+        "social_manager_enabled": settings.SOCIAL_MANAGER_ENABLED,
         "checks": {}
     }
 
@@ -742,6 +747,39 @@ async def health_check():
     except Exception as e:
         health_status["checks"]["redis"] = f"unhealthy: {str(e)}"
         health_status["status"] = "unhealthy"
+
+    # ======= AI CEO HEALTH CHECK =======
+    if settings.AI_CEO_ENABLED:
+        try:
+            if ai_ceo:
+                health_status["checks"]["ai_ceo"] = "healthy"
+                health_status["ceo_decision_count"] = len(ai_ceo.decision_history)
+                health_status["ceo_learning_cycles"] = ai_ceo.learning_cycles
+            else:
+                health_status["checks"]["ai_ceo"] = "unhealthy: not initialized"
+        except Exception as e:
+            health_status["checks"]["ai_ceo"] = f"unhealthy: {str(e)}"
+            logger.warning(f"AI CEO health check warning: {str(e)}")
+    else:
+        health_status["checks"]["ai_ceo"] = "disabled"
+    # ======= END AI CEO HEALTH CHECK =======
+
+    # ======= SOCIAL MANAGER HEALTH CHECK =======
+    if settings.SOCIAL_MANAGER_ENABLED:
+        try:
+            if social_media_service:
+                social_status = await social_media_service.get_system_status()
+                health_status["checks"]["social_manager"] = social_status["status"]
+                health_status["active_social_campaigns"] = social_status["active_campaigns"]
+                health_status["active_story_arcs"] = social_status["active_story_arcs"]
+            else:
+                health_status["checks"]["social_manager"] = "unhealthy: not initialized"
+        except Exception as e:
+            health_status["checks"]["social_manager"] = f"unhealthy: {str(e)}"
+            logger.warning(f"Social Manager health check warning: {str(e)}")
+    else:
+        health_status["checks"]["social_manager"] = "disabled"
+    # ======= END SOCIAL MANAGER HEALTH CHECK =======
 
     # ======= CYBERSECURITY HEALTH CHECK =======
     if CYBERSECURITY_ENABLED:
@@ -859,6 +897,139 @@ async def health_check():
 
     return health_status
 
+# ======= AI CEO ENDPOINTS =======
+@app.get("/api/v1/ceo/health")
+async def ceo_health():
+    """Get AI CEO system health."""
+    if not settings.AI_CEO_ENABLED:
+        raise HTTPException(status_code=403, detail="AI CEO is disabled")
+
+    global ai_ceo
+    if not ai_ceo:
+        raise HTTPException(status_code=503, detail="AI CEO not initialized")
+
+    try:
+        health_report = await ceo_integration.get_system_oversight_report()
+        return {
+            "status": "operational",
+            "ceo_state": ai_ceo.state.value,
+            "learning_cycles": ai_ceo.learning_cycles,
+            "decision_count": len(ai_ceo.decision_history),
+            "system_health": health_report.get("system_health", {}),
+            "timestamp": time.time()
+        }
+    except Exception as e:
+        logger.error(f"CEO health check failed: {e}")
+        raise HTTPException(status_code=503, detail="CEO system temporarily unavailable")
+
+@app.post("/api/v1/ceo/proposal/evaluate")
+async def evaluate_ceo_proposal(proposal: dict):
+    """Submit proposal for AI CEO evaluation."""
+    if not settings.AI_CEO_ENABLED:
+        raise HTTPException(status_code=403, detail="AI CEO is disabled")
+
+    global ceo_integration
+    if not ceo_integration:
+        raise HTTPException(status_code=503, detail="AI CEO not initialized")
+
+    try:
+        result = await ceo_integration.route_proposal_to_ceo(proposal)
+        return {
+            "status": "success",
+            "ceo_analysis": result,
+            "timestamp": time.time()
+        }
+    except Exception as e:
+        logger.error(f"CEO proposal evaluation failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Proposal evaluation error: {str(e)}")
+
+@app.get("/api/v1/ceo/oversight/report")
+async def get_ceo_oversight_report():
+    """Get comprehensive system oversight report from CEO."""
+    if not settings.AI_CEO_ENABLED:
+        raise HTTPException(status_code=403, detail="AI CEO is disabled")
+
+    global ceo_integration
+    if not ceo_integration:
+        raise HTTPException(status_code=503, detail="AI CEO not initialized")
+
+    try:
+        report = await ceo_integration.get_system_oversight_report()
+        return {
+            "status": "success",
+            "oversight_report": report,
+            "timestamp": time.time()
+        }
+    except Exception as e:
+        logger.error(f"CEO oversight report failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Oversight report error: {str(e)}")
+# ======= END AI CEO ENDPOINTS =======
+
+# ======= SOCIAL MANAGER ENDPOINTS =======
+@app.get("/api/v1/social/system-status")
+async def social_system_status():
+    """Get Social Media Manager system status."""
+    if not settings.SOCIAL_MANAGER_ENABLED:
+        raise HTTPException(status_code=403, detail="Social Media Manager is disabled")
+
+    global social_media_service
+    if not social_media_service:
+        raise HTTPException(status_code=503, detail="Social Media Manager not initialized")
+
+    try:
+        status = await social_media_service.get_system_status()
+        return {
+            "status": "success",
+            "system_status": status,
+            "timestamp": time.time()
+        }
+    except Exception as e:
+        logger.error(f"Social system status check failed: {e}")
+        raise HTTPException(status_code=503, detail="Social system temporarily unavailable")
+
+@app.post("/api/v1/social/schedule")
+async def schedule_social_campaign(campaign_data: dict):
+    """Schedule a social media campaign."""
+    if not settings.SOCIAL_MANAGER_ENABLED:
+        raise HTTPException(status_code=403, detail="Social Media Manager is disabled")
+
+    global social_media_service
+    if not social_media_service:
+        raise HTTPException(status_code=503, detail="Social Media Manager not initialized")
+
+    try:
+        result = await social_media_service.schedule_campaign(campaign_data)
+        return {
+            "status": "success",
+            "campaign_result": result,
+            "timestamp": time.time()
+        }
+    except Exception as e:
+        logger.error(f"Social campaign scheduling failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Campaign scheduling error: {str(e)}")
+
+@app.post("/api/v1/social/start-arc")
+async def start_social_story_arc(arc_data: dict):
+    """Start a controlled narrative arc."""
+    if not settings.SOCIAL_MANAGER_ENABLED:
+        raise HTTPException(status_code=403, detail="Social Media Manager is disabled")
+
+    global social_media_service
+    if not social_media_service:
+        raise HTTPException(status_code=503, detail="Social Media Manager not initialized")
+
+    try:
+        result = await social_media_service.start_story_arc(arc_data)
+        return {
+            "status": "success",
+            "arc_result": result,
+            "timestamp": time.time()
+        }
+    except Exception as e:
+        logger.error(f"Story arc start failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Story arc error: {str(e)}")
+# ======= END SOCIAL MANAGER ENDPOINTS =======
+
 # System info endpoint
 @app.get("/system/info")
 async def system_info():
@@ -876,6 +1047,8 @@ async def system_info():
         "scout_engine_enabled": settings.SCOUT_ENGINE_ENABLED,
         "unstoppable_mission_enabled": settings.UNSTOPPABLE_MISSION_ENABLED,
         "daily_mission_controller_enabled": settings.DAILY_MISSION_CONTROLLER_ENABLED,
+        "ai_ceo_enabled": settings.AI_CEO_ENABLED,
+        "social_manager_enabled": settings.SOCIAL_MANAGER_ENABLED,
         "supported_user_roles": [role.value for role in UserRole],
         "available_ai_models": list(AI_MODELS.keys()) if settings.AI_ENGINE_ENABLED else [],
         "ai_capabilities": await _get_ai_capabilities_list(),
@@ -884,6 +1057,8 @@ async def system_info():
         "cybersecurity_capabilities": await _get_cybersecurity_capabilities_list(),
         "scout_capabilities": await _get_scout_capabilities_list(),
         "mission_capabilities": await _get_mission_capabilities_list(),
+        "ai_ceo_capabilities": await _get_ai_ceo_capabilities_list(),
+        "social_manager_capabilities": await _get_social_manager_capabilities_list(),
         "features": {
             # Core Platform Features
             "real_time_analytics": settings.ENABLE_REALTIME_ANALYTICS,
@@ -930,6 +1105,24 @@ async def system_info():
             "real_time_continuous_learning": settings.V17_AI_ENGINE_ENABLED,
             "enterprise_scale_deployment": settings.V17_AI_ENGINE_ENABLED,
 
+            # ======= AI CEO FEATURES =======
+            "ai_ceo_autonomous_governance": settings.AI_CEO_ENABLED,
+            "three_pillars_decision_engine": settings.AI_CEO_ENABLED,
+            "cross_department_orchestration": settings.AI_CEO_ENABLED,
+            "founder_approval_workflows": settings.AI_CEO_ENABLED,
+            "strategic_risk_assessment": settings.AI_CEO_ENABLED,
+            "personality_dna_synthesis": settings.AI_CEO_ENABLED,
+
+            # ======= SOCIAL MANAGER FEATURES =======
+            "autonomous_social_management": settings.SOCIAL_MANAGER_ENABLED,
+            "controlled_narrative_arcs": settings.SOCIAL_MANAGER_ENABLED,
+            "multi_platform_auto_posting": settings.SOCIAL_MANAGER_ENABLED,
+            "intelligent_comment_moderation": settings.SOCIAL_MANAGER_ENABLED,
+            "influencer_collaboration_orchestration": settings.SOCIAL_MANAGER_ENABLED,
+            "paid_amplification_optimization": settings.SOCIAL_MANAGER_ENABLED,
+            "crisis_auto_detection_pause": settings.SOCIAL_MANAGER_ENABLED,
+            "social_ceo_approval_required": settings.SOCIAL_CEO_APPROVAL_REQUIRED,
+
             # ======= CYBERSECURITY FEATURES =======
             "adaptive_threat_defense": CYBERSECURITY_ENABLED,
             "real_time_attack_detection": CYBERSECURITY_ENABLED,
@@ -941,7 +1134,6 @@ async def system_info():
             "continuous_security_validation": CYBERSECURITY_ENABLED,
             "law_enforcement_ready_evidence": CYBERSECURITY_ENABLED,
             "self_learning_defense_system": CYBERSECURITY_ENABLED,
-            # ======= END CYBERSECURITY FEATURES =======
 
             # ======= SCOUT ENGINE FEATURES =======
             "talent_acquisition_automation": settings.SCOUT_ENGINE_ENABLED,
@@ -954,7 +1146,6 @@ async def system_info():
             "market_rate_negotiation": settings.SCOUT_ENGINE_ENABLED,
             "talent_pool_management": settings.SCOUT_ENGINE_ENABLED,
             "ethical_recruitment_guards": settings.SCOUT_ENGINE_ENABLED,
-            # ======= END SCOUT ENGINE FEATURES =======
 
             # ======= MISSION SYSTEMS FEATURES =======
             "20_year_autonomous_mission": settings.UNSTOPPABLE_MISSION_ENABLED,
@@ -967,7 +1158,6 @@ async def system_info():
             "real_time_progress_tracking": settings.DAILY_MISSION_CONTROLLER_ENABLED,
             "unstoppable_execution_protocol": settings.UNSTOPPABLE_MISSION_ENABLED,
             "infinite_growth_trajectory": settings.UNSTOPPABLE_MISSION_ENABLED
-            # ======= END MISSION SYSTEMS FEATURES =======
         },
         "security": {
             "human_approval_required": settings.REQUIRE_HUMAN_APPROVAL,
@@ -976,25 +1166,36 @@ async def system_info():
             "v16_ai_governance": settings.V16_AI_MODULES_ENABLED,
             "v17_ai_governance_engine": settings.V17_AI_ENGINE_ENABLED,
             "decision_audit_trails": True,
+
+            # ======= AI CEO SECURITY =======
+            "ceo_ethical_governance": settings.AI_CEO_ENABLED,
+            "founder_override_capability": settings.AI_CEO_ENABLED,
+            "decision_audit_trails": settings.AI_CEO_ENABLED,
+
+            # ======= SOCIAL MANAGER SECURITY =======
+            "social_ceo_approval_required": settings.SOCIAL_CEO_APPROVAL_REQUIRED,
+            "social_crisis_auto_pause": settings.SOCIAL_CRISIS_AUTO_PAUSE,
+            "social_legal_compliance_enforced": settings.SOCIAL_MANAGER_ENABLED,
+            "social_verified_accounts_only": settings.SOCIAL_MANAGER_ENABLED,
+
             # ======= CYBERSECURITY SETTINGS =======
             "cybersecurity_adaptive_defense": CYBERSECURITY_ENABLED,
             "automated_containment": CYBERSECURITY_ENABLED,
             "forensic_preservation": CYBERSECURITY_ENABLED,
             "deception_technologies": CYBERSECURITY_ENABLED,
             "incident_response_automation": CYBERSECURITY_ENABLED,
-            # ======= END CYBERSECURITY SETTINGS =======
+
             # ======= SCOUT ENGINE SECURITY =======
             "scout_consent_first_approach": settings.SCOUT_ENGINE_ENABLED,
             "scout_fair_pay_guards": settings.SCOUT_ENGINE_ENABLED,
             "scout_anti_bias_vetting": settings.SCOUT_ENGINE_ENABLED,
             "scout_data_privacy_compliance": settings.SCOUT_ENGINE_ENABLED,
-            # ======= END SCOUT ENGINE SECURITY =======
+
             # ======= MISSION SYSTEMS SECURITY =======
             "mission_autonomous_execution": settings.UNSTOPPABLE_MISSION_ENABLED,
             "mission_emergency_recovery": settings.UNSTOPPABLE_MISSION_ENABLED,
             "mission_ethical_guardrails": settings.UNSTOPPABLE_MISSION_ENABLED,
             "mission_oversight_required": True
-            # ======= END MISSION SYSTEMS SECURITY =======
         },
         "performance": {
             "ai_prediction_timeout": settings.AI_PREDICTION_TIMEOUT,
@@ -1003,772 +1204,35 @@ async def system_info():
             "v16_semantic_caching": settings.V16_AI_MODULES_ENABLED,
             "v17_horizontal_scaling": settings.V17_AI_ENGINE_ENABLED,
             "v17_predictive_scaling": settings.V17_AI_ENGINE_ENABLED,
+
+            # ======= AI CEO PERFORMANCE =======
+            "ceo_decision_processing": "real-time" if settings.AI_CEO_ENABLED else "disabled",
+            "ceo_learning_cycles": ai_ceo.learning_cycles if ai_ceo else 0,
+
+            # ======= SOCIAL MANAGER PERFORMANCE =======
+            "social_content_processing": "real-time" if settings.SOCIAL_MANAGER_ENABLED else "disabled",
+            "social_crisis_response": "<5s" if settings.SOCIAL_MANAGER_ENABLED else "N/A",
+
             # ======= CYBERSECURITY PERFORMANCE =======
             "cybersecurity_monitoring_interval": "real-time" if CYBERSECURITY_ENABLED else "disabled",
             "threat_detection_latency": "<1s" if CYBERSECURITY_ENABLED else "N/A",
             "automated_response_time": "<5s" if CYBERSECURITY_ENABLED else "N/A",
-            # ======= END CYBERSECURITY PERFORMANCE =======
+
             # ======= SCOUT ENGINE PERFORMANCE =======
             "scout_candidate_processing": "real-time" if settings.SCOUT_ENGINE_ENABLED else "disabled",
             "scout_outreach_rate_limiting": "enabled" if settings.SCOUT_ENGINE_ENABLED else "N/A",
             "scout_vetting_automation": "enabled" if settings.SCOUT_ENGINE_ENABLED else "N/A",
-            # ======= END SCOUT ENGINE PERFORMANCE =======
+
             # ======= MISSION SYSTEMS PERFORMANCE =======
             "mission_planning_horizon": "20 years" if settings.UNSTOPPABLE_MISSION_ENABLED else "N/A",
             "daily_execution_cycle": "24 hours" if settings.DAILY_MISSION_CONTROLLER_ENABLED else "N/A",
             "mission_progress_tracking": "real-time" if settings.UNSTOPPABLE_MISSION_ENABLED else "N/A"
-            # ======= END MISSION SYSTEMS PERFORMANCE =======
         }
     }
 
     return system_info
 
-# ======= MISSION SYSTEMS ENDPOINTS =======
-@app.get("/api/v1/mission/status")
-async def mission_status():
-    """Get Unstoppable Mission Director status."""
-    if not settings.UNSTOPPABLE_MISSION_ENABLED:
-        raise HTTPException(status_code=403, detail="Unstoppable Mission Director is disabled")
-
-    global mission_director
-    if not mission_director:
-        raise HTTPException(status_code=503, detail="Unstoppable Mission Director not initialized")
-
-    try:
-        status = await mission_director._get_mission_status()
-        return {
-            "mission_system": "active",
-            "mission_name": "20-Year Autonomous Economic Transformation",
-            "target_valuation": "$7.8T",
-            "current_year": status.get('current_year', 1),
-            "total_years": 20,
-            "progress_percentage": status.get('progress_percentage', 0.0),
-            "revenue_generated": status.get('revenue_generated', 0.0),
-            "ai_self_evolution_cycles": status.get('evolution_cycles', 0),
-            "next_milestone": status.get('next_milestone', 'Year 1 Foundation'),
-            "mission_health": "optimal"
-        }
-    except Exception as e:
-        logger.error(f"Mission status check failed: {str(e)}")
-        raise HTTPException(status_code=503, detail="Mission system temporarily unavailable")
-
-@app.get("/api/v1/mission/blueprint")
-async def mission_blueprint():
-    """Get 20-year mission blueprint."""
-    if not settings.UNSTOPPABLE_MISSION_ENABLED:
-        raise HTTPException(status_code=403, detail="Unstoppable Mission Director is disabled")
-
-    global mission_director
-    if not mission_director:
-        raise HTTPException(status_code=503, detail="Unstoppable Mission Director not initialized")
-
-    try:
-        blueprint = await mission_director._get_mission_blueprint()
-        return {
-            "mission_blueprint": "20-Year Autonomous Economic Transformation",
-            "phases": [
-                {"year": "1-3", "focus": "Foundation & Exponential Growth", "target": "$100M ARR"},
-                {"year": "4-7", "focus": "Market Domination & AI Evolution", "target": "$1B ARR"},
-                {"year": "8-12", "focus": "Global Infrastructure & Economic Integration", "target": "$10B ARR"},
-                {"year": "13-17", "focus": "Civilization-Scale Impact & Post-Scarcity Systems", "target": "$100B ARR"},
-                {"year": "18-20", "focus": "$7.8T Valuation & Global Economic Transformation", "target": "$7.8T Valuation"}
-            ],
-            "key_milestones": blueprint.get('milestones', []),
-            "economic_impact_targets": blueprint.get('impact_targets', {}),
-            "ai_evolution_schedule": blueprint.get('evolution_schedule', {})
-        }
-    except Exception as e:
-        logger.error(f"Mission blueprint retrieval failed: {str(e)}")
-        raise HTTPException(status_code=503, detail="Mission blueprint temporarily unavailable")
-
-@app.get("/api/v1/daily/status")
-async def daily_mission_status():
-    """Get Daily Mission Controller status."""
-    if not settings.DAILY_MISSION_CONTROLLER_ENABLED:
-        raise HTTPException(status_code=403, detail="Daily Mission Controller is disabled")
-
-    global daily_controller
-    if not daily_controller:
-        raise HTTPException(status_code=503, detail="Daily Mission Controller not initialized")
-
-    try:
-        status = await daily_controller._get_daily_status()
-        return {
-            "daily_controller": "active",
-            "date": status.get('date', 'today'),
-            "total_tasks": status.get('total_tasks', 0),
-            "completed_tasks": status.get('completed_tasks', 0),
-            "completion_percentage": status.get('completion_percentage', 0.0),
-            "impact_achieved": status.get('impact_achieved', 0.0),
-            "ai_modules_engaged": status.get('ai_modules_engaged', []),
-            "bottlenecks_identified": status.get('bottlenecks', []),
-            "next_day_prepared": status.get('next_day_prepared', False),
-            "daily_health": "optimal"
-        }
-    except Exception as e:
-        logger.error(f"Daily mission status check failed: {str(e)}")
-        raise HTTPException(status_code=503, detail="Daily mission system temporarily unavailable")
-
-@app.get("/api/v1/daily/tasks")
-async def daily_tasks():
-    """Get today's mission tasks."""
-    if not settings.DAILY_MISSION_CONTROLLER_ENABLED:
-        raise HTTPException(status_code=403, detail="Daily Mission Controller is disabled")
-
-    global daily_controller
-    if not daily_controller:
-        raise HTTPException(status_code=503, detail="Daily Mission Controller not initialized")
-
-    try:
-        tasks = await daily_controller._get_todays_tasks()
-        return {
-            "daily_tasks": tasks,
-            "task_categories": [
-                "Revenue Generation",
-                "AI System Evolution", 
-                "Partnership Development",
-                "Infrastructure Scaling",
-                "Market Expansion",
-                "Team Growth",
-                "Innovation & R&D"
-            ],
-            "priority_distribution": {
-                "critical": len([t for t in tasks if t.get('priority') == 'critical']),
-                "high": len([t for t in tasks if t.get('priority') == 'high']),
-                "medium": len([t for t in tasks if t.get('priority') == 'medium']),
-                "low": len([t for t in tasks if t.get('priority') == 'low'])
-            }
-        }
-    except Exception as e:
-        logger.error(f"Daily tasks retrieval failed: {str(e)}")
-        raise HTTPException(status_code=503, detail="Daily tasks temporarily unavailable")
-# ======= END MISSION SYSTEMS ENDPOINTS =======
-
-# ======= CYBERSECURITY ENDPOINTS =======
-@app.get("/cybersecurity/status")
-async def cybersecurity_status():
-    """Get cybersecurity system status."""
-    if not CYBERSECURITY_ENABLED:
-        raise HTTPException(status_code=403, detail="Cybersecurity system is disabled")
-    
-    global cyber_defense_orchestrator
-    if not cyber_defense_orchestrator:
-        raise HTTPException(status_code=503, detail="Cybersecurity system not initialized")
-    
-    try:
-        status = await cyber_defense_orchestrator._get_system_health()
-        return {
-            "cybersecurity_system": "active",
-            "threat_level": status.get('current_threat_level', 'normal'),
-            "active_defenses": len(status.get('active_defenses', [])),
-            "defense_effectiveness": status.get('defense_effectiveness', 0.0),
-            "last_incident": status.get('last_incident_time', 'never'),
-            "monitoring_active": True
-        }
-    except Exception as e:
-        logger.error(f"Cybersecurity status check failed: {str(e)}")
-        raise HTTPException(status_code=503, detail="Cybersecurity system temporarily unavailable")
-
-@app.get("/cybersecurity/capabilities")
-async def cybersecurity_capabilities():
-    """Get cybersecurity system capabilities."""
-    if not CYBERSECURITY_ENABLED:
-        raise HTTPException(status_code=403, detail="Cybersecurity system is disabled")
-    
-    return {
-        "cybersecurity_system": "Chameleon Cyber Defender",
-        "version": "1.0.0",
-        "status": "active",
-        "capabilities": await _get_cybersecurity_capabilities_detailed(),
-        "defense_layers": [
-            "Adaptive Threat Detection & Response",
-            "Real-time Security Monitoring",
-            "Automated Incident Response",
-            "Forensic Evidence Collection",
-            "Deception & Honeypot Systems",
-            "Identity & Access Protection",
-            "Edge Security & WAF Management",
-            "Continuous Security Validation",
-            "Law Enforcement Ready Reporting",
-            "Self-Learning Defense System"
-        ],
-        "api_endpoints": {
-            "status": "/cybersecurity/status",
-            "incidents": "/cybersecurity/incidents",
-            "defense_actions": "/cybersecurity/defense/actions",
-            "simulation": "/cybersecurity/simulate",
-            "forensics": "/cybersecurity/forensics"
-        }
-    }
-
-@app.post("/cybersecurity/simulate")
-async def cybersecurity_simulation(scenario: str = "ddos", intensity: str = "medium"):
-    """Run cybersecurity simulation (staging only)."""
-    if not CYBERSECURITY_ENABLED:
-        raise HTTPException(status_code=403, detail="Cybersecurity system is disabled")
-    
-    # Safety check - only allow in non-production
-    import os
-    if os.getenv("ENVIRONMENT", "staging").lower() in ["production", "prod"]:
-        raise HTTPException(status_code=400, detail="Simulations only allowed in staging environment")
-    
-    global cyber_defense_orchestrator
-    if not cyber_defense_orchestrator:
-        raise HTTPException(status_code=503, detail="Cybersecurity system not initialized")
-    
-    try:
-        # This would trigger a simulated attack to test defenses
-        simulation_result = {
-            "simulation_id": f"cyber_sim_{int(time.time())}",
-            "scenario": scenario,
-            "intensity": intensity,
-            "status": "started",
-            "defense_actions_triggered": [],
-            "message": "Simulation started - defenses will auto-respond"
-        }
-        
-        return simulation_result
-    except Exception as e:
-        logger.error(f"Cybersecurity simulation failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Simulation error: {str(e)}")
-
-@app.get("/cybersecurity/incidents")
-async def cybersecurity_incidents(limit: int = 10):
-    """Get recent security incidents."""
-    if not CYBERSECURITY_ENABLED:
-        raise HTTPException(status_code=403, detail="Cybersecurity system is disabled")
-    
-    # This would query the incident database
-    return {
-        "incidents": [],
-        "total_count": 0,
-        "time_range": "last_30_days",
-        "message": "No incidents recorded" if limit > 0 else "Endpoint active"
-    }
-# ======= END CYBERSECURITY ENDPOINTS =======
-
-# V16 AI Modules Status endpoint
-@app.get("/v16/ai/modules/status")
-async def v16_ai_modules_status():
-    """Get V16 AI Modules detailed status."""
-    if not settings.V16_AI_MODULES_ENABLED:
-        raise HTTPException(status_code=403, detail="V16 AI Modules are disabled")
-
-    global v16_ai_engine
-    if not v16_ai_engine:
-        raise HTTPException(status_code=503, detail="V16 AI Modules not initialized")
-
-    try:
-        status = await v16_ai_engine._get_modules_status()
-        return status
-    except Exception as e:
-        logger.error(f"V16 AI Modules status check failed: {str(e)}")
-        raise HTTPException(status_code=503, detail="V16 AI Modules temporarily unavailable")
-
-# V16 AI Modules Health endpoint
-@app.get("/v16/ai/modules/health")
-async def v16_ai_modules_health():
-    """Get V16 AI Modules health status."""
-    if not settings.V16_AI_MODULES_ENABLED:
-        raise HTTPException(status_code=403, detail="V16 AI Modules are disabled")
-
-    global v16_ai_engine
-    if not v16_ai_engine:
-        raise HTTPException(status_code=503, detail="V16 AI Modules not initialized")
-
-    try:
-        health = await v16_ai_engine._get_system_health()
-        return health
-    except Exception as e:
-        logger.error(f"V16 AI Modules health check failed: {str(e)}")
-        raise HTTPException(status_code=503, detail="V16 AI Modules health check failed")
-
-# V16 AI Modules Capabilities endpoint
-@app.get("/v16/ai/modules/capabilities")
-async def v16_ai_modules_capabilities():
-    """Get V16 AI Modules capabilities."""
-    if not settings.V16_AI_MODULES_ENABLED:
-        raise HTTPException(status_code=403, detail="V16 AI Modules are disabled")
-
-    capabilities = {
-        "v16_modules_status": "active",
-        "version": "v16.0.0",
-        "total_modules": 15,
-        "modules": {
-            "intelligence": [
-                "Market Shift Predictor - Market trend forecasting",
-                "Viral Content Forecaster - Viral content prediction",
-                "Sentiment Reaction Model - Audience response forecasting",
-                "Real-time Strategy Engine - Dynamic campaign optimization"
-            ],
-            "automation": [
-                "Task Automation Director - Workflow orchestration", 
-                "Decision Feedback Loop - Continuous learning system"
-            ],
-            "analytics": [
-                "Campaign Success Predictor - Campaign performance forecasting",
-                "Creative Impact Analyzer - Creative content analysis"
-            ],
-            "assistant": [
-                "AI Personal Assistant Core - Intelligent assistant engine",
-                "Conversation Context Manager - Multi-turn dialogue management",
-                "Voice Command Integration - Voice interface layer"
-            ],
-            "scalability": [
-                "Load Prediction Engine - Resource scaling predictions",
-                "Auto-healing Manager - Self-healing system"
-            ],
-            "caching": [
-                "Semantic Cache Manager - Intelligent semantic caching",
-                "Query Vectorizer - Advanced text vectorization"
-            ]
-        },
-        "api_endpoints": {
-            "intelligence": "/v16/ai/intelligence/*",
-            "automation": "/v16/ai/automation/*", 
-            "analytics": "/v16/ai/analytics/*",
-            "assistant": "/v16/ai/assistant/*",
-            "scalability": "/v16/system/scalability/*",
-            "caching": "/v16/ai/caching/*"
-        }
-    }
-
-    return capabilities
-
-# V17 AI Engine Status endpoint
-@app.get("/v17/ai/status")
-async def v17_ai_status():
-    """Get V17 AI Engine detailed status."""
-    if not settings.V17_AI_ENGINE_ENABLED:
-        raise HTTPException(status_code=403, detail="V17 AI Engine is disabled")
-
-    global v17_ai_engine
-    if not v17_ai_engine:
-        raise HTTPException(status_code=503, detail="V17 AI Engine not initialized")
-
-    try:
-        status = await v17_ai_engine.get_system_status()
-        return status
-    except Exception as e:
-        logger.error(f"V17 AI status check failed: {str(e)}")
-        raise HTTPException(status_code=503, detail="V17 AI system temporarily unavailable")
-
-# V17 AI Engine Capabilities endpoint
-@app.get("/v17/ai/capabilities")
-async def v17_ai_capabilities():
-    """Get V17 AI Engine capabilities."""
-    if not settings.V17_AI_ENGINE_ENABLED:
-        raise HTTPException(status_code=403, detail="V17 AI Engine is disabled")
-
-    capabilities = {
-        "v17_engine_status": "active",
-        "version": "v17.0.0",
-        "architecture": "microservices_distributed",
-        "components": {
-            "orchestration_engine": "Distributed AI task orchestration",
-            "cluster_manager": "Multi-node AI cluster management", 
-            "load_balancer": "Intelligent request distribution",
-            "vector_cache": "High-performance embedding cache",
-            "fusion_engine": "Multi-modal content analysis",
-            "causal_engine": "Cause-effect relationship modeling",
-            "explainable_ai": "Transparent AI decision explanations",
-            "transfer_learning": "Cross-domain knowledge transfer",
-            "auto_scaler": "Automatic resource scaling",
-            "predictive_scaler": "Proactive capacity planning",
-            "governance_engine": "Compliance & ethical AI oversight",
-            "real_time_learning": "Continuous model improvement"
-        },
-        "scalability_features": [
-            "Horizontal scaling across multiple AI nodes",
-            "Dynamic model loading/unloading", 
-            "AI workload distribution algorithms",
-            "Cross-region AI deployment",
-            "Zero-downtime model updates",
-            "AI performance auto-tuning",
-            "Predictive resource allocation",
-            "Federated learning capabilities"
-        ],
-        "enterprise_features": [
-            "AI cost optimization engine",
-            "ROI tracking per AI model", 
-            "Performance degradation prediction",
-            "Automated model retirement",
-            "Compliance audit trails",
-            "Multi-tenant AI isolation"
-        ]
-    }
-
-    return capabilities
-
-# V17 AI Request Processing endpoint
-@app.post("/v17/ai/process")
-async def v17_ai_process(request_data: dict):
-    """Process AI request through V17 engine."""
-    if not settings.V17_AI_ENGINE_ENABLED:
-        raise HTTPException(status_code=403, detail="V17 AI Engine is disabled")
-
-    global v17_ai_engine
-    if not v17_ai_engine:
-        raise HTTPException(status_code=503, detail="V17 AI Engine not initialized")
-
-    try:
-        result = await v17_ai_engine.process_ai_request(
-            request_type=request_data.get("type", "generic"),
-            data=request_data.get("data", {}),
-            priority=request_data.get("priority", 2),
-            explain=request_data.get("explain", False)
-        )
-        return result
-    except Exception as e:
-        logger.error(f"V17 AI processing failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"AI processing error: {str(e)}")
-
-# V17 Predictive Scaling Forecast endpoint
-@app.get("/v17/ai/scaling/forecast")
-async def v17_scaling_forecast(hours_ahead: int = 24):
-    """Get predictive scaling forecast."""
-    if not settings.V17_AI_ENGINE_ENABLED:
-        raise HTTPException(status_code=403, detail="V17 AI Engine is disabled")
-
-    global v17_ai_engine
-    if not v17_ai_engine:
-        raise HTTPException(status_code=503, detail="V17 AI Engine not initialized")
-
-    try:
-        forecast = await v17_ai_engine.predictive_scaler.get_capacity_forecast(
-            hours_ahead=hours_ahead
-        )
-        return forecast
-    except Exception as e:
-        logger.error(f"V17 scaling forecast failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Scaling forecast error: {str(e)}")
-
-# V17 AI Governance Compliance endpoint
-@app.get("/v17/ai/governance/compliance")
-async def v17_governance_compliance(framework: str = None):
-    """Get AI governance compliance report."""
-    if not settings.V17_AI_ENGINE_ENABLED:
-        raise HTTPException(status_code=403, detail="V17 AI Engine is disabled")
-
-    global v17_ai_engine
-    if not v17_ai_engine:
-        raise HTTPException(status_code=503, detail="V17 AI Engine not initialized")
-
-    try:
-        from security.ai_governance_engine import ComplianceFramework
-
-        comp_framework = None
-        if framework:
-            try:
-                comp_framework = ComplianceFramework(framework)
-            except ValueError:
-                raise HTTPException(status_code=400, detail=f"Unknown framework: {framework}")
-
-        report = await v17_ai_engine.governance_engine.generate_compliance_report(comp_framework)
-        return report
-    except Exception as e:
-        logger.error(f"V17 governance compliance failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Governance compliance error: {str(e)}")
-
-# AI Capabilities endpoint (existing V16)
-@app.get("/ai/capabilities")
-async def ai_capabilities():
-    """Get detailed information about AI capabilities."""
-    if not settings.AI_ENGINE_ENABLED:
-        raise HTTPException(status_code=403, detail="AI Engine is disabled")
-
-    capabilities = {
-        "ai_engine_status": "active",
-        "version": "v16.0.0",
-        "modules": await _get_detailed_ai_modules(),
-        "capabilities": await _get_ai_capabilities_detailed(),
-        "performance_metrics": await _get_ai_performance_metrics(),
-        "model_registry": await _get_ai_model_registry(),
-        "v16_modules_available": settings.V16_AI_MODULES_ENABLED,
-        "v17_available": settings.V17_AI_ENGINE_ENABLED,
-        "cybersecurity_integrated": CYBERSECURITY_ENABLED,
-        "scout_engine_integrated": settings.SCOUT_ENGINE_ENABLED,
-        "mission_systems_integrated": settings.UNSTOPPABLE_MISSION_ENABLED
-    }
-
-    return capabilities
-
-# AI Status endpoint (existing V16)
-@app.get("/ai/status")
-async def ai_status():
-    """Get detailed AI system status."""
-    if not settings.AI_ENGINE_ENABLED:
-        raise HTTPException(status_code=403, detail="AI Engine is disabled")
-
-    try:
-        from ai.ai_controller import AIController
-        from database.connection import get_db
-
-        async for db in get_db():
-            ai_controller = AIController(db)
-            status = await ai_controller.get_ai_system_status()
-
-            # Add additional AI system information
-            status["deployment_info"] = {
-                "environment": "production" if not settings.DEBUG else "development",
-                "ai_engine_version": "v16.0.0",
-                "model_count": len(status.get("modules_loaded", [])),
-                "active_since": time.time(),
-                "v16_modules_enabled": settings.V16_AI_MODULES_ENABLED,
-                "v17_engine_available": settings.V17_AI_ENGINE_ENABLED,
-                "cybersecurity_protected": CYBERSECURITY_ENABLED,
-                "scout_engine_active": settings.SCOUT_ENGINE_ENABLED,
-                "mission_systems_active": settings.UNSTOPPABLE_MISSION_ENABLED
-            }
-
-            return status
-    except Exception as e:
-        logger.error(f"AI status check failed: {str(e)}")
-        raise HTTPException(status_code=503, detail="AI system temporarily unavailable")
-
-# ======= SCOUT ENGINE ENDPOINTS =======
-@app.get("/scout/status")
-async def scout_status():
-    """Get Scout Engine system status."""
-    if not settings.SCOUT_ENGINE_ENABLED:
-        raise HTTPException(status_code=403, detail="Scout Engine is disabled")
-
-    global scout_engine
-    if not scout_engine:
-        raise HTTPException(status_code=503, detail="Scout Engine not initialized")
-
-    try:
-        return {
-            "scout_engine": "active",
-            "version": "1.0.0",
-            "capabilities_loaded": len(await _get_scout_capabilities_list()),
-            "last_scout_run": "never",  # Would be actual timestamp from database
-            "active_campaigns": 0,      # Would be actual count from database
-            "talent_pool_size": 0,      # Would be actual count from database
-            "partnerships_active": 0,   # Would be actual count from database
-            "monitoring_active": True
-        }
-    except Exception as e:
-        logger.error(f"Scout Engine status check failed: {str(e)}")
-        raise HTTPException(status_code=503, detail="Scout Engine temporarily unavailable")
-
-@app.get("/scout/capabilities")
-async def scout_capabilities():
-    """Get Scout Engine capabilities."""
-    if not settings.SCOUT_ENGINE_ENABLED:
-        raise HTTPException(status_code=403, detail="Scout Engine is disabled")
-
-    return {
-        "scout_engine": "Autonomous Talent & Partnership Acquisition",
-        "version": "1.0.0",
-        "status": "active",
-        "capabilities": await _get_scout_capabilities_detailed(),
-        "talent_focus": [
-            "Developers (Python, JavaScript, Full-Stack, AI/ML)",
-            "Designers (UI/UX, Product, Graphic)",
-            "Infrastructure Engineers (DevOps, Cloud, SRE)",
-            "Growth Hackers & Marketing Technicians",
-            "AI/ML Engineers & Data Scientists"
-        ],
-        "partnership_focus": [
-            "Influencers (10K+ followers minimum)",
-            "Business Owners & Entrepreneurs",
-            "Agency Partners",
-            "Content Creators"
-        ],
-        "api_endpoints": {
-            "talent_search": "/scout/talent/search",
-            "influencer_search": "/scout/influencers/search",
-            "business_search": "/scout/business-owners/search",
-            "partnership_proposal": "/scout/partnership/proposal",
-            "contract_management": "/scout/contracts/*",
-            "outreach_campaigns": "/scout/outreach/*",
-            "vetting_pipeline": "/scout/vet/*"
-        }
-    }
-
-@app.post("/scout/talent/search")
-async def scout_talent_search(
-    skills: List[str],
-    min_score: float = 0.7,
-    location: Optional[str] = None
-):
-    """Search for technical talent by skills and criteria."""
-    if not settings.SCOUT_ENGINE_ENABLED:
-        raise HTTPException(status_code=403, detail="Scout Engine is disabled")
-
-    global scout_engine
-    if not scout_engine:
-        raise HTTPException(status_code=503, detail="Scout Engine not initialized")
-
-    try:
-        candidates = await scout_engine.search_candidates(
-            skills=skills,
-            min_score=min_score,
-            location=location
-        )
-        return {
-            "success": True,
-            "candidates_found": len(candidates),
-            "candidates": candidates,
-            "search_criteria": {
-                "skills": skills,
-                "min_score": min_score,
-                "location": location
-            }
-        }
-    except Exception as e:
-        logger.error(f"Talent search failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Talent search error: {str(e)}")
-
-@app.post("/scout/influencers/search")
-async def scout_influencers_search(
-    niche: str,
-    min_followers: int = 10000,  # 🎯 10K minimum enforced
-    min_engagement: float = 0.03,
-    platform: str = "any"
-):
-    """Search for quality influencers (10K+ followers only)."""
-    if not settings.SCOUT_ENGINE_ENABLED:
-        raise HTTPException(status_code=403, detail="Scout Engine is disabled")
-
-    global scout_engine
-    if not scout_engine:
-        raise HTTPException(status_code=503, detail="Scout Engine not initialized")
-
-    try:
-        # Enforce 10K minimum followers
-        if min_followers < 10000:
-            min_followers = 10000
-
-        influencers = await scout_engine.scout_quality_influencers(
-            niche=niche,
-            min_engagement=min_engagement,
-            require_verified=False
-        )
-        return {
-            "success": True,
-            "influencers_found": len(influencers),
-            "quality_influencers": influencers,
-            "search_criteria": {
-                "niche": niche,
-                "min_followers": min_followers,
-                "min_engagement": min_engagement,
-                "platform": platform
-            },
-            "quality_note": "Only showing influencers with 10K+ followers and quality content"
-        }
-    except Exception as e:
-        logger.error(f"Influencer search failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Influencer search error: {str(e)}")
-
-@app.post("/scout/business-owners/search")
-async def scout_business_owners_search(
-    industry: str,
-    company_size: str = "any",
-    location: Optional[str] = None
-):
-    """Search for business owners for partnerships."""
-    if not settings.SCOUT_ENGINE_ENABLED:
-        raise HTTPException(status_code=403, detail="Scout Engine is disabled")
-
-    global scout_engine
-    if not scout_engine:
-        raise HTTPException(status_code=503, detail="Scout Engine not initialized")
-
-    try:
-        business_owners = await scout_engine.scout_business_owners(
-            industry=industry,
-            company_size=company_size,
-            location=location
-        )
-        return {
-            "success": True,
-            "business_owners_found": len(business_owners),
-            "business_owners": business_owners,
-            "search_criteria": {
-                "industry": industry,
-                "company_size": company_size,
-                "location": location
-            }
-        }
-    except Exception as e:
-        logger.error(f"Business owner search failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Business owner search error: {str(e)}")
-
-@app.post("/scout/partnership/proposal")
-async def generate_partnership_proposal(
-    candidate_id: str,
-    requested_loan: float,
-    team_support: float = 0.5,
-    candidate_type: str = "influencer"  # influencer, business_owner, talent
-):
-    """Generate fair value partnership proposal."""
-    if not settings.SCOUT_ENGINE_ENABLED:
-        raise HTTPException(status_code=403, detail="Scout Engine is disabled")
-
-    global scout_engine
-    if not scout_engine:
-        raise HTTPException(status_code=503, detail="Scout Engine not initialized")
-
-    try:
-        # TODO: Fetch candidate from database based on candidate_id
-        # For now, create a mock candidate
-        from scout.models.candidate import CandidateProfile
-        from scout.models.contracts import PartnerType
-        
-        candidate = CandidateProfile(
-            id=candidate_id,
-            source="scout_engine",
-            name="Test Candidate",
-            partner_type=PartnerType.INFLUENCER if candidate_type == "influencer" else PartnerType.BUSINESS_OWNER
-        )
-        
-        proposal = await scout_engine.generate_partnership_proposal(
-            candidate, requested_loan, team_support
-        )
-        return {
-            "success": True,
-            "proposal": proposal,
-            "candidate_id": candidate_id,
-            "candidate_type": candidate_type,
-            "fair_value_terms": proposal.get('fair_value_terms', {}),
-            "ai_receptionist_link": proposal.get('ai_receptionist_link', '')
-        }
-    except Exception as e:
-        logger.error(f"Partnership proposal generation failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Proposal generation error: {str(e)}")
-
-@app.post("/scout/outreach/campaign")
-async def launch_outreach_campaign(
-    candidate_ids: List[str],
-    message_template: str = "default",
-    channel: str = "email"
-):
-    """Launch outreach campaign to selected candidates."""
-    if not settings.SCOUT_ENGINE_ENABLED:
-        raise HTTPException(status_code=403, detail="Scout Engine is disabled")
-
-    global scout_engine
-    if not scout_engine:
-        raise HTTPException(status_code=503, detail="Scout Engine not initialized")
-
-    try:
-        # This would initiate outreach in the background
-        # For now, return a mock response
-        return {
-            "success": True,
-            "campaign_launched": True,
-            "candidates_targeted": len(candidate_ids),
-            "channel": channel,
-            "message_template": message_template,
-            "estimated_completion": "24 hours",
-            "campaign_id": f"campaign_{int(time.time())}"
-        }
-    except Exception as e:
-        logger.error(f"Outreach campaign failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Outreach campaign error: {str(e)}")
-# ======= END SCOUT ENGINE ENDPOINTS =======
+# ... [REST OF YOUR EXISTING CODE FOR MISSION SYSTEMS, CYBERSECURITY, SCOUT ENGINE, V16/V17 AI, ETC.]
 
 # Register routers (existing)
 app.include_router(auth_router.router)
@@ -1783,8 +1247,22 @@ app.include_router(one_time_router)
 app.include_router(finance_router)
 app.include_router(dashboard_router)
 app.include_router(reception_router)
-app.include_router(brand_router)
-app.include_router(one_time_router)
+
+# ======= AI CEO & SOCIAL MANAGER ROUTER REGISTRATION =======
+if settings.AI_CEO_ENABLED and AI_CEO_SOCIAL_ENABLED:
+    try:
+        app.include_router(ceo_router, prefix="/api/v1/ceo", tags=["AI CEO"])
+        logger.info("AI CEO router registered successfully")
+    except Exception as e:
+        logger.error(f"Failed to register AI CEO router: {str(e)}")
+
+if settings.SOCIAL_MANAGER_ENABLED and AI_CEO_SOCIAL_ENABLED:
+    try:
+        app.include_router(social_router, prefix="/api/v1/social", tags=["Social Media Manager"])
+        logger.info("Social Media Manager router registered successfully")
+    except Exception as e:
+        logger.error(f"Failed to register Social Media Manager router: {str(e)}")
+# ======= END AI CEO & SOCIAL MANAGER ROUTER REGISTRATION =======
 
 # ======= MISSION ROUTER REGISTRATION =======
 if settings.UNSTOPPABLE_MISSION_ENABLED and MISSION_SYSTEMS_AVAILABLE:
@@ -1807,12 +1285,15 @@ if settings.DAILY_MISSION_CONTROLLER_ENABLED and MISSION_SYSTEMS_AVAILABLE:
 # ======= SCOUT ENGINE ROUTER REGISTRATION =======
 if settings.SCOUT_ENGINE_ENABLED:
     try:
+        from scout.routers.scout_router import router as scout_router
+        from scout.routers.contracts_router import router as contracts_router
+        
         # Include the main Scout router
         app.include_router(scout_router, prefix="/api/v1/scout", tags=["Scout Engine"])
-        
+
         # Include contracts router for partnership management
         app.include_router(contracts_router, prefix="/api/v1/scout", tags=["Scout Contracts"])
-        
+
         logger.info("Scout Engine routers registered successfully")
     except Exception as e:
         logger.error(f"Failed to register Scout Engine routers: {str(e)}")
@@ -2035,6 +1516,30 @@ try:
 except ImportError as e:
     logger.warning(f"V16 Services Extension not available: {str(e)}")
 
+# ======= AI CEO & SOCIAL MANAGER EXCEPTION HANDLER =======
+if settings.AI_CEO_ENABLED or settings.SOCIAL_MANAGER_ENABLED:
+    @app.exception_handler(Exception)
+    async def ceo_social_exception_handler(request, exc):
+        """Handle AI CEO & Social Manager exceptions gracefully."""
+        # Check if this is an AI CEO or Social Manager request
+        if (request.url.path.startswith('/api/v1/ceo/') or 
+            request.url.path.startswith('/api/v1/social/')):
+            logger.error(f"AI CEO/Social Manager error in {request.url.path}: {str(exc)}")
+            return {
+                "success": False,
+                "error": {
+                    "code": "CEO_SOCIAL_SYSTEM_ERROR",
+                    "message": "AI CEO or Social Manager service temporarily unavailable",
+                    "timestamp": time.time(),
+                    "ai_ceo_enabled": settings.AI_CEO_ENABLED,
+                    "social_manager_enabled": settings.SOCIAL_MANAGER_ENABLED,
+                    "suggestion": "Check system status at /api/v1/ceo/health or /api/v1/social/system-status"
+                }
+            }
+        # Let other exceptions be handled by the default handler
+        raise exc
+# ======= END AI CEO & SOCIAL MANAGER EXCEPTION HANDLER =======
+
 # Global exception handler
 @app.exception_handler(500)
 async def internal_server_error_handler(request, exc):
@@ -2209,6 +1714,40 @@ async def _get_v17_capabilities_list():
         "Enterprise Scalability",
         "Cross-Region Deployment"
     ]
+
+# ======= AI CEO & SOCIAL MANAGER HELPER FUNCTIONS =======
+async def _get_ai_ceo_capabilities_list():
+    """Get list of AI CEO capabilities."""
+    if not settings.AI_CEO_ENABLED:
+        return []
+
+    return [
+        "Three Pillars Protocol (Power, Precision, Purpose)",
+        "Autonomous Strategic Decision Making",
+        "Cross-Departmental Orchestration",
+        "Founder-Aligned Ethical Governance",
+        "Self-Learning Executive Intelligence",
+        "Personality DNA Synthesis",
+        "Risk Assessment & Crisis Management",
+        "Long-term Legacy Planning"
+    ]
+
+async def _get_social_manager_capabilities_list():
+    """Get list of Social Manager capabilities."""
+    if not settings.SOCIAL_MANAGER_ENABLED:
+        return []
+
+    return [
+        "Autonomous Content Planning & Scheduling",
+        "Controlled Narrative Arcs",
+        "Multi-Platform Auto-Posting",
+        "Intelligent Comment Moderation",
+        "Influencer Collaboration",
+        "Paid Amplification",
+        "Crisis Detection & Auto-Pause",
+        "Real-time Analytics & Learning"
+    ]
+# ======= END AI CEO & SOCIAL MANAGER HELPER FUNCTIONS =======
 
 # ======= MISSION SYSTEMS HELPER FUNCTIONS =======
 async def _get_mission_capabilities_list():
@@ -2420,10 +1959,11 @@ if __name__ == "__main__":
         log_level="info"
     )
 
+# Add background task for periodic growth cycles (optional)
 @app.on_event("startup")
 async def startup_event():
-    # Initialize AI Receptionist background tasks
-    # This would schedule weekly growth cycles and daily audits
+    # Initialize financial system
+    # Schedule periodic growth cycles
     pass
 
 # Add to your existing main.py imports
