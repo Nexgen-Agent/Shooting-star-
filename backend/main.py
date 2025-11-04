@@ -35,6 +35,19 @@ from routers import (
     employee_router
 )
 
+# ======= AI CEO & SOCIAL MANAGER IMPORT =======
+try:
+    from ai.ai_ceo_dominion import DominionAI_CEO
+    from ai.social_manager.social_manager_core import SocialManagerCore
+    from services.social_media_service import SocialMediaService
+    from routers.social_router import router as social_router
+    from routers.ceo_router import router as ceo_router
+    AI_CEO_SOCIAL_ENABLED = True
+except ImportError as e:
+    AI_CEO_SOCIAL_ENABLED = False
+    logger.warning(f"AI CEO & Social Manager modules not available: {str(e)}")
+# ======= END AI CEO & SOCIAL MANAGER IMPORT =======
+
 # ======= MISSION SYSTEMS IMPORT =======
 try:
     from mission_director import UnstoppableMissionDirector
