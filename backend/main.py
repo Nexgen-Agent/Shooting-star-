@@ -257,6 +257,73 @@ async def _initialize_daily_mission_controller():
         logger.error(f"Daily Mission Controller initialization failed: {str(e)}")
 # ======= END DAILY MISSION CONTROLLER INITIALIZATION FUNCTION =======
 
+# ======= AI CEO & SOCIAL MANAGER INITIALIZATION FUNCTION =======
+async def _initialize_ai_ceo_and_social_manager():
+    """Initialize AI CEO Dominion Protocol and Social Media Manager"""
+    global ai_ceo, social_manager, social_media_service
+
+    try:
+        # Initialize AI CEO
+        if settings.AI_CEO_ENABLED:
+            from ai.ai_ceo_dominion import DominionAI_CEO
+            from ai.ceo_integration_layer import ShootingStarCEOIntegration
+            
+            ai_ceo = DominionAI_CEO()
+            ceo_integration = ShootingStarCEOIntegration()
+            
+            logger.info("🦅 AI CEO Dominion Protocol Initialized")
+            
+            # Log CEO capabilities
+            ceo_capabilities = [
+                "Three Pillars Protocol Decision Engine",
+                "Autonomous Strategic Oversight",
+                "Cross-Departmental Orchestration",
+                "Founder-Aligned Ethical Governance",
+                "Self-Learning Executive Intelligence",
+                "Crisis Management & Risk Assessment",
+                "Long-term Legacy Planning",
+                "Personality DNA Synthesis (Jobs, Pichai, Altman, Underwood, Nexgen)"
+            ]
+            
+            for capability in ceo_capabilities:
+                logger.info(f"  👑 {capability}")
+
+        # Initialize Social Media Manager
+        if settings.SOCIAL_MANAGER_ENABLED:
+            from ai.social_manager.social_manager_core import SocialManagerCore
+            from services.social_media_service import SocialMediaService
+            
+            # Create social manager with CEO integration
+            social_manager = SocialManagerCore(ceo_integration if settings.AI_CEO_ENABLED else None)
+            social_media_service = SocialMediaService(ceo_integration if settings.AI_CEO_ENABLED else None)
+            
+            # Start background content processing
+            import asyncio
+            asyncio.create_task(social_media_service.process_content_queue())
+            
+            logger.info("📱 AI Social Media Manager (ASMM) Initialized")
+            
+            # Log social manager capabilities
+            social_capabilities = [
+                "Autonomous Content Planning & Scheduling",
+                "Controlled Narrative Arcs (CEO Approved)",
+                "Multi-Platform Auto-Posting (Verified Accounts Only)",
+                "Intelligent Comment Moderation & Reply",
+                "Influencer Collaboration Orchestration",
+                "Paid Amplification & Ad Optimization",
+                "Crisis Detection & Auto-Pause",
+                "Real-time Analytics & Learning Loop",
+                "Legal Compliance & Safety Enforcement"
+            ]
+            
+            for capability in social_capabilities:
+                logger.info(f"  📱 {capability}")
+
+    except Exception as e:
+        logger.error(f"AI CEO & Social Manager initialization failed: {str(e)}")
+        # Don't raise - these systems shouldn't break the whole app
+# ======= END AI CEO & SOCIAL MANAGER INITIALIZATION FUNCTION =======
+
 # ======= CYBERSECURITY INITIALIZATION FUNCTION =======
 async def _initialize_cybersecurity_system():
     """Initialize the cybersecurity defense system."""
