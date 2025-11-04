@@ -130,3 +130,27 @@ class KeyManager:
     def _generate_id(self) -> str:
         """Generate unique rotation ID"""
         return f"key_rot_{datetime.utcnow().strftime('%H%M%S')}"
+
+"""
+Key Manager extensions for Innovation Engine
+Cryptographic functions for founder approval and secure signing.
+"""
+
+async def verify_founder_signature(self, data: str, signature: str) -> bool:
+    """Verify founder cryptographic signature."""
+    founder_public_key = self._load_founder_public_key()
+    return self._verify_signature(data, signature, founder_public_key)
+
+async def generate_approval_hash(self, proposal_id: str) -> str:
+    """Generate cryptographic hash for approval requests."""
+    import hashlib
+    import secrets
+    
+    salt = secrets.token_hex(16)
+    data = f"{proposal_id}:{salt}:{datetime.utcnow().isoformat()}"
+    return hashlib.sha256(data.encode()).hexdigest()
+
+async def sign_innovation_approval(self, proposal_id: str, founder_credentials: Dict) -> str:
+    """Sign innovation approval with founder credentials."""
+    approval_data = self._prepare_approval_data(proposal_id, founder_credentials)
+    return await self.sign_data(approval_data)
