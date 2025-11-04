@@ -580,3 +580,74 @@ CYBER_COMMUNICATION_CONSTANTS = {
     "SMS_CHARACTER_LIMIT": 160,
     "EMAIL_SUBJECT_PREFIX": "[SECURITY ALERT]"
 }
+
+"""
+Innovation Engine Settings
+Configuration for Autonomous Innovation Engine (AIE) "Forge"
+"""
+
+import os
+from typing import List
+
+# Innovation Engine Settings
+INNOVATION_MAX_EPHEMERAL_TIME = int(os.getenv("INNOVATION_MAX_EPHEMERAL_TIME", "3600"))  # 1 hour
+INNOVATION_ALLOWED_DOMAINS = os.getenv("INNOVATION_ALLOWED_DOMAINS", "github.com,gitlab.com,bitbucket.org").split(",")
+INNOVATION_APPROVAL_THRESHOLD = float(os.getenv("INNOVATION_APPROVAL_THRESHOLD", "1000.0"))  # $ amount requiring founder approval
+INNOVATION_RECRUITING_BUDGET = float(os.getenv("INNOVATION_RECRUITING_BUDGET", "5000.0"))
+INNOVATION_MAX_CONCURRENT_PROPOSALS = int(os.getenv("INNOVATION_MAX_CONCURRENT_PROPOSALS", "5"))
+
+# Security Settings
+INNOVATION_REQUIRE_SAST = os.getenv("INNOVATION_REQUIRE_SAST", "True").lower() == "true"
+INNOVATION_REQUIRE_DEPENDENCY_SCAN = os.getenv("INNOVATION_REQUIRE_DEPENDENCY_SCAN", "True").lower() == "true"
+INNOVATION_MIN_TEST_COVERAGE = float(os.getenv("INNOVATION_MIN_TEST_COVERAGE", "80.0"))
+INNOVATION_SECURITY_SCORE_THRESHOLD = float(os.getenv("INNOVATION_SECURITY_SCORE_THRESHOLD", "80.0"))
+
+# Recruitment Settings
+INNOVATION_MIN_VETTING_SCORE = int(os.getenv("INNOVATION_MIN_VETTING_SCORE", "80"))
+INNOVATION_REQUIRE_NDA = os.getenv("INNOVATION_REQUIRE_NDA", "True").lower() == "true"
+INNOVATION_CONTRACT_TERMS = {
+    "confidentiality": True,
+    "ip_assignment": True,
+    "term": "project_based",
+    "payment_terms": "milestone_based"
+}
+
+# CI/CD Settings
+INNOVATION_CI_IMAGE = os.getenv("INNOVATION_CI_IMAGE", "python:3.9-slim")
+INNOVATION_TEST_TIMEOUT = int(os.getenv("INNOVATION_TEST_TIMEOUT", "1800"))  # 30 minutes
+INNOVATION_ARTIFACT_RETENTION_DAYS = int(os.getenv("INNOVATION_ARTIFACT_RETENTION_DAYS", "30"))
+
+# Founder Approval Settings
+FOUNDER_APPROVAL_REQUIRED = os.getenv("FOUNDER_APPROVAL_REQUIRED", "True").lower() == "true"
+FOUNDER_PUBLIC_KEY = os.getenv("FOUNDER_PUBLIC_KEY", "")
+FOUNDER_APPROVAL_TIMEOUT = int(os.getenv("FOUNDER_APPROVAL_TIMEOUT", "604800"))  # 7 days
+
+# Export all innovation settings
+INNOVATION_SETTINGS = {
+    "max_ephemeral_time": INNOVATION_MAX_EPHEMERAL_TIME,
+    "allowed_domains": INNOVATION_ALLOWED_DOMAINS,
+    "approval_threshold": INNOVATION_APPROVAL_THRESHOLD,
+    "recruiting_budget": INNOVATION_RECRUITING_BUDGET,
+    "max_concurrent_proposals": INNOVATION_MAX_CONCURRENT_PROPOSALS,
+    "security": {
+        "require_sast": INNOVATION_REQUIRE_SAST,
+        "require_dependency_scan": INNOVATION_REQUIRE_DEPENDENCY_SCAN,
+        "min_test_coverage": INNOVATION_MIN_TEST_COVERAGE,
+        "security_score_threshold": INNOVATION_SECURITY_SCORE_THRESHOLD
+    },
+    "recruitment": {
+        "min_vetting_score": INNOVATION_MIN_VETTING_SCORE,
+        "require_nda": INNOVATION_REQUIRE_NDA,
+        "contract_terms": INNOVATION_CONTRACT_TERMS
+    },
+    "ci_cd": {
+        "ci_image": INNOVATION_CI_IMAGE,
+        "test_timeout": INNOVATION_TEST_TIMEOUT,
+        "artifact_retention_days": INNOVATION_ARTIFACT_RETENTION_DAYS
+    },
+    "founder_approval": {
+        "required": FOUNDER_APPROVAL_REQUIRED,
+        "public_key": FOUNDER_PUBLIC_KEY,
+        "approval_timeout": FOUNDER_APPROVAL_TIMEOUT
+    }
+}
