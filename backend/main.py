@@ -576,6 +576,19 @@ async def shutdown_event():
     """Cleanup on application shutdown."""
     logger.info("Shutting down Shooting Star AI Engines...")
 
+# ======= AI CEO & SOCIAL MANAGER SHUTDOWN =======
+if settings.AI_CEO_ENABLED and ai_ceo:
+    try:
+        logger.info("AI CEO Dominion Protocol shutdown complete")
+    except Exception as e:
+        logger.warning(f"AI CEO shutdown warning: {str(e)}")
+
+if settings.SOCIAL_MANAGER_ENABLED and social_media_service:
+    try:
+        logger.info("AI Social Media Manager shutdown complete")
+    except Exception as e:
+        logger.warning(f"Social Manager shutdown warning: {str(e)}")
+# ======= END AI CEO & SOCIAL MANAGER SHUTDOWN =======
     # ======= CYBERSECURITY SHUTDOWN =======
     if CYBERSECURITY_ENABLED and cyber_defense_orchestrator:
         try:
