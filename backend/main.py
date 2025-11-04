@@ -106,6 +106,12 @@ app.add_middleware(
     allowed_hosts=["*"]  # In production, specify actual hosts
 )
 
+# ======= AI CEO & SOCIAL MANAGER GLOBAL INSTANCES =======
+ai_ceo = None
+social_manager = None
+social_media_service = None
+# ======= END AI CEO & SOCIAL MANAGER GLOBAL INSTANCES =======
+
 # Global AI Engine instances
 v17_ai_engine = None
 v16_ai_engine = None
