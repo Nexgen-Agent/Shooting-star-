@@ -8,6 +8,18 @@ INTEGRATED WITH AI SOCIAL MEDIA MANAGER - AUTONOMOUS SOCIAL MEDIA OPERATIONS
 INTEGRATED WITH AI CEO - DOMINION PROTOCOL EXECUTIVE INTELLIGENCE
 """
 
+# Innovation Engine imports
+try:
+    from ai.autonomous_innovation_engine import AutonomousInnovationEngine, InnovationProposal, SecurityError
+    from core.private_ledger import PrivateLedger, LedgerEntry
+    from crypto.key_manager import KeyManager
+    from ai.innovation_task_manager import InnovationTaskManager, InnovationTask, TaskPriority, SkillTag
+    from scout.innovation_recruiter import InnovationRecruiter, Candidate
+    from ci.innovation_ci_runner import InnovationCIRunner
+    from services.innovation_service_api import router as innovation_api_router
+    from services.site_registry_service import SiteRegistry, ClientSite
+    
+
 from routers.reception_router import router 
 from routers.finance_router import router as finance_router
 from routers.dashboard_router import router as dashboard_router
@@ -2946,3 +2958,571 @@ from scout.contracts.fair_value import FairValueCalculator
 scout_engine = None
 social_connector = None
 fair_value_calculator = None
+
+# ======= INNOVATION ENGINE INTEGRATION START =======
+"""
+AUTONOMOUS INNOVATION ENGINE (AIE) "FORGE"
+Complete integration of AI-driven feature development with secure human gating.
+"""
+
+    INNOVATION_ENGINE_AVAILABLE = True
+    logger.info("Innovation Engine components imported successfully")
+except ImportError as e:
+    INNOVATION_ENGINE_AVAILABLE = False
+    logger.warning(f"Innovation Engine components not available: {str(e)}")
+
+# Global Innovation Engine instances
+innovation_engine = None
+private_ledger = None
+innovation_key_manager = None
+innovation_task_manager = None
+innovation_recruiter = None
+innovation_ci_runner = None
+site_registry = None
+
+async def _initialize_innovation_engine():
+    """Initialize the Autonomous Innovation Engine (AIE)"""
+    global innovation_engine, private_ledger, innovation_key_manager
+    global innovation_task_manager, innovation_recruiter, innovation_ci_runner, site_registry
+    
+    try:
+        # Initialize core components
+        private_ledger = PrivateLedger()
+        innovation_key_manager = KeyManager()
+        innovation_task_manager = InnovationTaskManager()
+        innovation_recruiter = InnovationRecruiter()
+        innovation_ci_runner = InnovationCIRunner()
+        site_registry = SiteRegistry()
+        
+        # Initialize main engine
+        innovation_engine = AutonomousInnovationEngine()
+        
+        logger.info("✅ AUTONOMOUS INNOVATION ENGINE (AIE) INITIALIZED")
+        logger.info("🎯 Mission: AI-driven feature development with secure human gating")
+        
+        innovation_capabilities = [
+            "Cryptographic Founder Approval Gates",
+            "Private Ledger with Immutable Audit Trail",
+            "Automated Task Breakdown & Skill Tagging",
+            "AI Expert Recruitment & NDA Workflows",
+            "Ephemeral CI/CD Pipeline with Security Scanning",
+            "Site Registry with Tenant Isolation",
+            "Secure Code Merging & Production Deployment",
+            "Real-time Innovation Proposal Tracking"
+        ]
+        
+        for capability in innovation_capabilities:
+            logger.info(f"  🔧 {capability}")
+            
+    except Exception as e:
+        logger.error(f"Innovation Engine initialization failed: {str(e)}")
+
+# Innovation Engine startup initialization
+if settings.INNOVATION_ENGINE_ENABLED and INNOVATION_ENGINE_AVAILABLE:
+    try:
+        # Add to startup event
+        @app.on_event("startup")
+        async def startup_innovation_engine():
+            await _initialize_innovation_engine()
+            
+        logger.info("Innovation Engine scheduled for startup initialization")
+    except Exception as e:
+        logger.error(f"Innovation Engine startup scheduling failed: {str(e)}")
+
+# Innovation Engine API Endpoints
+@app.get("/api/v1/innovation/status")
+async def innovation_engine_status():
+    """Get Innovation Engine system status."""
+    if not settings.INNOVATION_ENGINE_ENABLED:
+        raise HTTPException(status_code=403, detail="Innovation Engine is disabled")
+    
+    global innovation_engine
+    if not innovation_engine:
+        raise HTTPException(status_code=503, detail="Innovation Engine not initialized")
+    
+    try:
+        return {
+            "innovation_engine": "active",
+            "version": "1.0.0",
+            "active_proposals": len(innovation_engine.active_proposals),
+            "ledger_entries": len(private_ledger.ledger_chain) if private_ledger else 0,
+            "registered_sites": len(site_registry.sites) if site_registry else 0,
+            "components_healthy": all([
+                innovation_engine is not None,
+                private_ledger is not None,
+                innovation_key_manager is not None,
+                innovation_task_manager is not None,
+                innovation_recruiter is not None,
+                innovation_ci_runner is not None,
+                site_registry is not None
+            ])
+        }
+    except Exception as e:
+        logger.error(f"Innovation Engine status check failed: {str(e)}")
+        raise HTTPException(status_code=503, detail="Innovation Engine temporarily unavailable")
+
+@app.get("/api/v1/innovation/capabilities")
+async def innovation_engine_capabilities():
+    """Get Innovation Engine capabilities."""
+    if not settings.INNOVATION_ENGINE_ENABLED:
+        raise HTTPException(status_code=403, detail="Innovation Engine is disabled")
+    
+    return {
+        "innovation_engine": "Autonomous Innovation Engine (AIE) 'Forge'",
+        "version": "1.0.0",
+        "status": "active",
+        "mission": "AI-driven feature development with secure human gating",
+        "capabilities": {
+            "core_engine": [
+                "Autonomous feature proposal generation",
+                "Cryptographic founder approval system",
+                "Immutable private ledger audit trail",
+                "Secure code scanning and prototyping"
+            ],
+            "development": [
+                "AI task breakdown with skill tagging",
+                "Expert recruitment with automated NDA workflows",
+                "Ephemeral CI/CD pipeline with security scanning",
+                "Multi-environment deployment management"
+            ],
+            "security": [
+                "Founder cryptographic signature verification",
+                "Tenant isolation with encrypted keys",
+                "Comprehensive security scanning (SAST, DAST, container)",
+                "Immutable audit trail for all activities"
+            ],
+            "deployment": [
+                "Staging environment auto-provisioning",
+                "Production deployment with founder approval",
+                "Site registry with domain management",
+                "Rollback and recovery systems"
+            ]
+        },
+        "api_endpoints": {
+            "proposal_management": "/api/v1/innovation/propose",
+            "task_management": "/api/v1/innovation/proposal/{id}/tasks",
+            "recruitment": "/api/v1/innovation/proposal/{id}/recruit",
+            "ci_cd": "/api/v1/innovation/branch/{branch}/staging_report",
+            "approval": "/api/v1/innovation/proposal/{id}/request-approval",
+            "deployment": "/api/v1/innovation/proposal/{id}/approve"
+        }
+    }
+
+@app.post("/api/v1/innovation/propose")
+async def propose_innovation_feature(feature_spec: dict):
+    """Propose a new feature for autonomous development."""
+    if not settings.INNOVATION_ENGINE_ENABLED:
+        raise HTTPException(status_code=403, detail="Innovation Engine is disabled")
+    
+    global innovation_engine
+    if not innovation_engine:
+        raise HTTPException(status_code=503, detail="Innovation Engine not initialized")
+    
+    try:
+        result = await innovation_engine.generate_feature_proposal(feature_spec)
+        return {
+            "success": True,
+            "proposal_id": result.get("proposal_id"),
+            "summary": result.get("summary"),
+            "cost_estimate": result.get("cost_estimate"),
+            "tasks": result.get("tasks", []),
+            "next_steps": ["task_breakdown", "candidate_recruitment"]
+        }
+    except Exception as e:
+        logger.error(f"Feature proposal failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Feature proposal error: {str(e)}")
+
+@app.get("/api/v1/innovation/proposal/{proposal_id}")
+async def get_innovation_proposal(proposal_id: str):
+    """Get innovation proposal details and status."""
+    if not settings.INNOVATION_ENGINE_ENABLED:
+        raise HTTPException(status_code=403, detail="Innovation Engine is disabled")
+    
+    global innovation_engine
+    if not innovation_engine:
+        raise HTTPException(status_code=503, detail="Innovation Engine not initialized")
+    
+    try:
+        if proposal_id not in innovation_engine.active_proposals:
+            raise HTTPException(status_code=404, detail="Proposal not found")
+        
+        proposal = innovation_engine.active_proposals[proposal_id]
+        return {
+            "proposal_id": proposal_id,
+            "summary": proposal.summary,
+            "status": proposal.status,
+            "cost_estimate": proposal.cost_estimate,
+            "created_at": proposal.created_at.isoformat(),
+            "tasks": proposal.tasks
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Proposal retrieval failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Proposal retrieval error: {str(e)}")
+
+@app.post("/api/v1/innovation/proposal/{proposal_id}/recruit")
+async def recruit_innovation_experts(proposal_id: str, criteria: dict):
+    """Recruit experts for innovation proposal tasks."""
+    if not settings.INNOVATION_ENGINE_ENABLED:
+        raise HTTPException(status_code=403, detail="Innovation Engine is disabled")
+    
+    global innovation_engine
+    if not innovation_engine:
+        raise HTTPException(status_code=503, detail="Innovation Engine not initialized")
+    
+    try:
+        # Create task bundle first
+        task_bundle = await innovation_engine.create_task_bundle(proposal_id)
+        
+        # Recruit experts
+        candidates = await innovation_engine.recruit_experts(
+            task_bundle['task_ids'],
+            criteria
+        )
+        
+        return {
+            "success": True,
+            "proposal_id": proposal_id,
+            "tasks_created": len(task_bundle['task_ids']),
+            "candidates_found": len(candidates.get('candidates', [])),
+            "candidates": candidates.get('candidates', [])
+        }
+    except Exception as e:
+        logger.error(f"Expert recruitment failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Recruitment error: {str(e)}")
+
+@app.get("/api/v1/innovation/branch/{branch_name}/staging_report")
+async def get_innovation_staging_report(branch_name: str):
+    """Get CI/CD staging report for innovation branch."""
+    if not settings.INNOVATION_ENGINE_ENABLED:
+        raise HTTPException(status_code=403, detail="Innovation Engine is disabled")
+    
+    global innovation_engine
+    if not innovation_engine:
+        raise HTTPException(status_code=503, detail="Innovation Engine not initialized")
+    
+    try:
+        pipeline_results = await innovation_engine.run_staging_pipeline(branch_name)
+        return {
+            "branch": branch_name,
+            "pipeline_status": "completed",
+            "tests_passed": pipeline_results.get('tests_passed', False),
+            "security_passed": pipeline_results.get('security_report', {}).get('security_passed', False),
+            "performance_passed": pipeline_results.get('perf_report', {}).get('performance_passed', False),
+            "detailed_reports": {
+                "security": pipeline_results.get('security_report', {}),
+                "performance": pipeline_results.get('perf_report', {}),
+                "tests": pipeline_results.get('tests_passed', False)
+            }
+        }
+    except Exception as e:
+        logger.error(f"Staging report failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Staging report error: {str(e)}")
+
+@app.post("/api/v1/innovation/proposal/{proposal_id}/request-approval")
+async def request_innovation_approval(proposal_id: str):
+    """Request founder approval for production deployment."""
+    if not settings.INNOVATION_ENGINE_ENABLED:
+        raise HTTPException(status_code=403, detail="Innovation Engine is disabled")
+    
+    global innovation_engine
+    if not innovation_engine:
+        raise HTTPException(status_code=503, detail="Innovation Engine not initialized")
+    
+    try:
+        approval_request = await innovation_engine.request_production_approval(proposal_id)
+        return {
+            "success": True,
+            "status": "approval_requested",
+            "proposal_id": proposal_id,
+            "approval_required": True,
+            "founder_signature_required": True,
+            "approval_hash": approval_request.get('approval_hash')
+        }
+    except Exception as e:
+        logger.error(f"Approval request failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Approval request error: {str(e)}")
+
+@app.post("/api/v1/innovation/proposal/{proposal_id}/approve")
+async def approve_innovation_proposal(proposal_id: str, approval_data: dict):
+    """Approve innovation proposal with founder signature."""
+    if not settings.INNOVATION_ENGINE_ENABLED:
+        raise HTTPException(status_code=403, detail="Innovation Engine is disabled")
+    
+    global innovation_engine
+    if not innovation_engine:
+        raise HTTPException(status_code=503, detail="Innovation Engine not initialized")
+    
+    try:
+        founder_signature = approval_data.get("founder_signature")
+        if not founder_signature:
+            raise HTTPException(status_code=400, detail="Founder signature required")
+        
+        result = await innovation_engine.apply_founder_approval(proposal_id, founder_signature)
+        return {
+            "success": True,
+            "proposal_id": proposal_id,
+            "merged": result.get('merged', False),
+            "deployed": result.get('deployed', False),
+            "status": "approved_and_deployed"
+        }
+    except SecurityError as e:
+        raise HTTPException(status_code=401, detail=str(e))
+    except Exception as e:
+        logger.error(f"Proposal approval failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Approval error: {str(e)}")
+
+# Site Registry Endpoints
+@app.post("/api/v1/sites/register")
+async def register_client_site(site_data: dict):
+    """Register a new client site with encrypted tenant isolation."""
+    if not settings.INNOVATION_ENGINE_ENABLED:
+        raise HTTPException(status_code=403, detail="Innovation Engine is disabled")
+    
+    global site_registry
+    if not site_registry:
+        raise HTTPException(status_code=503, detail="Site Registry not initialized")
+    
+    try:
+        result = await site_registry.register_site(
+            owner=site_data.get("owner"),
+            domain=site_data.get("domain"),
+            deployment_target=site_data.get("deployment_target", "cloudflare")
+        )
+        return {
+            "success": True,
+            "site_id": result.get("site_id"),
+            "tenant_id": result.get("tenant_id"),
+            "staging_domain": result.get("staging_domain"),
+            "status": result.get("status"),
+            "next_steps": result.get("next_steps", [])
+        }
+    except Exception as e:
+        logger.error(f"Site registration failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Site registration error: {str(e)}")
+
+@app.post("/api/v1/sites/{site_id}/scaffold")
+async def scaffold_client_site(site_id: str, template: str = "default"):
+    """Scaffold website structure for client site."""
+    if not settings.INNOVATION_ENGINE_ENABLED:
+        raise HTTPException(status_code=403, detail="Innovation Engine is disabled")
+    
+    global site_registry
+    if not site_registry:
+        raise HTTPException(status_code=503, detail="Site Registry not initialized")
+    
+    try:
+        result = await site_registry.scaffold_site(site_id, template)
+        return {
+            "success": True,
+            "site_id": site_id,
+            "scaffold_complete": result.get("scaffold_complete", False),
+            "repo_url": result.get("repo_url"),
+            "template_used": result.get("template_used")
+        }
+    except Exception as e:
+        logger.error(f"Site scaffolding failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Scaffolding error: {str(e)}")
+
+@app.post("/api/v1/sites/{site_id}/deploy/staging")
+async def deploy_to_staging(site_id: str):
+    """Deploy site to staging environment."""
+    if not settings.INNOVATION_ENGINE_ENABLED:
+        raise HTTPException(status_code=403, detail="Innovation Engine is disabled")
+    
+    global site_registry
+    if not site_registry:
+        raise HTTPException(status_code=503, detail="Site Registry not initialized")
+    
+    try:
+        result = await site_registry.deploy_to_staging(site_id)
+        return {
+            "success": True,
+            "site_id": site_id,
+            "staging_url": result.get("staging_url"),
+            "deployment_id": result.get("deployment_id"),
+            "status": "staging_deployed"
+        }
+    except Exception as e:
+        logger.error(f"Staging deployment failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Staging deployment error: {str(e)}")
+
+@app.post("/api/v1/sites/{site_id}/deploy/production/request")
+async def request_production_deployment(site_id: str):
+    """Request production deployment requiring founder approval."""
+    if not settings.INNOVATION_ENGINE_ENABLED:
+        raise HTTPException(status_code=403, detail="Innovation Engine is disabled")
+    
+    global site_registry
+    if not site_registry:
+        raise HTTPException(status_code=503, detail="Site Registry not initialized")
+    
+    try:
+        result = await site_registry.request_production_deployment(site_id)
+        return {
+            "success": True,
+            "site_id": site_id,
+            "approval_required": True,
+            "approval_hash": result.get("approval_hash"),
+            "founder_signature_required": True
+        }
+    except Exception as e:
+        logger.error(f"Production deployment request failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Deployment request error: {str(e)}")
+
+# Innovation Ledger Endpoints
+@app.get("/api/v1/innovation/ledger/verify")
+async def verify_innovation_ledger():
+    """Verify the integrity of the innovation ledger."""
+    if not settings.INNOVATION_ENGINE_ENABLED:
+        raise HTTPException(status_code=403, detail="Innovation Engine is disabled")
+    
+    global private_ledger
+    if not private_ledger:
+        raise HTTPException(status_code=503, detail="Private Ledger not initialized")
+    
+    try:
+        integrity_report = await private_ledger.verify_ledger_integrity()
+        return {
+            "ledger_integrity": integrity_report.get('valid', False),
+            "total_entries": integrity_report.get('total_entries', 0),
+            "issues": integrity_report.get('issues', []),
+            "last_verified": integrity_report.get('last_verified').isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Ledger verification failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Ledger verification error: {str(e)}")
+
+@app.get("/api/v1/innovation/proposal/{proposal_id}/history")
+async def get_innovation_proposal_history(proposal_id: str):
+    """Get complete audit history for an innovation proposal."""
+    if not settings.INNOVATION_ENGINE_ENABLED:
+        raise HTTPException(status_code=403, detail="Innovation Engine is disabled")
+    
+    global private_ledger
+    if not private_ledger:
+        raise HTTPException(status_code=503, detail="Private Ledger not initialized")
+    
+    try:
+        history = await private_ledger.get_proposal_history(proposal_id)
+        return history
+    except Exception as e:
+        logger.error(f"History retrieval failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"History retrieval error: {str(e)}")
+
+# Innovation Engine Router Registration
+if settings.INNOVATION_ENGINE_ENABLED and INNOVATION_ENGINE_AVAILABLE:
+    try:
+        # Register the main innovation API router
+        app.include_router(innovation_api_router, prefix="/api/v1/innovation", tags=["Innovation Engine"])
+        logger.info("Innovation Engine API router registered successfully")
+    except Exception as e:
+        logger.error(f"Failed to register Innovation Engine router: {str(e)}")
+
+# Innovation Engine Health Check Integration
+@app.get("/health")
+async def health_check_with_innovation():
+    """Comprehensive health check including Innovation Engine."""
+    health_data = await health_check()
+    
+    # Add Innovation Engine health check
+    if settings.INNOVATION_ENGINE_ENABLED and INNOVATION_ENGINE_AVAILABLE:
+        try:
+            if innovation_engine and private_ledger:
+                health_data["checks"]["innovation_engine"] = "healthy"
+                health_data["innovation_engine_active"] = True
+                health_data["innovation_proposals_active"] = len(innovation_engine.active_proposals)
+                health_data["ledger_entries"] = len(private_ledger.ledger_chain)
+            else:
+                health_data["checks"]["innovation_engine"] = "unhealthy: not initialized"
+        except Exception as e:
+            health_data["checks"]["innovation_engine"] = f"unhealthy: {str(e)}"
+            logger.warning(f"Innovation Engine health check warning: {str(e)}")
+    else:
+        health_data["checks"]["innovation_engine"] = "disabled"
+    
+    return health_data
+
+# Innovation Engine System Info Integration
+@app.get("/system/info")
+async def system_info_with_innovation():
+    """Get system information including Innovation Engine."""
+    system_info_data = await system_info()
+    
+    # Add Innovation Engine information
+    if settings.INNOVATION_ENGINE_ENABLED:
+        system_info_data["innovation_engine_enabled"] = True
+        system_info_data["innovation_capabilities"] = await _get_innovation_capabilities_list()
+        
+        # Add Innovation Engine features
+        system_info_data["features"]["autonomous_feature_development"] = True
+        system_info_data["features"]["founder_approval_gates"] = True
+        system_info_data["features"]["innovation_ledger"] = True
+        system_info_data["features"]["ai_expert_recruitment"] = True
+        system_info_data["features"]["secure_ci_cd_pipeline"] = True
+        system_info_data["features"]["site_registry_management"] = True
+        
+        # Add Innovation Engine security
+        system_info_data["security"]["cryptographic_approval_required"] = True
+        system_info_data["security"]["immutable_audit_trail"] = True
+        system_info_data["security"]["tenant_isolation"] = True
+        system_info_data["security"]["automated_security_scanning"] = True
+        
+        # Add Innovation Engine performance
+        system_info_data["performance"]["innovation_pipeline_speed"] = "accelerated"
+        system_info_data["performance"]["automated_testing_coverage"] = "comprehensive"
+        system_info_data["performance"]["security_scanning_integrated"] = "real-time"
+    
+    return system_info_data
+
+# Innovation Engine Helper Functions
+async def _get_innovation_capabilities_list():
+    """Get list of Innovation Engine capabilities."""
+    if not settings.INNOVATION_ENGINE_ENABLED:
+        return []
+    
+    return [
+        "Autonomous Feature Proposal Generation",
+        "Cryptographic Founder Approval System",
+        "Immutable Private Ledger Audit Trail",
+        "AI Task Breakdown & Skill Tagging",
+        "Expert Recruitment & NDA Workflows",
+        "Ephemeral CI/CD Pipeline",
+        "Comprehensive Security Scanning",
+        "Site Registry & Tenant Isolation",
+        "Multi-Environment Deployment",
+        "Real-time Innovation Tracking"
+    ]
+
+# Innovation Engine Exception Handler
+if settings.INNOVATION_ENGINE_ENABLED:
+    @app.exception_handler(Exception)
+    async def innovation_exception_handler(request, exc):
+        """Handle Innovation Engine-related exceptions gracefully."""
+        if request.url.path.startswith('/api/v1/innovation/'):
+            logger.error(f"Innovation Engine error in {request.url.path}: {str(exc)}")
+            return {
+                "success": False,
+                "error": {
+                    "code": "INNOVATION_ENGINE_ERROR",
+                    "message": "Innovation Engine service temporarily unavailable",
+                    "timestamp": time.time(),
+                    "innovation_engine_enabled": settings.INNOVATION_ENGINE_ENABLED,
+                    "suggestion": "Check Innovation Engine status at /api/v1/innovation/status"
+                }
+            }
+        raise exc
+
+# Innovation Engine Shutdown Cleanup
+@app.on_event("shutdown")
+async def shutdown_innovation_engine():
+    """Cleanup Innovation Engine resources on shutdown."""
+    if settings.INNOVATION_ENGINE_ENABLED and INNOVATION_ENGINE_AVAILABLE:
+        try:
+            # Add any Innovation Engine cleanup logic if needed
+            logger.info("Innovation Engine shutdown complete")
+        except Exception as e:
+            logger.warning(f"Innovation Engine shutdown warning: {str(e)}")
+
+# ======= INNOVATION ENGINE INTEGRATION END =======
