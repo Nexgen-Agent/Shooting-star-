@@ -651,3 +651,158 @@ INNOVATION_SETTINGS = {
         "approval_timeout": FOUNDER_APPROVAL_TIMEOUT
     }
 }
+
+# ======= INNOVATION ENGINE SETTINGS =======
+INNOVATION_ENGINE_ENABLED: bool = True
+INNOVATION_ENGINE_VERSION: str = "1.0.0"
+
+# Innovation Engine Features
+INNOVATION_AUTO_PROPOSAL_ENABLED: bool = True
+INNOVATION_TASK_BREAKDOWN_ENABLED: bool = True
+INNOVATION_EXPERT_RECRUITMENT_ENABLED: bool = True
+INNOVATION_CI_CD_ENABLED: bool = True
+INNOVATION_SITE_REGISTRY_ENABLED: bool = True
+
+# Security & Approval Settings
+INNOVATION_REQUIRE_FOUNDER_APPROVAL: bool = True
+INNOVATION_CRYPTO_SIGNATURE_REQUIRED: bool = True
+INNOVATION_AUTO_SECURITY_SCANNING: bool = True
+INNOVATION_LEDGER_AUDIT_ENABLED: bool = True
+
+# Site Registry Settings
+SITE_REGISTRY_ENCRYPTION_KEY: str = os.getenv("SITE_REGISTRY_ENCRYPTION_KEY", "default_site_registry_key")
+SITE_DEPLOYMENT_TARGET: str = os.getenv("SITE_DEPLOYMENT_TARGET", "cloudflare")  # cloudflare, aws, gcp, azure
+SITE_STAGING_DOMAIN: str = os.getenv("SITE_STAGING_DOMAIN", "staging.shootingstar.ai")
+
+# Innovation CI/CD Settings
+INNOVATION_CI_SECURITY_SCANNING: bool = True
+INNOVATION_CI_PERFORMANCE_TESTING: bool = True
+INNOVATION_CI_CONTAINER_SCANNING: bool = True
+INNOVATION_CI_SECRETS_DETECTION: bool = True
+
+# Security Scanning Thresholds
+INNOVATION_SECURITY_SCORE_THRESHOLD: int = 80  # Minimum security score to pass (0-100)
+INNOVATION_SAST_VULNERABILITY_THRESHOLD: int = 0  # Maximum SAST vulnerabilities allowed
+INNOVATION_DEPENDENCY_VULNERABILITY_THRESHOLD: int = 0  # Maximum dependency vulnerabilities allowed
+
+# Expert Recruitment Settings
+INNOVATION_MIN_VETTING_SCORE: int = 80  # Minimum candidate vetting score (0-100)
+INNOVATION_MAX_HOURLY_RATE: float = 150.0  # Maximum hourly rate for experts
+INNOVATION_REQUIRE_NDA: bool = True
+INNOVATION_AUTO_ONBOARDING: bool = True
+
+# Task Management Settings
+INNOVATION_TASK_PRIORITIZATION_ENABLED: bool = True
+INNOVATION_AUTO_DEPENDENCY_RESOLUTION: bool = True
+INNOVATION_CRITICAL_PATH_ANALYSIS: bool = True
+
+# Cost & Budget Settings
+INNOVATION_MAX_PROPOSAL_COST: float = 10000.0  # Maximum cost for a single proposal
+INNOVATION_AUTO_COST_ESTIMATION: bool = True
+INNOVATION_COST_OPTIMIZATION: bool = True
+
+# Deployment Settings
+INNOVATION_AUTO_STAGING_DEPLOYMENT: bool = True
+INNOVATION_PRODUCTION_APPROVAL_REQUIRED: bool = True
+INNOVATION_AUTO_ROLLBACK_ENABLED: bool = True
+INNOVATION_DEPLOYMENT_TIMEOUT: int = 1800  # 30 minutes in seconds
+
+# Notification Settings
+INNOVATION_EMAIL_NOTIFICATIONS: bool = True
+INNOVATION_SLACK_NOTIFICATIONS: bool = False
+INNOVATION_FOUNDER_APPROVAL_NOTIFICATIONS: bool = True
+INNOVATION_DEPLOYMENT_NOTIFICATIONS: bool = True
+
+# Performance Settings
+INNOVATION_MAX_CONCURRENT_PROPOSALS: int = 5
+INNOVATION_MAX_CONCURRENT_DEPLOYMENTS: int = 3
+INNOVATION_TASK_PROCESSING_TIMEOUT: int = 3600  # 1 hour in seconds
+
+# Innovation Ledger Settings
+INNOVATION_LEDGER_ENCRYPTION_ENABLED: bool = True
+INNOVATION_LEDGER_BACKUP_ENABLED: bool = True
+INNOVATION_LEDGER_BACKUP_INTERVAL: int = 86400  # 24 hours in seconds
+
+# Integration Settings
+INNOVATION_INTEGRATE_WITH_CEO: bool = True
+INNOVATION_INTEGRATE_WITH_SCOUT: bool = True
+INNOVATION_INTEGRATE_WITH_MISSION: bool = True
+INNOVATION_INTEGRATE_WITH_SOCIAL_MEDIA: bool = False
+
+# Development & Debugging
+INNOVATION_DEBUG_MODE: bool = os.getenv("INNOVATION_DEBUG_MODE", "False").lower() == "true"
+INNOVATION_SIMULATION_MODE: bool = os.getenv("INNOVATION_SIMULATION_MODE", "False").lower() == "true"
+INNOVATION_DRY_RUN_ENABLED: bool = os.getenv("INNOVATION_DRY_RUN_ENABLED", "False").lower() == "true"
+
+# Environment-specific settings
+if os.getenv("ENVIRONMENT") == "production":
+    INNOVATION_REQUIRE_FOUNDER_APPROVAL = True
+    INNOVATION_CRYPTO_SIGNATURE_REQUIRED = True
+    INNOVATION_DEBUG_MODE = False
+    INNOVATION_SIMULATION_MODE = False
+elif os.getenv("ENVIRONMENT") == "staging":
+    INNOVATION_REQUIRE_FOUNDER_APPROVAL = False  # Auto-approve in staging for testing
+    INNOVATION_CRYPTO_SIGNATURE_REQUIRED = False
+    INNOVATION_DEBUG_MODE = True
+elif os.getenv("ENVIRONMENT") == "development":
+    INNOVATION_REQUIRE_FOUNDER_APPROVAL = False
+    INNOVATION_CRYPTO_SIGNATURE_REQUIRED = False
+    INNOVATION_DEBUG_MODE = True
+    INNOVATION_SIMULATION_MODE = True
+    INNOVATION_DRY_RUN_ENABLED = True
+
+# Feature flags for gradual rollout
+INNOVATION_FEATURE_FLAGS = {
+    "auto_prototype_generation": True,
+    "ai_task_breakdown": True,
+    "expert_auto_recruitment": True,
+    "smart_contract_generation": True,
+    "multi_tenant_isolation": True,
+    "cross_platform_deployment": True,
+    "real_time_collaboration": False,  # Coming soon
+    "predictive_cost_optimization": False,  # Coming soon
+}
+
+# API Rate Limits
+INNOVATION_API_RATE_LIMIT: str = "100/hour"
+INNOVATION_PROPOSAL_RATE_LIMIT: str = "10/hour"
+INNOVATION_DEPLOYMENT_RATE_LIMIT: str = "5/hour"
+
+# Monitoring & Analytics
+INNOVATION_METRICS_ENABLED: bool = True
+INNOVATION_PERFORMANCE_TRACKING: bool = True
+INNOVATION_USAGE_ANALYTICS: bool = True
+
+# Backup & Recovery
+INNOVATION_AUTO_BACKUP_ENABLED: bool = True
+INNOVATION_BACKUP_RETENTION_DAYS: int = 30
+INNOVATION_DISASTER_RECOVERY_ENABLED: bool = True
+
+# Compliance & Governance
+INNOVATION_COMPLIANCE_MODE: bool = os.getenv("INNOVATION_COMPLIANCE_MODE", "False").lower() == "true"
+INNOVATION_AUDIT_TRAIL_ENABLED: bool = True
+INNOVATION_DATA_RETENTION_DAYS: int = 365  # 1 year
+
+# External Service Integrations
+INNOVATION_GITHUB_INTEGRATION_ENABLED: bool = True
+INNOVATION_DOCKER_INTEGRATION_ENABLED: bool = True
+INNOVATION_CLOUDFLARE_INTEGRATION_ENABLED: bool = True
+INNOVATION_AWS_INTEGRATION_ENABLED: bool = False
+INNOVATION_GCP_INTEGRATION_ENABLED: bool = False
+INNOVATION_AZURE_INTEGRATION_ENABLED: bool = False
+
+# Security Service URLs (if using external services)
+INNOVATION_SAST_SERVICE_URL: str = os.getenv("INNOVATION_SAST_SERVICE_URL", "")
+INNOVATION_DAST_SERVICE_URL: str = os.getenv("INNOVATION_DAST_SERVICE_URL", "")
+INNOVATION_CONTAINER_SCAN_URL: str = os.getenv("INNOVATION_CONTAINER_SCAN_URL", "")
+
+# Innovation Engine Webhooks
+INNOVATION_WEBHOOKS_ENABLED: bool = True
+INNOVATION_PROPOSAL_WEBHOOK_URL: str = os.getenv("INNOVATION_PROPOSAL_WEBHOOK_URL", "")
+INNOVATION_DEPLOYMENT_WEBHOOK_URL: str = os.getenv("INNOVATION_DEPLOYMENT_WEBHOOK_URL", "")
+INNOVATION_APPROVAL_WEBHOOK_URL: str = os.getenv("INNOVATION_APPROVAL_WEBHOOK_URL", "")
+
+# Logging Settings
+INNOVATION_LOGGING_LEVEL: str = os.getenv("INNOVATION_LOGGING_LEVEL", "INFO")
+INNOVATION_DETAILED_LOGGING: bool = os.getenv("INNOVATION_DETAILED_LOGGING", "False").lower() == "true"
+INNOVATION_AUDIT_LOGGING: bool = True
