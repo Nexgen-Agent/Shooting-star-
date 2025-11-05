@@ -806,3 +806,280 @@ INNOVATION_APPROVAL_WEBHOOK_URL: str = os.getenv("INNOVATION_APPROVAL_WEBHOOK_UR
 INNOVATION_LOGGING_LEVEL: str = os.getenv("INNOVATION_LOGGING_LEVEL", "INFO")
 INNOVATION_DETAILED_LOGGING: bool = os.getenv("INNOVATION_DETAILED_LOGGING", "False").lower() == "true"
 INNOVATION_AUDIT_LOGGING: bool = True
+
+"""
+Enhanced Settings Configuration for Shooting Star AI Platform
+Integrated with Social Media Manager & AI CEO Systems
+"""
+
+import os
+from typing import List, Optional, Dict, Any
+from pydantic import BaseSettings, validator
+from datetime import timedelta
+
+class Settings(BaseSettings):
+    """Application settings with environment variables support"""
+    
+    # ======= CORE APPLICATION =======
+    APP_NAME: str = "Shooting Star AI Platform"
+    APP_VERSION: str = "v17.0.0"
+    DEBUG: bool = False
+    ENVIRONMENT: str = "production"
+    
+    # ======= DATABASE =======
+    DATABASE_URL: str = "sqlite+aiosqlite:///./shooting_star.db"
+    REDIS_URL: str = "redis://localhost:6379"
+    
+    # ======= SECURITY =======
+    SECRET_KEY: str = "your-secret-key-here-change-in-production"
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
+    
+    # ======= CORS =======
+    CORS_ORIGINS: List[str] = [
+        "http://localhost:3000",
+        "http://localhost:8000",
+        "https://yourdomain.com"
+    ]
+    
+    # ======= AI ENGINE FLAGS =======
+    AI_ENGINE_ENABLED: bool = True
+    V16_AI_MODULES_ENABLED: bool = True
+    V17_AI_ENGINE_ENABLED: bool = True
+    MARKETING_AI_ENABLED: bool = True
+    AI_MONITORING_ENABLED: bool = True
+    
+    # ======= NEW SYSTEM FLAGS =======
+    SOCIAL_MEDIA_MANAGER_ENABLED: bool = True
+    AI_CEO_ENABLED: bool = True
+    CYBERSECURITY_ENABLED: bool = True
+    SCOUT_ENGINE_ENABLED: bool = True
+    UNSTOPPABLE_MISSION_ENABLED: bool = True
+    DAILY_MISSION_CONTROLLER_ENABLED: bool = True
+    
+    # ======= SOCIAL MEDIA MANAGER SETTINGS =======
+    SOCIAL_MEDIA_PLATFORMS: List[str] = [
+        "instagram", "facebook", "twitter", "tiktok", "linkedin", "youtube"
+    ]
+    
+    SOCIAL_MEDIA_RATE_LIMITS: Dict[str, Dict[str, Any]] = {
+        "instagram": {"limit": 25, "window": "hour"},
+        "facebook": {"limit": 50, "window": "hour"},
+        "twitter": {"limit": 50, "window": "hour"},
+        "tiktok": {"limit": 20, "window": "hour"},
+        "linkedin": {"limit": 25, "window": "hour"},
+        "youtube": {"limit": 10, "window": "hour"}
+    }
+    
+    SOCIAL_CONTENT_APPROVAL_WORKFLOW: bool = True
+    SOCIAL_CRISIS_AUTO_RESPONSE: bool = True
+    SOCIAL_CEO_APPROVAL_REQUIRED: bool = True
+    
+    # ======= AI CEO SETTINGS =======
+    CEO_DECISION_HISTORY_LIMIT: int = 1000
+    CEO_LEARNING_CYCLES_MAX: int = 10000
+    
+    CEO_PERSONALITY_WEIGHTS: Dict[str, float] = {
+        "jobs": 0.25,
+        "pichai": 0.20,
+        "altman": 0.20,
+        "underwood": 0.15,
+        "nexgen": 0.20
+    }
+    
+    CEO_DECISION_THRESHOLDS: Dict[str, float] = {
+        "approve": 0.8,
+        "approve_with_optimization": 0.6,
+        "revise": 0.4,
+        "reject": 0.0
+    }
+    
+    FOUNDER_OVERRIDE_ENABLED: bool = True
+    CEO_STRATEGIC_INITIATIVES_MAX: int = 50
+    
+    # ======= AGENCY BUSINESS MODEL SETTINGS =======
+    AGENCY_SUCCESS_FEE_PERCENTAGE: float = 0.20  # 20% standard
+    AGENCY_MINIMUM_MONTHLY_FEE: float = 2000.00  # $2K/month minimum
+    AGENCY_CONTRACT_DURATION_MONTHS: int = 6
+    
+    # Client-specific negotiated rates (from your partnerships)
+    CLIENT_SPECIFIC_RATES: Dict[str, float] = {
+        "luxury_barbershop": 0.70,  # 70% margin
+        "premium_brand_1": 0.40,    # 40% margin
+        "premium_brand_2": 0.35,    # 35% margin
+        "premium_brand_3": 0.30,    # 30% margin
+        "premium_brand_4": 0.25,    # 25% margin
+    }
+    
+    # ======= OWNED BRANDS SETTINGS =======
+    OWNED_BRANDS_ENABLED: bool = True
+    OWNED_BRANDS_INITIAL_BUDGET: float = 50000.00  # $50K initial investment
+    OWNED_BRANDS_PROFIT_REINVESTMENT: float = 0.50  # 50% of profits reinvested
+    
+    # ======= PERFORMANCE & SCALING =======
+    AI_PREDICTION_TIMEOUT: int = 30  # seconds
+    MAX_CONCURRENT_AI_TASKS: int = 100
+    ANALYTICS_UPDATE_INTERVAL: int = 300  # 5 minutes
+    
+    # ======= SECURITY & COMPLIANCE =======
+    REQUIRE_HUMAN_APPROVAL: bool = True
+    AI_MAX_BUDGET_RECOMMENDATION: float = 100000.00  # $100K max AI can recommend
+    DECISION_AUDIT_TRAILS: bool = True
+    
+    # ======= MISSION SYSTEMS =======
+    MISSION_TARGET_VALUATION: float = 7800000000000.00  # $7.8T
+    MISSION_DURATION_YEARS: int = 20
+    MISSION_EMERGENCY_RECOVERY: bool = True
+    
+    # ======= CYBERSECURITY =======
+    CYBER_THREAT_LEVELS: Dict[str, Dict[str, Any]] = {
+        "normal": {"color": "green", "actions": ["monitor"]},
+        "elevated": {"color": "yellow", "actions": ["monitor", "alert_team"]},
+        "high": {"color": "orange", "actions": ["auto_contain", "alert_founder"]},
+        "critical": {"color": "red", "actions": ["full_lockdown", "ceo_alert"]}
+    }
+    
+    # ======= SCOUT ENGINE =======
+    SCOUT_MINIMUM_FOLLOWERS: int = 10000  # 10K minimum for influencers
+    SCOUT_TALENT_QUALITY_THRESHOLD: float = 0.7  # 70% minimum score
+    SCOUT_AUTO_OUTREACH_ENABLED: bool = True
+    
+    # ======= API & INTEGRATION =======
+    EXTERNAL_API_TIMEOUT: int = 30
+    RATE_LIMIT_REQUESTS_PER_MINUTE: int = 1000
+    
+    # Social Platform API Keys (set via environment variables in production)
+    INSTAGRAM_API_KEY: Optional[str] = None
+    FACEBOOK_API_KEY: Optional[str] = None
+    TWITTER_API_KEY: Optional[str] = None
+    TIKTOK_API_KEY: Optional[str] = None
+    LINKEDIN_API_KEY: Optional[str] = None
+    YOUTUBE_API_KEY: Optional[str] = None
+    
+    # ======= MONITORING & ANALYTICS =======
+    ENABLE_REALTIME_ANALYTICS: bool = True
+    PERFORMANCE_METRICS_INTERVAL: int = 60  # 1 minute
+    SYSTEM_HEALTH_CHECKS_ENABLED: bool = True
+    
+    # ======= FEATURE TOGGLES =======
+    FEATURE_FLAGS: Dict[str, bool] = {
+        "advanced_ai_governance": True,
+        "auto_negotiation_engine": True,
+        "predictive_scaling": True,
+        "real_time_learning": True,
+        "multi_cloud_deployment": True,
+        "federated_learning": True,
+    }
+    
+    # ======= BUSINESS INTELLIGENCE =======
+    BUSINESS_METRICS: Dict[str, Any] = {
+        "target_mrr_growth_rate": 0.10,  # 10% monthly growth
+        "target_client_acquisition_cost": 5000.00,  # $5K per client
+        "target_client_lifetime_value": 100000.00,  # $100K LTV
+        "target_agency_profit_margin": 0.40,  # 40% agency margin
+        "target_owned_brands_roi": 3.0,  # 3x ROI on owned brands
+    }
+    
+    # ======= VALIDATORS =======
+    @validator("CORS_ORIGINS", pre=True)
+    def parse_cors_origins(cls, v):
+        if isinstance(v, str):
+            return [origin.strip() for origin in v.split(",")]
+        return v
+    
+    @validator("SOCIAL_MEDIA_PLATFORMS", pre=True)
+    def parse_social_platforms(cls, v):
+        if isinstance(v, str):
+            return [platform.strip() for platform in v.split(",")]
+        return v
+    
+    @validator("ENVIRONMENT")
+    def validate_environment(cls, v):
+        if v not in ["development", "staging", "production"]:
+            raise ValueError("ENVIRONMENT must be development, staging, or production")
+        return v
+    
+    @validator("CEO_PERSONALITY_WEIGHTS")
+    def validate_personality_weights(cls, v):
+        total = sum(v.values())
+        if abs(total - 1.0) > 0.01:  # Allow small floating point errors
+            raise ValueError("CEO personality weights must sum to 1.0")
+        return v
+    
+    @validator("AGENCY_SUCCESS_FEE_PERCENTAGE")
+    def validate_success_fee(cls, v):
+        if not 0.01 <= v <= 0.95:  # 1% to 95% reasonable range
+            raise ValueError("Agency success fee must be between 1% and 95%")
+        return v
+    
+    class Config:
+        env_file = ".env"
+        case_sensitive = False
+
+# Global settings instance
+settings = Settings()
+
+# ======= ENVIRONMENT-SPECIFIC OVERRIDES =======
+if settings.ENVIRONMENT == "development":
+    settings.DEBUG = True
+    settings.DATABASE_URL = "sqlite+aiosqlite:///./shooting_star_dev.db"
+    
+    # Relax security for development
+    settings.REQUIRE_HUMAN_APPROVAL = False
+    settings.AI_MAX_BUDGET_RECOMMENDATION = 10000.00  # $10K in dev
+    
+    # Enable all features for testing
+    for feature in settings.FEATURE_FLAGS:
+        settings.FEATURE_FLAGS[feature] = True
+
+elif settings.ENVIRONMENT == "staging":
+    settings.DEBUG = True
+    settings.DATABASE_URL = "sqlite+aiosqlite:///./shooting_star_staging.db"
+    
+    # Partial security in staging
+    settings.REQUIRE_HUMAN_APPROVAL = True
+    settings.AI_MAX_BUDGET_RECOMMENDATION = 50000.00  # $50K in staging
+
+# Production environment uses all security settings as defined
+
+# ======= COMPUTED SETTINGS =======
+def get_social_platform_config(platform: str) -> Dict[str, Any]:
+    """Get configuration for a specific social media platform"""
+    return settings.SOCIAL_MEDIA_RATE_LIMITS.get(platform, {
+        "limit": 10, 
+        "window": "hour"
+    })
+
+def get_client_success_fee(client_id: str) -> float:
+    """Get negotiated success fee for specific client"""
+    return settings.CLIENT_SPECIFIC_RATES.get(client_id, settings.AGENCY_SUCCESS_FEE_PERCENTAGE)
+
+def is_feature_enabled(feature_name: str) -> bool:
+    """Check if a feature is enabled"""
+    return settings.FEATURE_FLAGS.get(feature_name, False)
+
+def get_ceo_decision_level(confidence: float) -> str:
+    """Determine CEO decision level based on confidence score"""
+    if confidence >= settings.CEO_DECISION_THRESHOLDS["approve"]:
+        return "APPROVE"
+    elif confidence >= settings.CEO_DECISION_THRESHOLDS["approve_with_optimization"]:
+        return "APPROVE_WITH_OPTIMIZATION" 
+    elif confidence >= settings.CEO_DECISION_THRESHOLDS["revise"]:
+        return "REVISE"
+    else:
+        return "REJECT"
+
+# ======= EXPORT COMPUTED VALUES =======
+SOCIAL_PLATFORM_CONFIGS = {
+    platform: get_social_platform_config(platform) 
+    for platform in settings.SOCIAL_MEDIA_PLATFORMS
+}
+
+# Export for easy imports
+__all__ = [
+    "settings", 
+    "SOCIAL_PLATFORM_CONFIGS",
+    "get_client_success_fee", 
+    "is_feature_enabled",
+    "get_ceo_decision_level"
+]
