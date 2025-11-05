@@ -3,11 +3,16 @@ V16 & V17 AI Engine Configuration
 INTEGRATED WITH CHAMELEON CYBER DEFENSE SYSTEM
 """
 
-from typing import List, Optional, Dict, Any
-from pydantic import BaseSettings, PostgresDsn, validator, Field
 import os
 from os import getenv
+from typing import List, Optional, Dict, Any
+from datetime import timedelta
+from pydantic import BaseSettings, PostgresDsn, validator, Field
 
+
+# ============================
+# CORE SETTINGS CLASS
+# ============================
 class Settings(BaseSettings):
     """V16 & V17 AI Engine Settings with Integrated Cybersecurity"""
 
@@ -17,23 +22,24 @@ class Settings(BaseSettings):
     APP_NAME: str = "Shooting Star V16 & V17 AI Engine + Cybersecurity"
     APP_VERSION: str = "17.1.0"
     DEBUG: bool = False
+    ENVIRONMENT: str = "production"
 
     # ============================
-    # Database Configuration
+    # Database & Cache Configuration
     # ============================
     DATABASE_URL: PostgresDsn = "postgresql+asyncpg://user:pass@localhost/shooting_star_v16"
+    REDIS_URL: str = "redis://localhost:6379/0"
 
     # ============================
-    # JWT Configuration
+    # Security & Authentication
     # ============================
     SECRET_KEY: str = "v16-ai-engine-secret-key-change-in-production"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
     # ============================
-    # Redis & Celery Configuration
+    # Celery Configuration
     # ============================
-    REDIS_URL: str = "redis://localhost:6379/0"
     CELERY_BROKER_URL: str = "redis://localhost:6379/0"
     CELERY_RESULT_BACKEND: str = "redis://localhost:6379/0"
 
@@ -160,7 +166,9 @@ class Settings(BaseSettings):
     CYBER_SIMULATION_FREQUENCY_HOURS: int = Field(24, description="How often to run security simulations")
     CYBER_SIMULATION_INTENSITY: str = Field("medium", description="Default simulation intensity")
 
-    # Marketing AI Configuration
+    # ============================
+    # MARKETING AI CONFIGURATION
+    # ============================
     MARKETING_AI_ENABLED: bool = Field(True, description="Enable Marketing AI Engine")
     MARKETING_AI_FEATURES: List[str] = Field([
         "customer_journey", "roi_optimization", "content_prediction", 
@@ -168,7 +176,82 @@ class Settings(BaseSettings):
     ], description="Enabled marketing AI features")
 
     # ============================
-    # Validators
+    # INNOVATION ENGINE SETTINGS
+    # ============================
+    INNOVATION_ENGINE_ENABLED: bool = True
+    INNOVATION_ENGINE_VERSION: str = "1.0.0"
+    INNOVATION_MAX_EPHEMERAL_TIME: int = 3600  # 1 hour
+    INNOVATION_ALLOWED_DOMAINS: List[str] = ["github.com", "gitlab.com", "bitbucket.org"]
+    INNOVATION_APPROVAL_THRESHOLD: float = 1000.0  # $ amount requiring founder approval
+    INNOVATION_RECRUITING_BUDGET: float = 5000.0
+    INNOVATION_MAX_CONCURRENT_PROPOSALS: int = 5
+
+    # Innovation Engine Features
+    INNOVATION_AUTO_PROPOSAL_ENABLED: bool = True
+    INNOVATION_TASK_BREAKDOWN_ENABLED: bool = True
+    INNOVATION_EXPERT_RECRUITMENT_ENABLED: bool = True
+    INNOVATION_CI_CD_ENABLED: bool = True
+    INNOVATION_SITE_REGISTRY_ENABLED: bool = True
+
+    # Security & Approval Settings
+    INNOVATION_REQUIRE_FOUNDER_APPROVAL: bool = True
+    INNOVATION_CRYPTO_SIGNATURE_REQUIRED: bool = True
+    INNOVATION_AUTO_SECURITY_SCANNING: bool = True
+    INNOVATION_LEDGER_AUDIT_ENABLED: bool = True
+
+    # ============================
+    # AI CEO & BUSINESS SETTINGS
+    # ============================
+    AI_CEO_ENABLED: bool = True
+    CEO_DECISION_HISTORY_LIMIT: int = 1000
+    CEO_LEARNING_CYCLES_MAX: int = 10000
+
+    CEO_PERSONALITY_WEIGHTS: Dict[str, float] = {
+        "jobs": 0.25,
+        "pichai": 0.20,
+        "altman": 0.20,
+        "underwood": 0.15,
+        "nexgen": 0.20
+    }
+
+    CEO_DECISION_THRESHOLDS: Dict[str, float] = {
+        "approve": 0.8,
+        "approve_with_optimization": 0.6,
+        "revise": 0.4,
+        "reject": 0.0
+    }
+
+    # Agency Business Model
+    AGENCY_SUCCESS_FEE_PERCENTAGE: float = 0.20  # 20% standard
+    AGENCY_MINIMUM_MONTHLY_FEE: float = 2000.00  # $2K/month minimum
+    AGENCY_CONTRACT_DURATION_MONTHS: int = 6
+
+    # Client-specific negotiated rates
+    CLIENT_SPECIFIC_RATES: Dict[str, float] = {
+        "luxury_barbershop": 0.70,  # 70% margin
+        "premium_brand_1": 0.40,    # 40% margin
+        "premium_brand_2": 0.35,    # 35% margin
+        "premium_brand_3": 0.30,    # 30% margin
+        "premium_brand_4": 0.25,    # 25% margin
+    }
+
+    # Owned Brands Settings
+    OWNED_BRANDS_ENABLED: bool = True
+    OWNED_BRANDS_INITIAL_BUDGET: float = 50000.00  # $50K initial investment
+    OWNED_BRANDS_PROFIT_REINVESTMENT: float = 0.50  # 50% of profits reinvested
+
+    # ============================
+    # MISSION SYSTEMS
+    # ============================
+    UNSTOPPABLE_MISSION_ENABLED: bool = True
+    DAILY_MISSION_CONTROLLER_ENABLED: bool = True
+    SCOUT_ENGINE_ENABLED: bool = True
+    MISSION_TARGET_VALUATION: float = 7800000000000.00  # $7.8T
+    MISSION_DURATION_YEARS: int = 20
+    MISSION_EMERGENCY_RECOVERY: bool = True
+
+    # ============================
+    # VALIDATORS
     # ============================
     @validator("DATABASE_URL")
     def validate_database_url(cls, v):
@@ -214,22 +297,38 @@ class Settings(BaseSettings):
             raise ValueError("CYBER_MONITORING_INTERVAL_SECONDS must be at least 1 second")
         return v
 
+    @validator("CORS_ORIGINS", pre=True)
+    def parse_cors_origins(cls, v):
+        if isinstance(v, str):
+            return [origin.strip() for origin in v.split(",")]
+        return v
+
+    @validator("CEO_PERSONALITY_WEIGHTS")
+    def validate_personality_weights(cls, v):
+        total = sum(v.values())
+        if abs(total - 1.0) > 0.01:
+            raise ValueError("CEO personality weights must sum to 1.0")
+        return v
+
+    @validator("AGENCY_SUCCESS_FEE_PERCENTAGE")
+    def validate_success_fee(cls, v):
+        if not 0.01 <= v <= 0.95:
+            raise ValueError("Agency success fee must be between 1% and 95%")
+        return v
+
     # ============================
-    # Property Methods for Feature Flags
+    # PROPERTY METHODS
     # ============================
     @property
     def v17_features_enabled(self) -> bool:
-        """Check if any V17 features are enabled."""
         return self.V17_AI_ENGINE_ENABLED
 
     @property
     def v17_microservices_enabled(self) -> bool:
-        """Check if V17 microservices are enabled."""
         return self.V17_AI_ENGINE_ENABLED and self.V17_MICROSERVICES_ENABLED
 
     @property
     def v17_advanced_ai_enabled(self) -> bool:
-        """Check if V17 advanced AI capabilities are enabled."""
         return (self.V17_AI_ENGINE_ENABLED and 
                 (self.V17_MULTI_MODAL_FUSION_ENABLED or 
                  self.V17_CAUSAL_INFERENCE_ENABLED or 
@@ -237,67 +336,36 @@ class Settings(BaseSettings):
 
     @property
     def v17_learning_enabled(self) -> bool:
-        """Check if V17 learning capabilities are enabled."""
         return self.V17_AI_ENGINE_ENABLED and self.V17_REAL_TIME_LEARNING_ENABLED
 
     @property
     def v17_scaling_enabled(self) -> bool:
-        """Check if V17 scaling capabilities are enabled."""
         return self.V17_AI_ENGINE_ENABLED and self.V17_AUTO_SCALING_ENABLED
 
     @property
     def v17_governance_enabled(self) -> bool:
-        """Check if V17 governance capabilities are enabled."""
         return self.V17_AI_ENGINE_ENABLED and self.V17_AI_GOVERNANCE_ENABLED
 
-    # ============================
-    # Cybersecurity Property Methods
-    # ============================
     @property
     def cybersecurity_enabled(self) -> bool:
-        """Check if cybersecurity system is enabled."""
         return self.CYBERSECURITY_ENABLED
 
     @property
     def cyber_defense_orchestration_enabled(self) -> bool:
-        """Check if cyber defense orchestration is enabled."""
         return self.CYBERSECURITY_ENABLED and self.CYBER_DEFENSE_ORCHESTRATION_ENABLED
 
     @property
     def cyber_real_time_monitoring_enabled(self) -> bool:
-        """Check if real-time security monitoring is enabled."""
         return self.CYBERSECURITY_ENABLED and self.CYBER_REAL_TIME_MONITORING_ENABLED
 
     @property
     def cyber_automated_response_enabled(self) -> bool:
-        """Check if automated incident response is enabled."""
         return self.CYBERSECURITY_ENABLED and self.CYBER_AUTOMATED_INCIDENT_RESPONSE_ENABLED
 
-    @property
-    def cyber_forensics_enabled(self) -> bool:
-        """Check if forensic evidence collection is enabled."""
-        return self.CYBERSECURITY_ENABLED and self.CYBER_FORENSIC_EVIDENCE_COLLECTION_ENABLED
-
-    @property
-    def cyber_deception_enabled(self) -> bool:
-        """Check if deception & honeypot systems are enabled."""
-        return self.CYBERSECURITY_ENABLED and self.CYBER_DECEPTION_HONEYPOT_ENABLED
-
-    @property
-    def cyber_identity_protection_enabled(self) -> bool:
-        """Check if identity & access protection is enabled."""
-        return self.CYBERSECURITY_ENABLED and self.CYBER_IDENTITY_ACCESS_PROTECTION_ENABLED
-
-    @property
-    def cyber_edge_protection_enabled(self) -> bool:
-        """Check if edge security protection is enabled."""
-        return self.CYBERSECURITY_ENABLED and self.CYBER_EDGE_SECURITY_PROTECTION_ENABLED
-
     # ============================
-    # Configuration Methods
+    # CONFIGURATION METHODS
     # ============================
     def get_v17_config(self) -> Dict[str, Any]:
-        """Get V17-specific configuration."""
         return {
             "cluster_size": self.V17_AI_CLUSTER_SIZE,
             "max_nodes": self.V17_AI_MAX_NODES,
@@ -330,7 +398,6 @@ class Settings(BaseSettings):
         }
 
     def get_v16_config(self) -> Dict[str, Any]:
-        """Get V16-specific configuration."""
         return {
             "ai_engine_enabled": self.AI_ENGINE_ENABLED,
             "ai_model_path": self.AI_MODEL_PATH,
@@ -347,7 +414,6 @@ class Settings(BaseSettings):
         }
 
     def get_cybersecurity_config(self) -> Dict[str, Any]:
-        """Get cybersecurity-specific configuration."""
         return {
             "cybersecurity_enabled": self.CYBERSECURITY_ENABLED,
             "defense_orchestration": self.CYBER_DEFENSE_ORCHESTRATION_ENABLED,
@@ -376,15 +442,7 @@ class Settings(BaseSettings):
             "simulation_intensity": self.CYBER_SIMULATION_INTENSITY
         }
 
-    def get_marketing_ai_config(self) -> Dict[str, Any]:
-        """Get marketing AI configuration."""
-        return {
-            "marketing_ai_enabled": self.MARKETING_AI_ENABLED,
-            "marketing_ai_features": self.MARKETING_AI_FEATURES
-        }
-
     def get_system_capabilities(self) -> Dict[str, Any]:
-        """Get comprehensive system capabilities."""
         return {
             "v16_ai_engine": {
                 "enabled": self.AI_ENGINE_ENABLED,
@@ -400,7 +458,10 @@ class Settings(BaseSettings):
             },
             "marketing_ai_engine": {
                 "enabled": self.MARKETING_AI_ENABLED,
-                "capabilities": self.get_marketing_ai_config() if self.MARKETING_AI_ENABLED else {}
+                "capabilities": {
+                    "marketing_ai_enabled": self.MARKETING_AI_ENABLED,
+                    "marketing_ai_features": self.MARKETING_AI_FEATURES
+                } if self.MARKETING_AI_ENABLED else {}
             },
             "system_info": {
                 "app_name": self.APP_NAME,
@@ -416,74 +477,63 @@ class Settings(BaseSettings):
         env_file = ".env"
         case_sensitive = True
 
-# Global settings instance
-settings = Settings()
 
 # ============================
-# V16 AI Engine Settings
+# GLOBAL SETTINGS INSTANCE
 # ============================
+settings = Settings()
+
+
+# ============================
+# LEGACY SETTINGS (for backward compatibility)
+# ============================
+
+# V16 AI Engine Settings
 V16_AI_MAX_CONCURRENT_REQUESTS = 10
 V16_AI_REQUEST_TIMEOUT = 30
 V16_AI_ENABLE_REAL_TIME_ENGINE = True
 V16_AI_ANALYTICS_RETENTION_DAYS = 30
 
-# ============================
 # V16 Admin System Settings
-# ============================
 V16_ADMIN_MAX_TASKS_PER_USER = 50
 V16_ADMIN_WORKSPACE_TEMPLATES_ENABLED = True
 V16_ADMIN_PRODUCTIVITY_TRACKING = True
 V16_ADMIN_PERFORMANCE_SCORE_INTERVAL = 3600  # 1 hour
 
-# ============================
 # V16 Analytics System Settings
-# ============================
 V16_ANALYTICS_SOCIAL_TREND_DETECTION = True
 V16_ANALYTICS_FINANCIAL_PROJECTION_ENABLED = True
 V16_ANALYTICS_REALTIME_INSIGHTS_INTERVAL = 300  # 5 minutes
 V16_ANALYTICS_MAX_HISTORICAL_DATA_POINTS = 10000
-V16_ANALYTICS_SENTIMENT_ANALYSIS_PROVIDER = "textblob"  # or "custom"
+V16_ANALYTICS_SENTIMENT_ANALYSIS_PROVIDER = "textblob"
 
-# ============================
 # V16 Monitoring System Settings
-# ============================
 V16_MONITORING_TELEMETRY_ENABLED = True
 V16_MONITORING_HEALTH_CHECKS_INTERVAL = 60  # seconds
 V16_MONITORING_ALERT_COOLDOWN_MINUTES = 10
 V16_MONITORING_NOTIFICATION_EMAILS = ["admin@shootingstar.com"]
-V16_MONITORING_SLACK_WEBHOOK_URL = "https://hooks.slack.com/services/..."
 
-# ============================
 # V16 Services System Settings
-# ============================
 V16_SERVICES_REDIS_URL = "redis://localhost:6379"
 V16_SERVICES_NOTIFICATION_EMAIL_FROM = "notifications@shootingstar.com"
 V16_SERVICES_AUTOMATION_ENABLED = True
 V16_SERVICES_REALTIME_MONITORING = True
 V16_SERVICES_DELIVERY_RATE_LIMIT = 100  # notifications per minute
 
-# ============================
 # V16 AI Modules Settings
-# ============================
 V16_AI_MODULES_ENABLED: bool = getenv("V16_AI_MODULES_ENABLED", "True").lower() == "true"
-
-# AI Integration Settings
 AI_INSIGHT_QUEUE_ENABLED = True
 CROSSOVER_LOGIC_ENABLED = True
 RETARGETING_DAYS_LOOKBACK = 90
 
-# ============================
 # Financial System Configuration
-# ============================
 PROFIT_ALLOCATION_RULES = {
     "growth_fund": 0.30,
     "operations": 0.60, 
     "vault_reserves": 0.10
 }
 
-# ============================
 # Growth Engine Settings
-# ============================
 GROWTH_CYCLE_CONFIG = {
     "daily_cycle_enabled": True,
     "weekly_cycle_enabled": True,
@@ -492,9 +542,7 @@ GROWTH_CYCLE_CONFIG = {
     "profit_threshold_increase_reinvestment": 50000
 }
 
-# ============================
 # Forecasting Settings
-# ============================
 FORECASTING_CONFIG = {
     "default_growth_rate": 0.05,
     "confidence_threshold": 0.7,
@@ -502,9 +550,7 @@ FORECASTING_CONFIG = {
     "projection_horizon_years": 5
 }
 
-# ============================
 # Dashboard Settings
-# ============================
 DASHBOARD_CONFIG = {
     "update_frequency_minutes": 5,
     "cache_duration_minutes": 10,
@@ -514,6 +560,7 @@ DASHBOARD_CONFIG = {
 # ============================
 # CYBERSECURITY CONSTANTS
 # ============================
+
 # Threat Levels
 CYBER_THREAT_LEVELS = {
     "NORMAL": "normal",
@@ -550,9 +597,7 @@ CYBER_INCIDENT_SEVERITY = {
     "CRITICAL": "critical"
 }
 
-# ============================
 # Cybersecurity Performance Constants
-# ============================
 CYBER_PERFORMANCE_CONSTANTS = {
     "MAX_INCIDENTS_PER_HOUR": 1000,
     "MAX_FORENSIC_JOBS": 5,
@@ -561,9 +606,7 @@ CYBER_PERFORMANCE_CONSTANTS = {
     "EVIDENCE_PROCESSING_TIMEOUT": 300  # 5 minutes
 }
 
-# ============================
 # Cybersecurity Storage Constants  
-# ============================
 CYBER_STORAGE_CONSTANTS = {
     "MAX_EVIDENCE_SIZE_MB": 1024,  # 1GB per evidence package
     "MAX_AUDIT_LOG_SIZE_GB": 100,  # 100GB total audit logs
@@ -571,9 +614,7 @@ CYBER_STORAGE_CONSTANTS = {
     "COMPRESSION_LEVEL": 6
 }
 
-# ============================
 # Cybersecurity Communication Constants
-# ============================
 CYBER_COMMUNICATION_CONSTANTS = {
     "ALERT_PRIORITY_LEVELS": ["low", "medium", "high", "critical"],
     "MAX_ALERTS_PER_HOUR": 100,
@@ -581,30 +622,19 @@ CYBER_COMMUNICATION_CONSTANTS = {
     "EMAIL_SUBJECT_PREFIX": "[SECURITY ALERT]"
 }
 
-"""
-Innovation Engine Settings
-Configuration for Autonomous Innovation Engine (AIE) "Forge"
-"""
-
-import os
-from typing import List
-
-# Innovation Engine Settings
-INNOVATION_MAX_EPHEMERAL_TIME = int(os.getenv("INNOVATION_MAX_EPHEMERAL_TIME", "3600"))  # 1 hour
-INNOVATION_ALLOWED_DOMAINS = os.getenv("INNOVATION_ALLOWED_DOMAINS", "github.com,gitlab.com,bitbucket.org").split(",")
-INNOVATION_APPROVAL_THRESHOLD = float(os.getenv("INNOVATION_APPROVAL_THRESHOLD", "1000.0"))  # $ amount requiring founder approval
-INNOVATION_RECRUITING_BUDGET = float(os.getenv("INNOVATION_RECRUITING_BUDGET", "5000.0"))
-INNOVATION_MAX_CONCURRENT_PROPOSALS = int(os.getenv("INNOVATION_MAX_CONCURRENT_PROPOSALS", "5"))
+# ============================
+# INNOVATION ENGINE CONSTANTS
+# ============================
 
 # Security Settings
-INNOVATION_REQUIRE_SAST = os.getenv("INNOVATION_REQUIRE_SAST", "True").lower() == "true"
-INNOVATION_REQUIRE_DEPENDENCY_SCAN = os.getenv("INNOVATION_REQUIRE_DEPENDENCY_SCAN", "True").lower() == "true"
-INNOVATION_MIN_TEST_COVERAGE = float(os.getenv("INNOVATION_MIN_TEST_COVERAGE", "80.0"))
-INNOVATION_SECURITY_SCORE_THRESHOLD = float(os.getenv("INNOVATION_SECURITY_SCORE_THRESHOLD", "80.0"))
+INNOVATION_REQUIRE_SAST = getenv("INNOVATION_REQUIRE_SAST", "True").lower() == "true"
+INNOVATION_REQUIRE_DEPENDENCY_SCAN = getenv("INNOVATION_REQUIRE_DEPENDENCY_SCAN", "True").lower() == "true"
+INNOVATION_MIN_TEST_COVERAGE = float(getenv("INNOVATION_MIN_TEST_COVERAGE", "80.0"))
+INNOVATION_SECURITY_SCORE_THRESHOLD = float(getenv("INNOVATION_SECURITY_SCORE_THRESHOLD", "80.0"))
 
 # Recruitment Settings
-INNOVATION_MIN_VETTING_SCORE = int(os.getenv("INNOVATION_MIN_VETTING_SCORE", "80"))
-INNOVATION_REQUIRE_NDA = os.getenv("INNOVATION_REQUIRE_NDA", "True").lower() == "true"
+INNOVATION_MIN_VETTING_SCORE = int(getenv("INNOVATION_MIN_VETTING_SCORE", "80"))
+INNOVATION_REQUIRE_NDA = getenv("INNOVATION_REQUIRE_NDA", "True").lower() == "true"
 INNOVATION_CONTRACT_TERMS = {
     "confidentiality": True,
     "ip_assignment": True,
@@ -613,450 +643,27 @@ INNOVATION_CONTRACT_TERMS = {
 }
 
 # CI/CD Settings
-INNOVATION_CI_IMAGE = os.getenv("INNOVATION_CI_IMAGE", "python:3.9-slim")
-INNOVATION_TEST_TIMEOUT = int(os.getenv("INNOVATION_TEST_TIMEOUT", "1800"))  # 30 minutes
-INNOVATION_ARTIFACT_RETENTION_DAYS = int(os.getenv("INNOVATION_ARTIFACT_RETENTION_DAYS", "30"))
+INNOVATION_CI_IMAGE = getenv("INNOVATION_CI_IMAGE", "python:3.9-slim")
+INNOVATION_TEST_TIMEOUT = int(getenv("INNOVATION_TEST_TIMEOUT", "1800"))  # 30 minutes
+INNOVATION_ARTIFACT_RETENTION_DAYS = int(getenv("INNOVATION_ARTIFACT_RETENTION_DAYS", "30"))
 
 # Founder Approval Settings
-FOUNDER_APPROVAL_REQUIRED = os.getenv("FOUNDER_APPROVAL_REQUIRED", "True").lower() == "true"
-FOUNDER_PUBLIC_KEY = os.getenv("FOUNDER_PUBLIC_KEY", "")
-FOUNDER_APPROVAL_TIMEOUT = int(os.getenv("FOUNDER_APPROVAL_TIMEOUT", "604800"))  # 7 days
+FOUNDER_APPROVAL_REQUIRED = getenv("FOUNDER_APPROVAL_REQUIRED", "True").lower() == "true"
+FOUNDER_PUBLIC_KEY = getenv("FOUNDER_PUBLIC_KEY", "")
+FOUNDER_APPROVAL_TIMEOUT = int(getenv("FOUNDER_APPROVAL_TIMEOUT", "604800"))  # 7 days
 
-# Export all innovation settings
-INNOVATION_SETTINGS = {
-    "max_ephemeral_time": INNOVATION_MAX_EPHEMERAL_TIME,
-    "allowed_domains": INNOVATION_ALLOWED_DOMAINS,
-    "approval_threshold": INNOVATION_APPROVAL_THRESHOLD,
-    "recruiting_budget": INNOVATION_RECRUITING_BUDGET,
-    "max_concurrent_proposals": INNOVATION_MAX_CONCURRENT_PROPOSALS,
-    "security": {
-        "require_sast": INNOVATION_REQUIRE_SAST,
-        "require_dependency_scan": INNOVATION_REQUIRE_DEPENDENCY_SCAN,
-        "min_test_coverage": INNOVATION_MIN_TEST_COVERAGE,
-        "security_score_threshold": INNOVATION_SECURITY_SCORE_THRESHOLD
-    },
-    "recruitment": {
-        "min_vetting_score": INNOVATION_MIN_VETTING_SCORE,
-        "require_nda": INNOVATION_REQUIRE_NDA,
-        "contract_terms": INNOVATION_CONTRACT_TERMS
-    },
-    "ci_cd": {
-        "ci_image": INNOVATION_CI_IMAGE,
-        "test_timeout": INNOVATION_TEST_TIMEOUT,
-        "artifact_retention_days": INNOVATION_ARTIFACT_RETENTION_DAYS
-    },
-    "founder_approval": {
-        "required": FOUNDER_APPROVAL_REQUIRED,
-        "public_key": FOUNDER_PUBLIC_KEY,
-        "approval_timeout": FOUNDER_APPROVAL_TIMEOUT
-    }
-}
+# Innovation Engine Settings
+SITE_REGISTRY_ENCRYPTION_KEY: str = getenv("SITE_REGISTRY_ENCRYPTION_KEY", "default_site_registry_key")
+SITE_DEPLOYMENT_TARGET: str = getenv("SITE_DEPLOYMENT_TARGET", "cloudflare")
+SITE_STAGING_DOMAIN: str = getenv("SITE_STAGING_DOMAIN", "staging.shootingstar.ai")
 
-# ======= INNOVATION ENGINE SETTINGS =======
-INNOVATION_ENGINE_ENABLED: bool = True
-INNOVATION_ENGINE_VERSION: str = "1.0.0"
-
-# Innovation Engine Features
-INNOVATION_AUTO_PROPOSAL_ENABLED: bool = True
-INNOVATION_TASK_BREAKDOWN_ENABLED: bool = True
-INNOVATION_EXPERT_RECRUITMENT_ENABLED: bool = True
-INNOVATION_CI_CD_ENABLED: bool = True
-INNOVATION_SITE_REGISTRY_ENABLED: bool = True
-
-# Security & Approval Settings
-INNOVATION_REQUIRE_FOUNDER_APPROVAL: bool = True
-INNOVATION_CRYPTO_SIGNATURE_REQUIRED: bool = True
-INNOVATION_AUTO_SECURITY_SCANNING: bool = True
-INNOVATION_LEDGER_AUDIT_ENABLED: bool = True
-
-# Site Registry Settings
-SITE_REGISTRY_ENCRYPTION_KEY: str = os.getenv("SITE_REGISTRY_ENCRYPTION_KEY", "default_site_registry_key")
-SITE_DEPLOYMENT_TARGET: str = os.getenv("SITE_DEPLOYMENT_TARGET", "cloudflare")  # cloudflare, aws, gcp, azure
-SITE_STAGING_DOMAIN: str = os.getenv("SITE_STAGING_DOMAIN", "staging.shootingstar.ai")
-
-# Innovation CI/CD Settings
-INNOVATION_CI_SECURITY_SCANNING: bool = True
-INNOVATION_CI_PERFORMANCE_TESTING: bool = True
-INNOVATION_CI_CONTAINER_SCANNING: bool = True
-INNOVATION_CI_SECRETS_DETECTION: bool = True
-
-# Security Scanning Thresholds
-INNOVATION_SECURITY_SCORE_THRESHOLD: int = 80  # Minimum security score to pass (0-100)
-INNOVATION_SAST_VULNERABILITY_THRESHOLD: int = 0  # Maximum SAST vulnerabilities allowed
-INNOVATION_DEPENDENCY_VULNERABILITY_THRESHOLD: int = 0  # Maximum dependency vulnerabilities allowed
-
-# Expert Recruitment Settings
-INNOVATION_MIN_VETTING_SCORE: int = 80  # Minimum candidate vetting score (0-100)
-INNOVATION_MAX_HOURLY_RATE: float = 150.0  # Maximum hourly rate for experts
-INNOVATION_REQUIRE_NDA: bool = True
-INNOVATION_AUTO_ONBOARDING: bool = True
-
-# Task Management Settings
-INNOVATION_TASK_PRIORITIZATION_ENABLED: bool = True
-INNOVATION_AUTO_DEPENDENCY_RESOLUTION: bool = True
-INNOVATION_CRITICAL_PATH_ANALYSIS: bool = True
-
-# Cost & Budget Settings
-INNOVATION_MAX_PROPOSAL_COST: float = 10000.0  # Maximum cost for a single proposal
-INNOVATION_AUTO_COST_ESTIMATION: bool = True
-INNOVATION_COST_OPTIMIZATION: bool = True
-
-# Deployment Settings
-INNOVATION_AUTO_STAGING_DEPLOYMENT: bool = True
-INNOVATION_PRODUCTION_APPROVAL_REQUIRED: bool = True
-INNOVATION_AUTO_ROLLBACK_ENABLED: bool = True
-INNOVATION_DEPLOYMENT_TIMEOUT: int = 1800  # 30 minutes in seconds
-
-# Notification Settings
-INNOVATION_EMAIL_NOTIFICATIONS: bool = True
-INNOVATION_SLACK_NOTIFICATIONS: bool = False
-INNOVATION_FOUNDER_APPROVAL_NOTIFICATIONS: bool = True
-INNOVATION_DEPLOYMENT_NOTIFICATIONS: bool = True
-
-# Performance Settings
-INNOVATION_MAX_CONCURRENT_PROPOSALS: int = 5
-INNOVATION_MAX_CONCURRENT_DEPLOYMENTS: int = 3
-INNOVATION_TASK_PROCESSING_TIMEOUT: int = 3600  # 1 hour in seconds
-
-# Innovation Ledger Settings
-INNOVATION_LEDGER_ENCRYPTION_ENABLED: bool = True
-INNOVATION_LEDGER_BACKUP_ENABLED: bool = True
-INNOVATION_LEDGER_BACKUP_INTERVAL: int = 86400  # 24 hours in seconds
-
-# Integration Settings
-INNOVATION_INTEGRATE_WITH_CEO: bool = True
-INNOVATION_INTEGRATE_WITH_SCOUT: bool = True
-INNOVATION_INTEGRATE_WITH_MISSION: bool = True
-INNOVATION_INTEGRATE_WITH_SOCIAL_MEDIA: bool = False
-
-# Development & Debugging
-INNOVATION_DEBUG_MODE: bool = os.getenv("INNOVATION_DEBUG_MODE", "False").lower() == "true"
-INNOVATION_SIMULATION_MODE: bool = os.getenv("INNOVATION_SIMULATION_MODE", "False").lower() == "true"
-INNOVATION_DRY_RUN_ENABLED: bool = os.getenv("INNOVATION_DRY_RUN_ENABLED", "False").lower() == "true"
-
-# Environment-specific settings
-if os.getenv("ENVIRONMENT") == "production":
-    INNOVATION_REQUIRE_FOUNDER_APPROVAL = True
-    INNOVATION_CRYPTO_SIGNATURE_REQUIRED = True
-    INNOVATION_DEBUG_MODE = False
-    INNOVATION_SIMULATION_MODE = False
-elif os.getenv("ENVIRONMENT") == "staging":
-    INNOVATION_REQUIRE_FOUNDER_APPROVAL = False  # Auto-approve in staging for testing
-    INNOVATION_CRYPTO_SIGNATURE_REQUIRED = False
-    INNOVATION_DEBUG_MODE = True
-elif os.getenv("ENVIRONMENT") == "development":
-    INNOVATION_REQUIRE_FOUNDER_APPROVAL = False
-    INNOVATION_CRYPTO_SIGNATURE_REQUIRED = False
-    INNOVATION_DEBUG_MODE = True
-    INNOVATION_SIMULATION_MODE = True
-    INNOVATION_DRY_RUN_ENABLED = True
-
-# Feature flags for gradual rollout
-INNOVATION_FEATURE_FLAGS = {
-    "auto_prototype_generation": True,
-    "ai_task_breakdown": True,
-    "expert_auto_recruitment": True,
-    "smart_contract_generation": True,
-    "multi_tenant_isolation": True,
-    "cross_platform_deployment": True,
-    "real_time_collaboration": False,  # Coming soon
-    "predictive_cost_optimization": False,  # Coming soon
-}
-
-# API Rate Limits
-INNOVATION_API_RATE_LIMIT: str = "100/hour"
-INNOVATION_PROPOSAL_RATE_LIMIT: str = "10/hour"
-INNOVATION_DEPLOYMENT_RATE_LIMIT: str = "5/hour"
-
-# Monitoring & Analytics
-INNOVATION_METRICS_ENABLED: bool = True
-INNOVATION_PERFORMANCE_TRACKING: bool = True
-INNOVATION_USAGE_ANALYTICS: bool = True
-
-# Backup & Recovery
-INNOVATION_AUTO_BACKUP_ENABLED: bool = True
-INNOVATION_BACKUP_RETENTION_DAYS: int = 30
-INNOVATION_DISASTER_RECOVERY_ENABLED: bool = True
-
-# Compliance & Governance
-INNOVATION_COMPLIANCE_MODE: bool = os.getenv("INNOVATION_COMPLIANCE_MODE", "False").lower() == "true"
-INNOVATION_AUDIT_TRAIL_ENABLED: bool = True
-INNOVATION_DATA_RETENTION_DAYS: int = 365  # 1 year
-
-# External Service Integrations
-INNOVATION_GITHUB_INTEGRATION_ENABLED: bool = True
-INNOVATION_DOCKER_INTEGRATION_ENABLED: bool = True
-INNOVATION_CLOUDFLARE_INTEGRATION_ENABLED: bool = True
-INNOVATION_AWS_INTEGRATION_ENABLED: bool = False
-INNOVATION_GCP_INTEGRATION_ENABLED: bool = False
-INNOVATION_AZURE_INTEGRATION_ENABLED: bool = False
-
-# Security Service URLs (if using external services)
-INNOVATION_SAST_SERVICE_URL: str = os.getenv("INNOVATION_SAST_SERVICE_URL", "")
-INNOVATION_DAST_SERVICE_URL: str = os.getenv("INNOVATION_DAST_SERVICE_URL", "")
-INNOVATION_CONTAINER_SCAN_URL: str = os.getenv("INNOVATION_CONTAINER_SCAN_URL", "")
-
-# Innovation Engine Webhooks
-INNOVATION_WEBHOOKS_ENABLED: bool = True
-INNOVATION_PROPOSAL_WEBHOOK_URL: str = os.getenv("INNOVATION_PROPOSAL_WEBHOOK_URL", "")
-INNOVATION_DEPLOYMENT_WEBHOOK_URL: str = os.getenv("INNOVATION_DEPLOYMENT_WEBHOOK_URL", "")
-INNOVATION_APPROVAL_WEBHOOK_URL: str = os.getenv("INNOVATION_APPROVAL_WEBHOOK_URL", "")
-
-# Logging Settings
-INNOVATION_LOGGING_LEVEL: str = os.getenv("INNOVATION_LOGGING_LEVEL", "INFO")
-INNOVATION_DETAILED_LOGGING: bool = os.getenv("INNOVATION_DETAILED_LOGGING", "False").lower() == "true"
-INNOVATION_AUDIT_LOGGING: bool = True
-
-"""
-Enhanced Settings Configuration for Shooting Star AI Platform
-Integrated with Social Media Manager & AI CEO Systems
-"""
-
-import os
-from typing import List, Optional, Dict, Any
-from pydantic import BaseSettings, validator
-from datetime import timedelta
-
-class Settings(BaseSettings):
-    """Application settings with environment variables support"""
-    
-    # ======= CORE APPLICATION =======
-    APP_NAME: str = "Shooting Star AI Platform"
-    APP_VERSION: str = "v17.0.0"
-    DEBUG: bool = False
-    ENVIRONMENT: str = "production"
-    
-    # ======= DATABASE =======
-    DATABASE_URL: str = "sqlite+aiosqlite:///./shooting_star.db"
-    REDIS_URL: str = "redis://localhost:6379"
-    
-    # ======= SECURITY =======
-    SECRET_KEY: str = "your-secret-key-here-change-in-production"
-    ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
-    
-    # ======= CORS =======
-    CORS_ORIGINS: List[str] = [
-        "http://localhost:3000",
-        "http://localhost:8000",
-        "https://yourdomain.com"
-    ]
-    
-    # ======= AI ENGINE FLAGS =======
-    AI_ENGINE_ENABLED: bool = True
-    V16_AI_MODULES_ENABLED: bool = True
-    V17_AI_ENGINE_ENABLED: bool = True
-    MARKETING_AI_ENABLED: bool = True
-    AI_MONITORING_ENABLED: bool = True
-    
-    # ======= NEW SYSTEM FLAGS =======
-    SOCIAL_MEDIA_MANAGER_ENABLED: bool = True
-    AI_CEO_ENABLED: bool = True
-    CYBERSECURITY_ENABLED: bool = True
-    SCOUT_ENGINE_ENABLED: bool = True
-    UNSTOPPABLE_MISSION_ENABLED: bool = True
-    DAILY_MISSION_CONTROLLER_ENABLED: bool = True
-    
-    # ======= SOCIAL MEDIA MANAGER SETTINGS =======
-    SOCIAL_MEDIA_PLATFORMS: List[str] = [
-        "instagram", "facebook", "twitter", "tiktok", "linkedin", "youtube"
-    ]
-    
-    SOCIAL_MEDIA_RATE_LIMITS: Dict[str, Dict[str, Any]] = {
-        "instagram": {"limit": 25, "window": "hour"},
-        "facebook": {"limit": 50, "window": "hour"},
-        "twitter": {"limit": 50, "window": "hour"},
-        "tiktok": {"limit": 20, "window": "hour"},
-        "linkedin": {"limit": 25, "window": "hour"},
-        "youtube": {"limit": 10, "window": "hour"}
-    }
-    
-    SOCIAL_CONTENT_APPROVAL_WORKFLOW: bool = True
-    SOCIAL_CRISIS_AUTO_RESPONSE: bool = True
-    SOCIAL_CEO_APPROVAL_REQUIRED: bool = True
-    
-    # ======= AI CEO SETTINGS =======
-    CEO_DECISION_HISTORY_LIMIT: int = 1000
-    CEO_LEARNING_CYCLES_MAX: int = 10000
-    
-    CEO_PERSONALITY_WEIGHTS: Dict[str, float] = {
-        "jobs": 0.25,
-        "pichai": 0.20,
-        "altman": 0.20,
-        "underwood": 0.15,
-        "nexgen": 0.20
-    }
-    
-    CEO_DECISION_THRESHOLDS: Dict[str, float] = {
-        "approve": 0.8,
-        "approve_with_optimization": 0.6,
-        "revise": 0.4,
-        "reject": 0.0
-    }
-    
-    FOUNDER_OVERRIDE_ENABLED: bool = True
-    CEO_STRATEGIC_INITIATIVES_MAX: int = 50
-    
-    # ======= AGENCY BUSINESS MODEL SETTINGS =======
-    AGENCY_SUCCESS_FEE_PERCENTAGE: float = 0.20  # 20% standard
-    AGENCY_MINIMUM_MONTHLY_FEE: float = 2000.00  # $2K/month minimum
-    AGENCY_CONTRACT_DURATION_MONTHS: int = 6
-    
-    # Client-specific negotiated rates (from your partnerships)
-    CLIENT_SPECIFIC_RATES: Dict[str, float] = {
-        "luxury_barbershop": 0.70,  # 70% margin
-        "premium_brand_1": 0.40,    # 40% margin
-        "premium_brand_2": 0.35,    # 35% margin
-        "premium_brand_3": 0.30,    # 30% margin
-        "premium_brand_4": 0.25,    # 25% margin
-    }
-    
-    # ======= OWNED BRANDS SETTINGS =======
-    OWNED_BRANDS_ENABLED: bool = True
-    OWNED_BRANDS_INITIAL_BUDGET: float = 50000.00  # $50K initial investment
-    OWNED_BRANDS_PROFIT_REINVESTMENT: float = 0.50  # 50% of profits reinvested
-    
-    # ======= PERFORMANCE & SCALING =======
-    AI_PREDICTION_TIMEOUT: int = 30  # seconds
-    MAX_CONCURRENT_AI_TASKS: int = 100
-    ANALYTICS_UPDATE_INTERVAL: int = 300  # 5 minutes
-    
-    # ======= SECURITY & COMPLIANCE =======
-    REQUIRE_HUMAN_APPROVAL: bool = True
-    AI_MAX_BUDGET_RECOMMENDATION: float = 100000.00  # $100K max AI can recommend
-    DECISION_AUDIT_TRAILS: bool = True
-    
-    # ======= MISSION SYSTEMS =======
-    MISSION_TARGET_VALUATION: float = 7800000000000.00  # $7.8T
-    MISSION_DURATION_YEARS: int = 20
-    MISSION_EMERGENCY_RECOVERY: bool = True
-    
-    # ======= CYBERSECURITY =======
-    CYBER_THREAT_LEVELS: Dict[str, Dict[str, Any]] = {
-        "normal": {"color": "green", "actions": ["monitor"]},
-        "elevated": {"color": "yellow", "actions": ["monitor", "alert_team"]},
-        "high": {"color": "orange", "actions": ["auto_contain", "alert_founder"]},
-        "critical": {"color": "red", "actions": ["full_lockdown", "ceo_alert"]}
-    }
-    
-    # ======= SCOUT ENGINE =======
-    SCOUT_MINIMUM_FOLLOWERS: int = 10000  # 10K minimum for influencers
-    SCOUT_TALENT_QUALITY_THRESHOLD: float = 0.7  # 70% minimum score
-    SCOUT_AUTO_OUTREACH_ENABLED: bool = True
-    
-    # ======= API & INTEGRATION =======
-    EXTERNAL_API_TIMEOUT: int = 30
-    RATE_LIMIT_REQUESTS_PER_MINUTE: int = 1000
-    
-    # Social Platform API Keys (set via environment variables in production)
-    INSTAGRAM_API_KEY: Optional[str] = None
-    FACEBOOK_API_KEY: Optional[str] = None
-    TWITTER_API_KEY: Optional[str] = None
-    TIKTOK_API_KEY: Optional[str] = None
-    LINKEDIN_API_KEY: Optional[str] = None
-    YOUTUBE_API_KEY: Optional[str] = None
-    
-    # ======= MONITORING & ANALYTICS =======
-    ENABLE_REALTIME_ANALYTICS: bool = True
-    PERFORMANCE_METRICS_INTERVAL: int = 60  # 1 minute
-    SYSTEM_HEALTH_CHECKS_ENABLED: bool = True
-    
-    # ======= FEATURE TOGGLES =======
-    FEATURE_FLAGS: Dict[str, bool] = {
-        "advanced_ai_governance": True,
-        "auto_negotiation_engine": True,
-        "predictive_scaling": True,
-        "real_time_learning": True,
-        "multi_cloud_deployment": True,
-        "federated_learning": True,
-    }
-    
-    # ======= BUSINESS INTELLIGENCE =======
-    BUSINESS_METRICS: Dict[str, Any] = {
-        "target_mrr_growth_rate": 0.10,  # 10% monthly growth
-        "target_client_acquisition_cost": 5000.00,  # $5K per client
-        "target_client_lifetime_value": 100000.00,  # $100K LTV
-        "target_agency_profit_margin": 0.40,  # 40% agency margin
-        "target_owned_brands_roi": 3.0,  # 3x ROI on owned brands
-    }
-    
-    # ======= VALIDATORS =======
-    @validator("CORS_ORIGINS", pre=True)
-    def parse_cors_origins(cls, v):
-        if isinstance(v, str):
-            return [origin.strip() for origin in v.split(",")]
-        return v
-    
-    @validator("SOCIAL_MEDIA_PLATFORMS", pre=True)
-    def parse_social_platforms(cls, v):
-        if isinstance(v, str):
-            return [platform.strip() for platform in v.split(",")]
-        return v
-    
-    @validator("ENVIRONMENT")
-    def validate_environment(cls, v):
-        if v not in ["development", "staging", "production"]:
-            raise ValueError("ENVIRONMENT must be development, staging, or production")
-        return v
-    
-    @validator("CEO_PERSONALITY_WEIGHTS")
-    def validate_personality_weights(cls, v):
-        total = sum(v.values())
-        if abs(total - 1.0) > 0.01:  # Allow small floating point errors
-            raise ValueError("CEO personality weights must sum to 1.0")
-        return v
-    
-    @validator("AGENCY_SUCCESS_FEE_PERCENTAGE")
-    def validate_success_fee(cls, v):
-        if not 0.01 <= v <= 0.95:  # 1% to 95% reasonable range
-            raise ValueError("Agency success fee must be between 1% and 95%")
-        return v
-    
-    class Config:
-        env_file = ".env"
-        case_sensitive = False
-
-# Global settings instance
-settings = Settings()
-
-# ======= ENVIRONMENT-SPECIFIC OVERRIDES =======
-if settings.ENVIRONMENT == "development":
-    settings.DEBUG = True
-    settings.DATABASE_URL = "sqlite+aiosqlite:///./shooting_star_dev.db"
-    
-    # Relax security for development
-    settings.REQUIRE_HUMAN_APPROVAL = False
-    settings.AI_MAX_BUDGET_RECOMMENDATION = 10000.00  # $10K in dev
-    
-    # Enable all features for testing
-    for feature in settings.FEATURE_FLAGS:
-        settings.FEATURE_FLAGS[feature] = True
-
-elif settings.ENVIRONMENT == "staging":
-    settings.DEBUG = True
-    settings.DATABASE_URL = "sqlite+aiosqlite:///./shooting_star_staging.db"
-    
-    # Partial security in staging
-    settings.REQUIRE_HUMAN_APPROVAL = True
-    settings.AI_MAX_BUDGET_RECOMMENDATION = 50000.00  # $50K in staging
-
-# Production environment uses all security settings as defined
-
-# ======= COMPUTED SETTINGS =======
-def get_social_platform_config(platform: str) -> Dict[str, Any]:
-    """Get configuration for a specific social media platform"""
-    return settings.SOCIAL_MEDIA_RATE_LIMITS.get(platform, {
-        "limit": 10, 
-        "window": "hour"
-    })
+# ============================
+# HELPER FUNCTIONS
+# ============================
 
 def get_client_success_fee(client_id: str) -> float:
     """Get negotiated success fee for specific client"""
     return settings.CLIENT_SPECIFIC_RATES.get(client_id, settings.AGENCY_SUCCESS_FEE_PERCENTAGE)
-
-def is_feature_enabled(feature_name: str) -> bool:
-    """Check if a feature is enabled"""
-    return settings.FEATURE_FLAGS.get(feature_name, False)
 
 def get_ceo_decision_level(confidence: float) -> str:
     """Determine CEO decision level based on confidence score"""
@@ -1069,17 +676,27 @@ def get_ceo_decision_level(confidence: float) -> str:
     else:
         return "REJECT"
 
-# ======= EXPORT COMPUTED VALUES =======
-SOCIAL_PLATFORM_CONFIGS = {
-    platform: get_social_platform_config(platform) 
-    for platform in settings.SOCIAL_MEDIA_PLATFORMS
-}
+# ============================
+# ENVIRONMENT-SPECIFIC OVERRIDES
+# ============================
 
-# Export for easy imports
+if settings.ENVIRONMENT == "development":
+    settings.DEBUG = True
+    settings.REQUIRE_HUMAN_APPROVAL = False
+    settings.AI_MAX_BUDGET_RECOMMENDATION = 10000.00  # $10K in dev
+
+elif settings.ENVIRONMENT == "staging":
+    settings.DEBUG = True
+    settings.REQUIRE_HUMAN_APPROVAL = True
+    settings.AI_MAX_BUDGET_RECOMMENDATION = 50000.00  # $50K in staging
+
+# Production environment uses all security settings as defined
+
+# ============================
+# EXPORT FOR EASY IMPORTS
+# ============================
 __all__ = [
     "settings", 
-    "SOCIAL_PLATFORM_CONFIGS",
     "get_client_success_fee", 
-    "is_feature_enabled",
     "get_ceo_decision_level"
 ]
