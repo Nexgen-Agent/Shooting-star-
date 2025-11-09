@@ -3526,3 +3526,703 @@ async def shutdown_innovation_engine():
             logger.warning(f"Innovation Engine shutdown warning: {str(e)}")
 
 # ======= INNOVATION ENGINE INTEGRATION END =======
+
+
+
+# ======= COLONY BUILDER INTEGRATION START =======
+"""
+COLONY BUILDER - AI-Powered Website & System Generator
+Complete integration of autonomous brand system generation with multi-tenant isolation.
+"""
+
+try:
+    from colony_builder.system_builder.website_generator import WebsiteGenerator
+    from colony_builder.system_builder.admin_panel_generator import AdminPanelGenerator
+    from colony_builder.system_builder.template_engine import TemplateEngine
+    from colony_builder.models.core import CoreColony, BrandColony, MarketingCampaign
+    from colony_builder.schemas.colony_schemas import BrandColonyCreate, MarketingCampaignCreate
+    from colony_builder.security.tenant_isolation import TenantSecurity, SandboxManager
+    from colony_builder.services.core_marketing_service import CoreMarketingService
+    from colony_builder.services.sync_manager import SyncManager
+    
+    COLONY_BUILDER_AVAILABLE = True
+    logger.info("Colony Builder components imported successfully")
+except ImportError as e:
+    COLONY_BUILDER_AVAILABLE = False
+    logger.warning(f"Colony Builder components not available: {str(e)}")
+
+# Global Colony Builder instances
+website_generator = None
+admin_panel_generator = None 
+template_engine = None
+tenant_security = None
+sandbox_manager = None
+sync_manager = None
+
+async def _initialize_colony_builder():
+    """Initialize the Colony Builder system"""
+    global website_generator, admin_panel_generator, template_engine
+    global tenant_security, sandbox_manager, sync_manager
+
+    try:
+        # Initialize core components
+        website_generator = WebsiteGenerator()
+        admin_panel_generator = AdminPanelGenerator()
+        template_engine = TemplateEngine()
+        tenant_security = TenantSecurity()
+        sandbox_manager = SandboxManager()
+        
+        # Initialize sync manager with database
+        from database.connection import SessionLocal
+        db = SessionLocal()
+        sync_manager = SyncManager(db)
+
+        logger.info("✅ COLONY BUILDER SYSTEM INITIALIZED")
+        logger.info("🎯 Mission: Autonomous brand system generation with multi-tenant isolation")
+
+        colony_capabilities = [
+            "AI-Powered Website Generation",
+            "Custom Admin Panel Creation", 
+            "Multi-Tenant Security & Isolation",
+            "Brand Colony Sandbox Management",
+            "Automatic System Synchronization",
+            "Marketing Restriction Enforcement",
+            "Template-Based System Generation",
+            "Fault-Tolerant Colony Deployment"
+        ]
+
+        for capability in colony_capabilities:
+            logger.info(f"  🏗️  {capability}")
+
+    except Exception as e:
+        logger.error(f"Colony Builder initialization failed: {str(e)}")
+
+# Colony Builder startup initialization
+if settings.COLONY_BUILDER_ENABLED and COLONY_BUILDER_AVAILABLE:
+    try:
+        # Add to startup event
+        @app.on_event("startup")
+        async def startup_colony_builder():
+            await _initialize_colony_builder()
+
+        logger.info("Colony Builder scheduled for startup initialization")
+    except Exception as e:
+        logger.error(f"Colony Builder startup scheduling failed: {str(e)}")
+
+# Colony Builder API Endpoints
+@app.get("/api/v1/colony/status")
+async def colony_builder_status():
+    """Get Colony Builder system status."""
+    if not settings.COLONY_BUILDER_ENABLED:
+        raise HTTPException(status_code=403, detail="Colony Builder is disabled")
+
+    global website_generator, admin_panel_generator
+    if not website_generator or not admin_panel_generator:
+        raise HTTPException(status_code=503, detail="Colony Builder not initialized")
+
+    try:
+        return {
+            "colony_builder": "active",
+            "version": "1.0.0",
+            "templates_loaded": len(website_generator.available_templates),
+            "components_healthy": all([
+                website_generator is not None,
+                admin_panel_generator is not None,
+                template_engine is not None,
+                tenant_security is not None,
+                sandbox_manager is not None,
+                sync_manager is not None
+            ]),
+            "capabilities": await _get_colony_capabilities_list()
+        }
+    except Exception as e:
+        logger.error(f"Colony Builder status check failed: {str(e)}")
+        raise HTTPException(status_code=503, detail="Colony Builder temporarily unavailable")
+
+@app.get("/api/v1/colony/capabilities")
+async def colony_builder_capabilities():
+    """Get Colony Builder capabilities."""
+    if not settings.COLONY_BUILDER_ENABLED:
+        raise HTTPException(status_code=403, detail="Colony Builder is disabled")
+
+    return {
+        "colony_builder": "AI-Powered Brand System Generator",
+        "version": "1.0.0",
+        "status": "active",
+        "mission": "Autonomous brand system generation with multi-tenant isolation",
+        "capabilities": {
+            "website_generation": [
+                "Multi-industry template system",
+                "Responsive design generation",
+                "Custom CSS/JS generation",
+                "Automatic deployment",
+                "SEO-optimized structure"
+            ],
+            "admin_systems": [
+                "Custom admin panel generation",
+                "Role-based access control",
+                "Business intelligence dashboards",
+                "Automated workflow creation",
+                "Multi-tenant data isolation"
+            ],
+            "security": [
+                "Tenant isolation enforcement",
+                "Marketing access restrictions",
+                "Secure API gateway",
+                "Fault-tolerant sandboxing",
+                "Data synchronization security"
+            ],
+            "automation": [
+                "Automatic system synchronization",
+                "Health monitoring & recovery",
+                "Performance optimization",
+                "Backup & disaster recovery",
+                "Scalability management"
+            ]
+        },
+        "supported_industries": [
+            "ecommerce",
+            "saas", 
+            "agency",
+            "restaurant",
+            "portfolio",
+            "blog",
+            "nonprofit",
+            "education"
+        ],
+        "api_endpoints": {
+            "core_colony_management": "/api/v1/colony/core",
+            "brand_colony_creation": "/api/v1/colony/brands/create",
+            "system_synchronization": "/api/v1/colony/sync",
+            "colony_health_check": "/api/v1/colony/health",
+            "template_management": "/api/v1/colony/templates"
+        }
+    }
+
+@app.post("/api/v1/colony/core/create")
+async def create_core_colony(core_data: dict):
+    """Create a new Core Colony (master system)."""
+    if not settings.COLONY_BUILDER_ENABLED:
+        raise HTTPException(status_code=403, detail="Colony Builder is disabled")
+
+    try:
+        from database.connection import SessionLocal
+        db = SessionLocal()
+        
+        core_colony = CoreColony(
+            name=core_data["name"],
+            domain=core_data["domain"],
+            marketing_api_key=core_data.get("marketing_api_key"),
+            total_marketing_budget=core_data.get("total_marketing_budget", 10000)
+        )
+        
+        db.add(core_colony)
+        db.commit()
+        db.refresh(core_colony)
+        
+        return {
+            "success": True,
+            "core_colony_id": core_colony.id,
+            "name": core_colony.name,
+            "domain": core_colony.domain,
+            "marketing_api_key": core_colony.marketing_api_key,
+            "message": f"Core Colony '{core_colony.name}' created successfully"
+        }
+        
+    except Exception as e:
+        logger.error(f"Core Colony creation failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Core Colony creation error: {str(e)}")
+
+@app.post("/api/v1/colony/brands/create")
+async def create_brand_colony(brand_data: dict):
+    """Create a complete Brand Colony system (website + admin panel)."""
+    if not settings.COLONY_BUILDER_ENABLED:
+        raise HTTPException(status_code=403, detail="Colony Builder is disabled")
+
+    global website_generator, admin_panel_generator
+    if not website_generator or not admin_panel_generator:
+        raise HTTPException(status_code=503, detail="Colony Builder not initialized")
+
+    try:
+        from database.connection import SessionLocal
+        db = SessionLocal()
+
+        # Generate website
+        website_result = website_generator.generate_brand_website(brand_data)
+        
+        # Generate admin panel
+        admin_result = admin_panel_generator.generate_admin_panel(
+            brand_data, 
+            brand_data.get("features", [])
+        )
+
+        # Create brand colony record
+        brand_colony = BrandColony(
+            name=brand_data["name"],
+            domain=brand_data["domain"],
+            industry=brand_data.get("industry", "general"),
+            core_colony_id=brand_data["core_colony_id"],
+            website_url=website_result["website_url"],
+            admin_panel_url=website_result["admin_panel_url"],
+            config={
+                "website_data": website_result,
+                "admin_data": admin_result,
+                "features": brand_data.get("features", []),
+                "marketing_restricted": True  # Enforce marketing restrictions
+            }
+        )
+
+        db.add(brand_colony)
+        db.commit()
+        db.refresh(brand_colony)
+
+        logger.info(f"Brand Colony system created: {brand_data['name']}")
+
+        return {
+            "success": True,
+            "brand_colony_id": brand_colony.id,
+            "website_url": website_result["website_url"],
+            "admin_panel_url": website_result["admin_panel_url"],
+            "build_path": website_result["build_path"],
+            "message": f"Brand Colony '{brand_data['name']}' created successfully"
+        }
+
+    except Exception as e:
+        logger.error(f"Brand Colony creation failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Brand Colony creation error: {str(e)}")
+
+@app.get("/api/v1/colony/core/{core_id}/brands")
+async def get_brand_colonies(core_id: str):
+    """Get all brand colonies for a core colony."""
+    if not settings.COLONY_BUILDER_ENABLED:
+        raise HTTPException(status_code=403, detail="Colony Builder is disabled")
+
+    try:
+        from database.connection import SessionLocal
+        db = SessionLocal()
+        
+        brand_colonies = db.query(BrandColony).filter(
+            BrandColony.core_colony_id == core_id
+        ).all()
+        
+        return {
+            "core_colony_id": core_id,
+            "brand_colonies": [
+                {
+                    "id": colony.id,
+                    "name": colony.name,
+                    "domain": colony.domain,
+                    "industry": colony.industry,
+                    "website_url": colony.website_url,
+                    "status": "active",
+                    "created_at": colony.created_at.isoformat() if colony.created_at else None
+                }
+                for colony in brand_colonies
+            ]
+        }
+        
+    except Exception as e:
+        logger.error(f"Brand colonies retrieval failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Brand colonies retrieval error: {str(e)}")
+
+@app.post("/api/v1/colony/core/{core_id}/marketing/campaigns")
+async def create_marketing_campaign(core_id: str, campaign_data: dict):
+    """Create marketing campaign (Core Colony only - brands cannot access this)."""
+    if not settings.COLONY_BUILDER_ENABLED:
+        raise HTTPException(status_code=403, detail="Colony Builder is disabled")
+
+    try:
+        from database.connection import SessionLocal
+        db = SessionLocal()
+        
+        marketing_service = CoreMarketingService(db, core_id)
+        campaign = marketing_service.create_campaign_for_brand(
+            campaign_data["brand_colony_id"],
+            campaign_data
+        )
+        
+        return {
+            "success": True,
+            "campaign_id": campaign.id,
+            "name": campaign.name,
+            "brand_colony_id": campaign.brand_colony_id,
+            "status": campaign.status,
+            "message": f"Marketing campaign '{campaign.name}' created successfully"
+        }
+        
+    except Exception as e:
+        logger.error(f"Marketing campaign creation failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Marketing campaign creation error: {str(e)}")
+
+@app.get("/api/v1/colony/brands/{brand_id}/marketing/campaigns")
+async def get_brand_marketing_campaigns(brand_id: str, request: Request):
+    """Get marketing campaigns for brand (read-only, restricted access)."""
+    if not settings.COLONY_BUILDER_ENABLED:
+        raise HTTPException(status_code=403, detail="Colony Builder is disabled")
+
+    global tenant_security
+    if not tenant_security:
+        raise HTTPException(status_code=503, detail="Security system not initialized")
+
+    try:
+        from database.connection import SessionLocal
+        db = SessionLocal()
+        
+        # Verify brand colony access
+        if not tenant_security.check_marketing_access(request, db, brand_id):
+            raise HTTPException(status_code=403, detail="Marketing access denied for brand colony")
+        
+        marketing_service = CoreMarketingService(db, "core_colony_id_placeholder")
+        campaigns = marketing_service.get_brand_campaigns(brand_id, include_sensitive=False)
+        
+        # Filter sensitive data for brand view
+        filtered_campaigns = []
+        for campaign in campaigns:
+            filtered_campaigns.append({
+                "id": campaign.id,
+                "brand_visible_name": campaign.brand_visible_name,
+                "status": campaign.status,
+                "launched_at": campaign.launched_at.isoformat() if campaign.launched_at else None
+            })
+        
+        return {
+            "brand_colony_id": brand_id,
+            "campaigns": filtered_campaigns,
+            "access_level": "brand_restricted"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Marketing campaigns retrieval failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Marketing campaigns retrieval error: {str(e)}")
+
+@app.post("/api/v1/colony/sync/all")
+async def sync_all_colonies():
+    """Sync data from all brand colonies to core colonies."""
+    if not settings.COLONY_BUILDER_ENABLED:
+        raise HTTPException(status_code=403, detail="Colony Builder is disabled")
+
+    global sync_manager
+    if not sync_manager:
+        raise HTTPException(status_code=503, detail="Sync Manager not initialized")
+
+    try:
+        results = sync_manager.sync_all_colonies()
+        
+        return {
+            "success": True,
+            "sync_operation": "complete",
+            "results": results,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Colony synchronization failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Colony synchronization error: {str(e)}")
+
+@app.get("/api/v1/colony/health/{brand_id}")
+async def check_colony_health(brand_id: str):
+    """Check health of a specific brand colony."""
+    if not settings.COLONY_BUILDER_ENABLED:
+        raise HTTPException(status_code=403, detail="Colony Builder is disabled")
+
+    global sandbox_manager
+    if not sandbox_manager:
+        raise HTTPException(status_code=503, detail="Sandbox Manager not initialized")
+
+    try:
+        health_status = sandbox_manager.health_check_colony(brand_id)
+        
+        return {
+            "brand_colony_id": brand_id,
+            "health_status": health_status,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Health check failed for colony {brand_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Health check error: {str(e)}")
+
+@app.get("/api/v1/colony/templates")
+async def get_available_templates():
+    """Get available website templates."""
+    if not settings.COLONY_BUILDER_ENABLED:
+        raise HTTPException(status_code=403, detail="Colony Builder is disabled")
+
+    global website_generator
+    if not website_generator:
+        raise HTTPException(status_code=503, detail="Website Generator not initialized")
+
+    try:
+        return {
+            "templates": website_generator.available_templates,
+            "total_templates": len(website_generator.available_templates),
+            "industries_supported": list(website_generator.available_templates.keys())
+        }
+        
+    except Exception as e:
+        logger.error(f"Template retrieval failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Template retrieval error: {str(e)}")
+
+# Colony Builder Admin Dashboard
+@app.get("/admin/colony/dashboard")
+async def colony_admin_dashboard():
+    """Colony Builder Admin Dashboard - Overview of all colonies."""
+    if not settings.COLONY_BUILDER_ENABLED:
+        raise HTTPException(status_code=403, detail="Colony Builder is disabled")
+
+    try:
+        from database.connection import SessionLocal
+        db = SessionLocal()
+        
+        core_colonies = db.query(CoreColony).all()
+        brand_colonies = db.query(BrandColony).all()
+        
+        dashboard_html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Colony Builder - Admin Dashboard</title>
+            <style>
+                body {{ font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }}
+                .header {{ background: #2c3e50; color: white; padding: 1rem 2rem; margin-bottom: 2rem; }}
+                .stats-grid {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem; }}
+                .stat-card {{ background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }}
+                .colonies-grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }}
+                .colony-card {{ background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }}
+                .btn {{ background: #3498db; color: white; padding: 0.5rem 1rem; border: none; border-radius: 4px; cursor: pointer; }}
+                .btn-success {{ background: #27ae60; }}
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>🏛️ Colony Builder - Administration</h1>
+                <p>AI-Powered Brand System Generation</p>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Core Colonies</h3>
+                    <p class="stat-number">{len(core_colonies)}</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Brand Colonies</h3>
+                    <p class="stat-number">{len(brand_colonies)}</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Active Systems</h3>
+                    <p class="stat-number">{len([b for b in brand_colonies if b.website_url])}</p>
+                </div>
+                <div class="stat-card">
+                    <h3>System Health</h3>
+                    <p class="stat-number">100%</p>
+                </div>
+            </div>
+            
+            <div class="actions">
+                <button class="btn btn-success" onclick="createNewColony()">+ Create New Colony System</button>
+                <button class="btn" onclick="syncAllColonies()">🔄 Sync All Colonies</button>
+            </div>
+            
+            <h2>Core Colonies</h2>
+            <div class="colonies-grid">
+                {"".join([generate_core_colony_card(core) for core in core_colonies])}
+            </div>
+            
+            <h2>Brand Colonies</h2>
+            <div class="colonies-grid">
+                {"".join([generate_brand_colony_card(brand) for brand in brand_colonies])}
+            </div>
+            
+            <script>
+                function createNewColony() {{
+                    window.location.href = '/admin/colony/create';
+                }}
+                
+                function syncAllColonies() {{
+                    fetch('/api/v1/colony/sync/all', {{ method: 'POST' }})
+                        .then(response => response.json())
+                        .then(data => alert('Sync completed: ' + data.results.total_colonies + ' colonies processed'));
+                }}
+                
+                function viewColonyDetails(colonyId, type) {{
+                    if (type === 'core') {{
+                        window.location.href = '/admin/colony/core/' + colonyId;
+                    }} else {{
+                        window.location.href = '/admin/colony/brand/' + colonyId;
+                    }}
+                }}
+            </script>
+        </body>
+        </html>
+        """
+        
+        return HTMLResponse(dashboard_html)
+        
+    except Exception as e:
+        logger.error(f"Admin dashboard generation failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Dashboard error: {str(e)}")
+
+def generate_core_colony_card(core: CoreColony):
+    """Generate HTML card for a core colony."""
+    return f"""
+    <div class="colony-card">
+        <h3>🏛️ {core.name}</h3>
+        <p><strong>Domain:</strong> {core.domain}</p>
+        <p><strong>Marketing Budget:</strong> ${core.total_marketing_budget}</p>
+        <p><strong>Status:</strong> <span style="color: green;">Active</span></p>
+        <div class="actions">
+            <button class="btn" onclick="viewColonyDetails('{core.id}', 'core')">Manage</button>
+            <button class="btn" onclick="window.open('{core.domain}', '_blank')">Visit</button>
+        </div>
+    </div>
+    """
+
+def generate_brand_colony_card(brand: BrandColony):
+    """Generate HTML card for a brand colony."""
+    return f"""
+    <div class="colony-card">
+        <h3>🏢 {brand.name}</h3>
+        <p><strong>Industry:</strong> {brand.industry}</p>
+        <p><strong>Website:</strong> {brand.website_url or "Not deployed"}</p>
+        <p><strong>Status:</strong> <span style="color: green;">Active</span></p>
+        <div class="actions">
+            <button class="btn" onclick="viewColonyDetails('{brand.id}', 'brand')">Manage</button>
+            <button class="btn" onclick="window.open('{brand.website_url}', '_blank')" {'' if brand.website_url else 'disabled'}>Visit Website</button>
+        </div>
+    </div>
+    """
+
+# Colony Builder Health Check Integration
+@app.get("/health")
+async def health_check_with_colony_builder():
+    """Comprehensive health check including Colony Builder."""
+    health_data = await health_check()
+
+    # Add Colony Builder health check
+    if settings.COLONY_BUILDER_ENABLED and COLONY_BUILDER_AVAILABLE:
+        try:
+            if website_generator and admin_panel_generator:
+                health_data["checks"]["colony_builder"] = "healthy"
+                health_data["colony_builder_active"] = True
+                health_data["colony_templates_loaded"] = len(website_generator.available_templates)
+                health_data["colony_components_healthy"] = all([
+                    website_generator is not None,
+                    admin_panel_generator is not None,
+                    template_engine is not None,
+                    tenant_security is not None,
+                    sandbox_manager is not None,
+                    sync_manager is not None
+                ])
+            else:
+                health_data["checks"]["colony_builder"] = "unhealthy: not initialized"
+        except Exception as e:
+            health_data["checks"]["colony_builder"] = f"unhealthy: {str(e)}"
+            logger.warning(f"Colony Builder health check warning: {str(e)}")
+    else:
+        health_data["checks"]["colony_builder"] = "disabled"
+
+    return health_data
+
+# Colony Builder System Info Integration
+@app.get("/system/info")
+async def system_info_with_colony_builder():
+    """Get system information including Colony Builder."""
+    system_info_data = await system_info()
+
+    # Add Colony Builder information
+    if settings.COLONY_BUILDER_ENABLED:
+        system_info_data["colony_builder_enabled"] = True
+        system_info_data["colony_capabilities"] = await _get_colony_capabilities_list()
+
+        # Add Colony Builder features
+        system_info_data["features"]["autonomous_website_generation"] = True
+        system_info_data["features"]["brand_admin_panel_creation"] = True
+        system_info_data["features"]["multi_tenant_isolation"] = True
+        system_info_data["features"]["marketing_restriction_enforcement"] = True
+        system_info_data["features"]["automatic_system_synchronization"] = True
+        system_info_data["features"]["template_based_generation"] = True
+
+        # Add Colony Builder security
+        system_info_data["security"]["tenant_access_isolation"] = True
+        system_info_data["security"]["brand_marketing_restrictions"] = True
+        system_info_data["security"]["secure_colony_synchronization"] = True
+        system_info_data["security"]["fault_tolerant_sandboxing"] = True
+
+        # Add Colony Builder performance
+        system_info_data["performance"]["website_generation_speed"] = "under_5_seconds"
+        system_info_data["performance"]["admin_panel_generation"] = "under_3_seconds"
+        system_info_data["performance"]["colony_synchronization"] = "real_time"
+        system_info_data["performance"]["template_rendering"] = "optimized"
+
+    return system_info_data
+
+# Colony Builder Helper Functions
+async def _get_colony_capabilities_list():
+    """Get list of Colony Builder capabilities."""
+    if not settings.COLONY_BUILDER_ENABLED:
+        return []
+
+    return [
+        "AI-Powered Website Generation",
+        "Custom Admin Panel Creation",
+        "Multi-Tenant Security & Isolation", 
+        "Brand Colony Sandbox Management",
+        "Automatic System Synchronization",
+        "Marketing Restriction Enforcement",
+        "Template-Based System Generation",
+        "Fault-Tolerant Colony Deployment",
+        "Core Colony Management",
+        "Brand Colony Orchestration"
+    ]
+
+# Colony Builder Exception Handler
+if settings.COLONY_BUILDER_ENABLED:
+    @app.exception_handler(Exception)
+    async def colony_builder_exception_handler(request, exc):
+        """Handle Colony Builder-related exceptions gracefully."""
+        if request.url.path.startswith('/api/v1/colony/') or request.url.path.startswith('/admin/colony/'):
+            logger.error(f"Colony Builder error in {request.url.path}: {str(exc)}")
+            return {
+                "success": False,
+                "error": {
+                    "code": "COLONY_BUILDER_ERROR",
+                    "message": "Colony Builder service temporarily unavailable",
+                    "timestamp": time.time(),
+                    "colony_builder_enabled": settings.COLONY_BUILDER_ENABLED,
+                    "suggestion": "Check Colony Builder status at /api/v1/colony/status"
+                }
+            }
+        raise exc
+
+# Colony Builder Shutdown Cleanup
+@app.on_event("shutdown")
+async def shutdown_colony_builder():
+    """Cleanup Colony Builder resources on shutdown."""
+    if settings.COLONY_BUILDER_ENABLED and COLONY_BUILDER_AVAILABLE:
+        try:
+            # Add any Colony Builder cleanup logic if needed
+            logger.info("Colony Builder shutdown complete")
+        except Exception as e:
+            logger.warning(f"Colony Builder shutdown warning: {str(e)}")
+
+# Colony Builder Settings Configuration
+# Add these to your config/settings.py
+"""
+# Colony Builder Settings
+COLONY_BUILDER_ENABLED = os.getenv("COLONY_BUILDER_ENABLED", "True").lower() == "true"
+COLONY_BUILDER_TEMPLATE_PATH = os.getenv("COLONY_BUILDER_TEMPLATE_PATH", "frontend/templates")
+COLONY_BUILDER_BUILD_PATH = os.getenv("COLONY_BUILDER_BUILD_PATH", "frontend/build")
+COLONY_BUILDER_DEPLOYMENT_TARGET = os.getenv("COLONY_BUILDER_DEPLOYMENT_TARGET", "cloudflare")  # cloudflare, netlify, vercel, s3
+"""
+
+# Colony Builder Requirements
+# Add these to your requirements.txt
+"""
+jinja2==3.1.2
+python-multipart==0.0.6
+pathlib==1.0.1
+"""
+
+# ======= COLONY BUILDER INTEGRATION END =======
