@@ -6,20 +6,43 @@ INTEGRATED WITH UNSTOPPABLE MISSION DIRECTOR - 20-YEAR AUTONOMOUS MISSION
 INTEGRATED WITH DAILY MISSION CONTROLLER - DAILY EXECUTION SYSTEM
 INTEGRATED WITH AI SOCIAL MEDIA MANAGER - AUTONOMOUS SOCIAL MEDIA OPERATIONS  
 INTEGRATED WITH AI CEO - DOMINION PROTOCOL EXECUTIVE INTELLIGENCE
+INTEGRATED WITH AUTONOMOUS INNOVATION ENGINE - AI-DRIVEN FEATURE DEVELOPMENT
+INTEGRATED WITH COLONY BUILDER - AI-POWERED WEBSITE & SYSTEM GENERATOR
 """
 
-# Innovation Engine imports
+# ======= INNOVATION ENGINE IMPORTS =======
 try:
-    from ai.autonomous_innovation_engine import AutonomousInnovationEngine, InnovationProposal, SecurityError
+    from ai.innovation.autonomous_innovation_engine import AutonomousInnovationEngine, InnovationProposal, SecurityError
     from core.private_ledger import PrivateLedger, LedgerEntry
     from crypto.key_manager import KeyManager
-    from ai.innovation_task_manager import InnovationTaskManager, InnovationTask, TaskPriority, SkillTag
-    from scout.innovation_recruiter import InnovationRecruiter, Candidate
+    from ai.innovation.innovation_task_manager import InnovationTaskManager, InnovationTask, TaskPriority, SkillTag
+    from scout.innovation.innovation_recruiter import InnovationRecruiter, Candidate
     from ci.innovation_ci_runner import InnovationCIRunner
-    from services.innovation_service_api import router as innovation_api_router
+    from services.innovation_service import router as innovation_api_router
     from services.site_registry_service import SiteRegistry, ClientSite
-    
+    INNOVATION_ENGINE_AVAILABLE = True
+except ImportError as e:
+    INNOVATION_ENGINE_AVAILABLE = False
+    logger.warning(f"Innovation Engine components not available: {str(e)}")
+# ======= END INNOVATION ENGINE IMPORTS =======
 
+# ======= COLONY BUILDER IMPORTS =======
+try:
+    from colony_builder.system_builder.website_generator import WebsiteGenerator
+    from colony_builder.system_builder.admin_panel_generator import AdminPanelGenerator
+    from colony_builder.system_builder.template_engine import TemplateEngine
+    from colony_builder.models.core import CoreColony, BrandColony, MarketingCampaign
+    from colony_builder.schemas.colony_schemas import BrandColonyCreate, MarketingCampaignCreate
+    from colony_builder.security.tenant_isolation import TenantSecurity, SandboxManager
+    from colony_builder.services.core_marketing_service import CoreMarketingService
+    from colony_builder.services.sync_manager import SyncManager
+    COLONY_BUILDER_AVAILABLE = True
+except ImportError as e:
+    COLONY_BUILDER_AVAILABLE = False
+    logger.warning(f"Colony Builder components not available: {str(e)}")
+# ======= END COLONY BUILDER IMPORTS =======
+
+# Existing imports remain the same...
 from routers.reception_router import router 
 from routers.finance_router import router as finance_router
 from routers.dashboard_router import router as dashboard_router
@@ -52,15 +75,18 @@ async def startup_event():
     pass
 from routers.brand_management_router import router as brand_router
 from routers.one_time_router import router as one_time_router
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from fastapi.responses import HTMLResponse
+from datetime import datetime
+from typing import List, Optional
 import logging
 import time
 
 from marketing.marketing_ai_engine import MarketingAIEngine
 from config.settings import settings
-from database.connection import create_tables
+from database.connection import create_tables, SessionLocal
 from routers import (
     auth_router, 
     brand_router, 
@@ -108,7 +134,7 @@ logger = logging.getLogger("shooting_star")
 # Create FastAPI application
 app = FastAPI(
     title=settings.APP_NAME,
-    description="Shooting Star V17 AI Engine - Enterprise Scalable AI Platform with Advanced Intelligence + V16 AI Modules + INTEGRATED CYBERSECURITY + UNSTOPPABLE MISSION DIRECTOR + DAILY MISSION CONTROLLER + AI SOCIAL MEDIA MANAGER + AI CEO",
+    description="Shooting Star V17 AI Engine - Enterprise Scalable AI Platform with Advanced Intelligence + V16 AI Modules + INTEGRATED CYBERSECURITY + UNSTOPPABLE MISSION DIRECTOR + DAILY MISSION CONTROLLER + AI SOCIAL MEDIA MANAGER + AI CEO + AUTONOMOUS INNOVATION ENGINE + COLONY BUILDER",
     version=settings.APP_VERSION,
     docs_url="/docs",
     redoc_url="/redoc",
@@ -149,6 +175,25 @@ ceo_integration = None
 ceo_dashboard = None
 # ======= END SOCIAL MEDIA MANAGER & AI CEO GLOBAL INSTANCES =======
 
+# ======= INNOVATION ENGINE GLOBAL INSTANCES =======
+innovation_engine = None
+private_ledger = None
+innovation_key_manager = None
+innovation_task_manager = None
+innovation_recruiter = None
+innovation_ci_runner = None
+site_registry = None
+# ======= END INNOVATION ENGINE GLOBAL INSTANCES =======
+
+# ======= COLONY BUILDER GLOBAL INSTANCES =======
+website_generator = None
+admin_panel_generator = None 
+template_engine = None
+tenant_security = None
+sandbox_manager = None
+sync_manager = None
+# ======= END COLONY BUILDER GLOBAL INSTANCES =======
+
 # Add startup and shutdown events
 @app.on_event("startup")
 async def startup_event():
@@ -174,6 +219,16 @@ async def startup_event():
         if settings.AI_CEO_ENABLED and AI_CEO_AVAILABLE:
             await _initialize_ai_ceo()
         # ======= END AI CEO INITIALIZATION =======
+
+        # ======= INNOVATION ENGINE INITIALIZATION =======
+        if settings.INNOVATION_ENGINE_ENABLED and INNOVATION_ENGINE_AVAILABLE:
+            await _initialize_innovation_engine()
+        # ======= END INNOVATION ENGINE INITIALIZATION =======
+
+        # ======= COLONY BUILDER INITIALIZATION =======
+        if settings.COLONY_BUILDER_ENABLED and COLONY_BUILDER_AVAILABLE:
+            await _initialize_colony_builder()
+        # ======= END COLONY BUILDER INITIALIZATION =======
 
         # Initialize V16 AI modules (existing functionality)
         if settings.AI_ENGINE_ENABLED:
@@ -217,10 +272,91 @@ async def startup_event():
         logger.info(f"Daily Mission Controller Status: {'ENABLED' if settings.DAILY_MISSION_CONTROLLER_ENABLED else 'DISABLED'}")
         logger.info(f"Social Media Manager Status: {'ENABLED' if settings.SOCIAL_MEDIA_MANAGER_ENABLED else 'DISABLED'}")
         logger.info(f"AI CEO Status: {'ENABLED' if settings.AI_CEO_ENABLED else 'DISABLED'}")
+        logger.info(f"Innovation Engine Status: {'ENABLED' if settings.INNOVATION_ENGINE_ENABLED else 'DISABLED'}")
+        logger.info(f"Colony Builder Status: {'ENABLED' if settings.COLONY_BUILDER_ENABLED else 'DISABLED'}")
 
     except Exception as e:
         logger.error(f"Startup error: {str(e)}")
         raise
+
+# ======= INNOVATION ENGINE INITIALIZATION FUNCTION =======
+async def _initialize_innovation_engine():
+    """Initialize the Autonomous Innovation Engine (AIE)"""
+    global innovation_engine, private_ledger, innovation_key_manager
+    global innovation_task_manager, innovation_recruiter, innovation_ci_runner, site_registry
+
+    try:
+        # Initialize core components
+        private_ledger = PrivateLedger()
+        innovation_key_manager = KeyManager()
+        innovation_task_manager = InnovationTaskManager()
+        innovation_recruiter = InnovationRecruiter()
+        innovation_ci_runner = InnovationCIRunner()
+        site_registry = SiteRegistry()
+
+        # Initialize main engine
+        innovation_engine = AutonomousInnovationEngine()
+
+        logger.info("✅ AUTONOMOUS INNOVATION ENGINE (AIE) INITIALIZED")
+        logger.info("🎯 Mission: AI-driven feature development with secure human gating")
+
+        innovation_capabilities = [
+            "Cryptographic Founder Approval Gates",
+            "Private Ledger with Immutable Audit Trail",
+            "Automated Task Breakdown & Skill Tagging",
+            "AI Expert Recruitment & NDA Workflows",
+            "Ephemeral CI/CD Pipeline with Security Scanning",
+            "Site Registry with Tenant Isolation",
+            "Secure Code Merging & Production Deployment",
+            "Real-time Innovation Proposal Tracking"
+        ]
+
+        for capability in innovation_capabilities:
+            logger.info(f"  🔧 {capability}")
+
+    except Exception as e:
+        logger.error(f"Innovation Engine initialization failed: {str(e)}")
+# ======= END INNOVATION ENGINE INITIALIZATION FUNCTION =======
+
+# ======= COLONY BUILDER INITIALIZATION FUNCTION =======
+async def _initialize_colony_builder():
+    """Initialize the Colony Builder system"""
+    global website_generator, admin_panel_generator, template_engine
+    global tenant_security, sandbox_manager, sync_manager
+
+    try:
+        # Initialize core components
+        website_generator = WebsiteGenerator()
+        admin_panel_generator = AdminPanelGenerator()
+        template_engine = TemplateEngine()
+        tenant_security = TenantSecurity()
+        sandbox_manager = SandboxManager()
+
+        # Initialize sync manager with database
+        from database.connection import SessionLocal
+        db = SessionLocal()
+        sync_manager = SyncManager(db)
+
+        logger.info("✅ COLONY BUILDER SYSTEM INITIALIZED")
+        logger.info("🎯 Mission: Autonomous brand system generation with multi-tenant isolation")
+
+        colony_capabilities = [
+            "AI-Powered Website Generation",
+            "Custom Admin Panel Creation", 
+            "Multi-Tenant Security & Isolation",
+            "Brand Colony Sandbox Management",
+            "Automatic System Synchronization",
+            "Marketing Restriction Enforcement",
+            "Template-Based System Generation",
+            "Fault-Tolerant Colony Deployment"
+        ]
+
+        for capability in colony_capabilities:
+            logger.info(f"  🏗️  {capability}")
+
+    except Exception as e:
+        logger.error(f"Colony Builder initialization failed: {str(e)}")
+# ======= END COLONY BUILDER INITIALIZATION FUNCTION =======
 
 # ======= SOCIAL MEDIA MANAGER INITIALIZATION FUNCTION =======
 async def _initialize_social_media_manager():
@@ -233,9 +369,9 @@ async def _initialize_social_media_manager():
 
         # Initialize with CEO integration if available
         ceo_integration_ref = ceo_integration if settings.AI_CEO_ENABLED else None
-        
+
         social_manager = SocialManagerCore(ceo_integration=ceo_integration_ref)
-        
+
         logger.info("✅ AI SOCIAL MEDIA MANAGER INITIALIZED")
         logger.info("🎯 Mission: Autonomous social media operations with CEO oversight")
 
@@ -270,10 +406,10 @@ async def _initialize_ai_ceo():
 
         # Initialize CEO integration
         ceo_integration = ShootingStarCEOIntegration()
-        
+
         # Initialize CEO dashboard for founder access
         ceo_dashboard = CEODashboardService(ceo_integration)
-        
+
         logger.info("👑 AI CEO WITH DOMINION PROTOCOL INITIALIZED")
         logger.info("🎯 Mission: Executive intelligence governing entire ecosystem")
 
@@ -619,6 +755,24 @@ async def shutdown_event():
     """Cleanup on application shutdown."""
     logger.info("Shutting down Shooting Star AI Engines...")
 
+    # ======= INNOVATION ENGINE SHUTDOWN =======
+    if settings.INNOVATION_ENGINE_ENABLED and INNOVATION_ENGINE_AVAILABLE:
+        try:
+            # Add any Innovation Engine cleanup logic if needed
+            logger.info("Innovation Engine shutdown complete")
+        except Exception as e:
+            logger.warning(f"Innovation Engine shutdown warning: {str(e)}")
+    # ======= END INNOVATION ENGINE SHUTDOWN =======
+
+    # ======= COLONY BUILDER SHUTDOWN =======
+    if settings.COLONY_BUILDER_ENABLED and COLONY_BUILDER_AVAILABLE:
+        try:
+            # Add any Colony Builder cleanup logic if needed
+            logger.info("Colony Builder shutdown complete")
+        except Exception as e:
+            logger.warning(f"Colony Builder shutdown warning: {str(e)}")
+    # ======= END COLONY BUILDER SHUTDOWN =======
+
     # ======= SOCIAL MEDIA MANAGER SHUTDOWN =======
     global social_manager
     if social_manager and settings.SOCIAL_MEDIA_MANAGER_ENABLED:
@@ -747,6 +901,8 @@ async def root():
         "daily_mission_controller_enabled": settings.DAILY_MISSION_CONTROLLER_ENABLED,
         "social_media_manager_enabled": settings.SOCIAL_MEDIA_MANAGER_ENABLED,
         "ai_ceo_enabled": settings.AI_CEO_ENABLED,
+        "innovation_engine_enabled": settings.INNOVATION_ENGINE_ENABLED,
+        "colony_builder_enabled": settings.COLONY_BUILDER_ENABLED,
         "ai_capabilities": await _get_ai_capabilities_list(),
         "v16_modules": await _get_v16_modules_list(),
         "v17_capabilities": await _get_v17_capabilities_list(),
@@ -755,6 +911,8 @@ async def root():
         "mission_capabilities": await _get_mission_capabilities_list(),
         "social_media_capabilities": await _get_social_media_capabilities_list(),
         "ceo_capabilities": await _get_ceo_capabilities_list(),
+        "innovation_capabilities": await _get_innovation_capabilities_list(),
+        "colony_capabilities": await _get_colony_capabilities_list(),
         "timestamp": time.time()
     }
 
@@ -778,6 +936,8 @@ async def health_check():
         "daily_mission_controller_enabled": settings.DAILY_MISSION_CONTROLLER_ENABLED,
         "social_media_manager_enabled": settings.SOCIAL_MEDIA_MANAGER_ENABLED,
         "ai_ceo_enabled": settings.AI_CEO_ENABLED,
+        "innovation_engine_enabled": settings.INNOVATION_ENGINE_ENABLED,
+        "colony_builder_enabled": settings.COLONY_BUILDER_ENABLED,
         "checks": {}
     }
 
@@ -798,6 +958,47 @@ async def health_check():
     except Exception as e:
         health_status["checks"]["redis"] = f"unhealthy: {str(e)}"
         health_status["status"] = "unhealthy"
+
+    # ======= INNOVATION ENGINE HEALTH CHECK =======
+    if settings.INNOVATION_ENGINE_ENABLED and INNOVATION_ENGINE_AVAILABLE:
+        try:
+            if innovation_engine and private_ledger:
+                health_status["checks"]["innovation_engine"] = "healthy"
+                health_status["innovation_engine_active"] = True
+                health_status["innovation_proposals_active"] = len(innovation_engine.active_proposals)
+                health_status["ledger_entries"] = len(private_ledger.ledger_chain)
+            else:
+                health_status["checks"]["innovation_engine"] = "unhealthy: not initialized"
+        except Exception as e:
+            health_status["checks"]["innovation_engine"] = f"unhealthy: {str(e)}"
+            logger.warning(f"Innovation Engine health check warning: {str(e)}")
+    else:
+        health_status["checks"]["innovation_engine"] = "disabled"
+    # ======= END INNOVATION ENGINE HEALTH CHECK =======
+
+    # ======= COLONY BUILDER HEALTH CHECK =======
+    if settings.COLONY_BUILDER_ENABLED and COLONY_BUILDER_AVAILABLE:
+        try:
+            if website_generator and admin_panel_generator:
+                health_status["checks"]["colony_builder"] = "healthy"
+                health_status["colony_builder_active"] = True
+                health_status["colony_templates_loaded"] = len(website_generator.available_templates)
+                health_status["colony_components_healthy"] = all([
+                    website_generator is not None,
+                    admin_panel_generator is not None,
+                    template_engine is not None,
+                    tenant_security is not None,
+                    sandbox_manager is not None,
+                    sync_manager is not None
+                ])
+            else:
+                health_status["checks"]["colony_builder"] = "unhealthy: not initialized"
+        except Exception as e:
+            health_status["checks"]["colony_builder"] = f"unhealthy: {str(e)}"
+            logger.warning(f"Colony Builder health check warning: {str(e)}")
+    else:
+        health_status["checks"]["colony_builder"] = "disabled"
+    # ======= END COLONY BUILDER HEALTH CHECK =======
 
     # ======= SOCIAL MEDIA MANAGER HEALTH CHECK =======
     if settings.SOCIAL_MEDIA_MANAGER_ENABLED and SOCIAL_MEDIA_MANAGER_AVAILABLE:
@@ -968,6 +1169,8 @@ async def system_info():
         "daily_mission_controller_enabled": settings.DAILY_MISSION_CONTROLLER_ENABLED,
         "social_media_manager_enabled": settings.SOCIAL_MEDIA_MANAGER_ENABLED,
         "ai_ceo_enabled": settings.AI_CEO_ENABLED,
+        "innovation_engine_enabled": settings.INNOVATION_ENGINE_ENABLED,
+        "colony_builder_enabled": settings.COLONY_BUILDER_ENABLED,
         "supported_user_roles": [role.value for role in UserRole],
         "available_ai_models": list(AI_MODELS.keys()) if settings.AI_ENGINE_ENABLED else [],
         "ai_capabilities": await _get_ai_capabilities_list(),
@@ -978,6 +1181,8 @@ async def system_info():
         "mission_capabilities": await _get_mission_capabilities_list(),
         "social_media_capabilities": await _get_social_media_capabilities_list(),
         "ceo_capabilities": await _get_ceo_capabilities_list(),
+        "innovation_capabilities": await _get_innovation_capabilities_list(),
+        "colony_capabilities": await _get_colony_capabilities_list(),
         "features": {
             # Core Platform Features
             "real_time_analytics": settings.ENABLE_REALTIME_ANALYTICS,
@@ -1091,6 +1296,24 @@ async def system_info():
             "decision_override_capability": settings.AI_CEO_ENABLED,
             "20_year_vision_alignment": settings.AI_CEO_ENABLED,
             # ======= END AI CEO FEATURES =======
+
+            # ======= INNOVATION ENGINE FEATURES =======
+            "autonomous_feature_development": settings.INNOVATION_ENGINE_ENABLED,
+            "founder_approval_gates": settings.INNOVATION_ENGINE_ENABLED,
+            "innovation_ledger": settings.INNOVATION_ENGINE_ENABLED,
+            "ai_expert_recruitment": settings.INNOVATION_ENGINE_ENABLED,
+            "secure_ci_cd_pipeline": settings.INNOVATION_ENGINE_ENABLED,
+            "site_registry_management": settings.INNOVATION_ENGINE_ENABLED,
+            # ======= END INNOVATION ENGINE FEATURES =======
+
+            # ======= COLONY BUILDER FEATURES =======
+            "autonomous_website_generation": settings.COLONY_BUILDER_ENABLED,
+            "brand_admin_panel_creation": settings.COLONY_BUILDER_ENABLED,
+            "multi_tenant_isolation": settings.COLONY_BUILDER_ENABLED,
+            "marketing_restriction_enforcement": settings.COLONY_BUILDER_ENABLED,
+            "automatic_system_synchronization": settings.COLONY_BUILDER_ENABLED,
+            "template_based_generation": settings.COLONY_BUILDER_ENABLED,
+            # ======= END COLONY BUILDER FEATURES =======
         },
         "security": {
             "human_approval_required": settings.REQUIRE_HUMAN_APPROVAL,
@@ -1130,6 +1353,18 @@ async def system_info():
             "three_pillars_validation": settings.AI_CEO_ENABLED,
             "strategic_risk_assessment": settings.AI_CEO_ENABLED,
             # ======= END AI CEO SECURITY =======
+            # ======= INNOVATION ENGINE SECURITY =======
+            "cryptographic_approval_required": settings.INNOVATION_ENGINE_ENABLED,
+            "immutable_audit_trail": settings.INNOVATION_ENGINE_ENABLED,
+            "tenant_isolation": settings.INNOVATION_ENGINE_ENABLED,
+            "automated_security_scanning": settings.INNOVATION_ENGINE_ENABLED,
+            # ======= END INNOVATION ENGINE SECURITY =======
+            # ======= COLONY BUILDER SECURITY =======
+            "tenant_access_isolation": settings.COLONY_BUILDER_ENABLED,
+            "brand_marketing_restrictions": settings.COLONY_BUILDER_ENABLED,
+            "secure_colony_synchronization": settings.COLONY_BUILDER_ENABLED,
+            "fault_tolerant_sandboxing": settings.COLONY_BUILDER_ENABLED,
+            # ======= END COLONY BUILDER SECURITY =======
         },
         "performance": {
             "ai_prediction_timeout": settings.AI_PREDICTION_TIMEOUT,
@@ -1163,10 +1398,890 @@ async def system_info():
             "strategic_analysis_depth": "comprehensive" if settings.AI_CEO_ENABLED else "N/A",
             "system_oversight_frequency": "continuous" if settings.AI_CEO_ENABLED else "N/A",
             # ======= END AI CEO PERFORMANCE =======
+            # ======= INNOVATION ENGINE PERFORMANCE =======
+            "innovation_pipeline_speed": "accelerated" if settings.INNOVATION_ENGINE_ENABLED else "N/A",
+            "automated_testing_coverage": "comprehensive" if settings.INNOVATION_ENGINE_ENABLED else "N/A",
+            "security_scanning_integrated": "real-time" if settings.INNOVATION_ENGINE_ENABLED else "N/A",
+            # ======= END INNOVATION ENGINE PERFORMANCE =======
+            # ======= COLONY BUILDER PERFORMANCE =======
+            "website_generation_speed": "under_5_seconds" if settings.COLONY_BUILDER_ENABLED else "N/A",
+            "admin_panel_generation": "under_3_seconds" if settings.COLONY_BUILDER_ENABLED else "N/A",
+            "colony_synchronization": "real_time" if settings.COLONY_BUILDER_ENABLED else "N/A",
+            "template_rendering": "optimized" if settings.COLONY_BUILDER_ENABLED else "N/A",
+            # ======= END COLONY BUILDER PERFORMANCE =======
         }
     }
 
     return system_info
+
+# ======= INNOVATION ENGINE ENDPOINTS =======
+@app.get("/api/v1/innovation/status")
+async def innovation_engine_status():
+    """Get Innovation Engine system status."""
+    if not settings.INNOVATION_ENGINE_ENABLED:
+        raise HTTPException(status_code=403, detail="Innovation Engine is disabled")
+
+    global innovation_engine
+    if not innovation_engine:
+        raise HTTPException(status_code=503, detail="Innovation Engine not initialized")
+
+    try:
+        return {
+            "innovation_engine": "active",
+            "version": "1.0.0",
+            "active_proposals": len(innovation_engine.active_proposals),
+            "ledger_entries": len(private_ledger.ledger_chain) if private_ledger else 0,
+            "registered_sites": len(site_registry.sites) if site_registry else 0,
+            "components_healthy": all([
+                innovation_engine is not None,
+                private_ledger is not None,
+                innovation_key_manager is not None,
+                innovation_task_manager is not None,
+                innovation_recruiter is not None,
+                innovation_ci_runner is not None,
+                site_registry is not None
+            ])
+        }
+    except Exception as e:
+        logger.error(f"Innovation Engine status check failed: {str(e)}")
+        raise HTTPException(status_code=503, detail="Innovation Engine temporarily unavailable")
+
+@app.get("/api/v1/innovation/capabilities")
+async def innovation_engine_capabilities():
+    """Get Innovation Engine capabilities."""
+    if not settings.INNOVATION_ENGINE_ENABLED:
+        raise HTTPException(status_code=403, detail="Innovation Engine is disabled")
+
+    return {
+        "innovation_engine": "Autonomous Innovation Engine (AIE) 'Forge'",
+        "version": "1.0.0",
+        "status": "active",
+        "mission": "AI-driven feature development with secure human gating",
+        "capabilities": {
+            "core_engine": [
+                "Autonomous feature proposal generation",
+                "Cryptographic founder approval system",
+                "Immutable private ledger audit trail",
+                "Secure code scanning and prototyping"
+            ],
+            "development": [
+                "AI task breakdown with skill tagging",
+                "Expert recruitment with automated NDA workflows",
+                "Ephemeral CI/CD pipeline with security scanning",
+                "Multi-environment deployment management"
+            ],
+            "security": [
+                "Founder cryptographic signature verification",
+                "Tenant isolation with encrypted keys",
+                "Comprehensive security scanning (SAST, DAST, container)",
+                "Immutable audit trail for all activities"
+            ],
+            "deployment": [
+                "Staging environment auto-provisioning",
+                "Production deployment with founder approval",
+                "Site registry with domain management",
+                "Rollback and recovery systems"
+            ]
+        },
+        "api_endpoints": {
+            "proposal_management": "/api/v1/innovation/propose",
+            "task_management": "/api/v1/innovation/proposal/{id}/tasks",
+            "recruitment": "/api/v1/innovation/proposal/{id}/recruit",
+            "ci_cd": "/api/v1/innovation/branch/{branch}/staging_report",
+            "approval": "/api/v1/innovation/proposal/{id}/request-approval",
+            "deployment": "/api/v1/innovation/proposal/{id}/approve"
+        }
+    }
+
+@app.post("/api/v1/innovation/propose")
+async def propose_innovation_feature(feature_spec: dict):
+    """Propose a new feature for autonomous development."""
+    if not settings.INNOVATION_ENGINE_ENABLED:
+        raise HTTPException(status_code=403, detail="Innovation Engine is disabled")
+
+    global innovation_engine
+    if not innovation_engine:
+        raise HTTPException(status_code=503, detail="Innovation Engine not initialized")
+
+    try:
+        result = await innovation_engine.generate_feature_proposal(feature_spec)
+        return {
+            "success": True,
+            "proposal_id": result.get("proposal_id"),
+            "summary": result.get("summary"),
+            "cost_estimate": result.get("cost_estimate"),
+            "tasks": result.get("tasks", []),
+            "next_steps": ["task_breakdown", "candidate_recruitment"]
+        }
+    except Exception as e:
+        logger.error(f"Feature proposal failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Feature proposal error: {str(e)}")
+
+@app.get("/api/v1/innovation/proposal/{proposal_id}")
+async def get_innovation_proposal(proposal_id: str):
+    """Get innovation proposal details and status."""
+    if not settings.INNOVATION_ENGINE_ENABLED:
+        raise HTTPException(status_code=403, detail="Innovation Engine is disabled")
+
+    global innovation_engine
+    if not innovation_engine:
+        raise HTTPException(status_code=503, detail="Innovation Engine not initialized")
+
+    try:
+        if proposal_id not in innovation_engine.active_proposals:
+            raise HTTPException(status_code=404, detail="Proposal not found")
+
+        proposal = innovation_engine.active_proposals[proposal_id]
+        return {
+            "proposal_id": proposal_id,
+            "summary": proposal.summary,
+            "status": proposal.status,
+            "cost_estimate": proposal.cost_estimate,
+            "created_at": proposal.created_at.isoformat(),
+            "tasks": proposal.tasks
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Proposal retrieval failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Proposal retrieval error: {str(e)}")
+
+@app.post("/api/v1/innovation/proposal/{proposal_id}/recruit")
+async def recruit_innovation_experts(proposal_id: str, criteria: dict):
+    """Recruit experts for innovation proposal tasks."""
+    if not settings.INNOVATION_ENGINE_ENABLED:
+        raise HTTPException(status_code=403, detail="Innovation Engine is disabled")
+
+    global innovation_engine
+    if not innovation_engine:
+        raise HTTPException(status_code=503, detail="Innovation Engine not initialized")
+
+    try:
+        # Create task bundle first
+        task_bundle = await innovation_engine.create_task_bundle(proposal_id)
+
+        # Recruit experts
+        candidates = await innovation_engine.recruit_experts(
+            task_bundle['task_ids'],
+            criteria
+        )
+
+        return {
+            "success": True,
+            "proposal_id": proposal_id,
+            "tasks_created": len(task_bundle['task_ids']),
+            "candidates_found": len(candidates.get('candidates', [])),
+            "candidates": candidates.get('candidates', [])
+        }
+    except Exception as e:
+        logger.error(f"Expert recruitment failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Recruitment error: {str(e)}")
+
+@app.get("/api/v1/innovation/branch/{branch_name}/staging_report")
+async def get_innovation_staging_report(branch_name: str):
+    """Get CI/CD staging report for innovation branch."""
+    if not settings.INNOVATION_ENGINE_ENABLED:
+        raise HTTPException(status_code=403, detail="Innovation Engine is disabled")
+
+    global innovation_engine
+    if not innovation_engine:
+        raise HTTPException(status_code=503, detail="Innovation Engine not initialized")
+
+    try:
+        pipeline_results = await innovation_engine.run_staging_pipeline(branch_name)
+        return {
+            "branch": branch_name,
+            "pipeline_status": "completed",
+            "tests_passed": pipeline_results.get('tests_passed', False),
+            "security_passed": pipeline_results.get('security_report', {}).get('security_passed', False),
+            "performance_passed": pipeline_results.get('perf_report', {}).get('performance_passed', False),
+            "detailed_reports": {
+                "security": pipeline_results.get('security_report', {}),
+                "performance": pipeline_results.get('perf_report', {}),
+                "tests": pipeline_results.get('tests_passed', False)
+            }
+        }
+    except Exception as e:
+        logger.error(f"Staging report failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Staging report error: {str(e)}")
+
+@app.post("/api/v1/innovation/proposal/{proposal_id}/request-approval")
+async def request_innovation_approval(proposal_id: str):
+    """Request founder approval for production deployment."""
+    if not settings.INNOVATION_ENGINE_ENABLED:
+        raise HTTPException(status_code=403, detail="Innovation Engine is disabled")
+
+    global innovation_engine
+    if not innovation_engine:
+        raise HTTPException(status_code=503, detail="Innovation Engine not initialized")
+
+    try:
+        approval_request = await innovation_engine.request_production_approval(proposal_id)
+        return {
+            "success": True,
+            "status": "approval_requested",
+            "proposal_id": proposal_id,
+            "approval_required": True,
+            "founder_signature_required": True,
+            "approval_hash": approval_request.get('approval_hash')
+        }
+    except Exception as e:
+        logger.error(f"Approval request failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Approval request error: {str(e)}")
+
+@app.post("/api/v1/innovation/proposal/{proposal_id}/approve")
+async def approve_innovation_proposal(proposal_id: str, approval_data: dict):
+    """Approve innovation proposal with founder signature."""
+    if not settings.INNOVATION_ENGINE_ENABLED:
+        raise HTTPException(status_code=403, detail="Innovation Engine is disabled")
+
+    global innovation_engine
+    if not innovation_engine:
+        raise HTTPException(status_code=503, detail="Innovation Engine not initialized")
+
+    try:
+        founder_signature = approval_data.get("founder_signature")
+        if not founder_signature:
+            raise HTTPException(status_code=400, detail="Founder signature required")
+
+        result = await innovation_engine.apply_founder_approval(proposal_id, founder_signature)
+        return {
+            "success": True,
+            "proposal_id": proposal_id,
+            "merged": result.get('merged', False),
+            "deployed": result.get('deployed', False),
+            "status": "approved_and_deployed"
+        }
+    except SecurityError as e:
+        raise HTTPException(status_code=401, detail=str(e))
+    except Exception as e:
+        logger.error(f"Proposal approval failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Approval error: {str(e)}")
+
+# Site Registry Endpoints
+@app.post("/api/v1/sites/register")
+async def register_client_site(site_data: dict):
+    """Register a new client site with encrypted tenant isolation."""
+    if not settings.INNOVATION_ENGINE_ENABLED:
+        raise HTTPException(status_code=403, detail="Innovation Engine is disabled")
+
+    global site_registry
+    if not site_registry:
+        raise HTTPException(status_code=503, detail="Site Registry not initialized")
+
+    try:
+        result = await site_registry.register_site(
+            owner=site_data.get("owner"),
+            domain=site_data.get("domain"),
+            deployment_target=site_data.get("deployment_target", "cloudflare")
+        )
+        return {
+            "success": True,
+            "site_id": result.get("site_id"),
+            "tenant_id": result.get("tenant_id"),
+            "staging_domain": result.get("staging_domain"),
+            "status": result.get("status"),
+            "next_steps": result.get("next_steps", [])
+        }
+    except Exception as e:
+        logger.error(f"Site registration failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Site registration error: {str(e)}")
+
+@app.post("/api/v1/sites/{site_id}/scaffold")
+async def scaffold_client_site(site_id: str, template: str = "default"):
+    """Scaffold website structure for client site."""
+    if not settings.INNOVATION_ENGINE_ENABLED:
+        raise HTTPException(status_code=403, detail="Innovation Engine is disabled")
+
+    global site_registry
+    if not site_registry:
+        raise HTTPException(status_code=503, detail="Site Registry not initialized")
+
+    try:
+        result = await site_registry.scaffold_site(site_id, template)
+        return {
+            "success": True,
+            "site_id": site_id,
+            "scaffold_complete": result.get("scaffold_complete", False),
+            "repo_url": result.get("repo_url"),
+            "template_used": result.get("template_used")
+        }
+    except Exception as e:
+        logger.error(f"Site scaffolding failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Scaffolding error: {str(e)}")
+
+@app.post("/api/v1/sites/{site_id}/deploy/staging")
+async def deploy_to_staging(site_id: str):
+    """Deploy site to staging environment."""
+    if not settings.INNOVATION_ENGINE_ENABLED:
+        raise HTTPException(status_code=403, detail="Innovation Engine is disabled")
+
+    global site_registry
+    if not site_registry:
+        raise HTTPException(status_code=503, detail="Site Registry not initialized")
+
+    try:
+        result = await site_registry.deploy_to_staging(site_id)
+        return {
+            "success": True,
+            "site_id": site_id,
+            "staging_url": result.get("staging_url"),
+            "deployment_id": result.get("deployment_id"),
+            "status": "staging_deployed"
+        }
+    except Exception as e:
+        logger.error(f"Staging deployment failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Staging deployment error: {str(e)}")
+
+@app.post("/api/v1/sites/{site_id}/deploy/production/request")
+async def request_production_deployment(site_id: str):
+    """Request production deployment requiring founder approval."""
+    if not settings.INNOVATION_ENGINE_ENABLED:
+        raise HTTPException(status_code=403, detail="Innovation Engine is disabled")
+
+    global site_registry
+    if not site_registry:
+        raise HTTPException(status_code=503, detail="Site Registry not initialized")
+
+    try:
+        result = await site_registry.request_production_deployment(site_id)
+        return {
+            "success": True,
+            "site_id": site_id,
+            "approval_required": True,
+            "approval_hash": result.get("approval_hash"),
+            "founder_signature_required": True
+        }
+    except Exception as e:
+        logger.error(f"Production deployment request failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Deployment request error: {str(e)}")
+
+# Innovation Ledger Endpoints
+@app.get("/api/v1/innovation/ledger/verify")
+async def verify_innovation_ledger():
+    """Verify the integrity of the innovation ledger."""
+    if not settings.INNOVATION_ENGINE_ENABLED:
+        raise HTTPException(status_code=403, detail="Innovation Engine is disabled")
+
+    global private_ledger
+    if not private_ledger:
+        raise HTTPException(status_code=503, detail="Private Ledger not initialized")
+
+    try:
+        integrity_report = await private_ledger.verify_ledger_integrity()
+        return {
+            "ledger_integrity": integrity_report.get('valid', False),
+            "total_entries": integrity_report.get('total_entries', 0),
+            "issues": integrity_report.get('issues', []),
+            "last_verified": integrity_report.get('last_verified').isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Ledger verification failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Ledger verification error: {str(e)}")
+
+@app.get("/api/v1/innovation/proposal/{proposal_id}/history")
+async def get_innovation_proposal_history(proposal_id: str):
+    """Get complete audit history for an innovation proposal."""
+    if not settings.INNOVATION_ENGINE_ENABLED:
+        raise HTTPException(status_code=403, detail="Innovation Engine is disabled")
+
+    global private_ledger
+    if not private_ledger:
+        raise HTTPException(status_code=503, detail="Private Ledger not initialized")
+
+    try:
+        history = await private_ledger.get_proposal_history(proposal_id)
+        return history
+    except Exception as e:
+        logger.error(f"History retrieval failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"History retrieval error: {str(e)}")
+# ======= END INNOVATION ENGINE ENDPOINTS =======
+
+# ======= COLONY BUILDER ENDPOINTS =======
+@app.get("/api/v1/colony/status")
+async def colony_builder_status():
+    """Get Colony Builder system status."""
+    if not settings.COLONY_BUILDER_ENABLED:
+        raise HTTPException(status_code=403, detail="Colony Builder is disabled")
+
+    global website_generator, admin_panel_generator
+    if not website_generator or not admin_panel_generator:
+        raise HTTPException(status_code=503, detail="Colony Builder not initialized")
+
+    try:
+        return {
+            "colony_builder": "active",
+            "version": "1.0.0",
+            "templates_loaded": len(website_generator.available_templates),
+            "components_healthy": all([
+                website_generator is not None,
+                admin_panel_generator is not None,
+                template_engine is not None,
+                tenant_security is not None,
+                sandbox_manager is not None,
+                sync_manager is not None
+            ]),
+            "capabilities": await _get_colony_capabilities_list()
+        }
+    except Exception as e:
+        logger.error(f"Colony Builder status check failed: {str(e)}")
+        raise HTTPException(status_code=503, detail="Colony Builder temporarily unavailable")
+
+@app.get("/api/v1/colony/capabilities")
+async def colony_builder_capabilities():
+    """Get Colony Builder capabilities."""
+    if not settings.COLONY_BUILDER_ENABLED:
+        raise HTTPException(status_code=403, detail="Colony Builder is disabled")
+
+    return {
+        "colony_builder": "AI-Powered Brand System Generator",
+        "version": "1.0.0",
+        "status": "active",
+        "mission": "Autonomous brand system generation with multi-tenant isolation",
+        "capabilities": {
+            "website_generation": [
+                "Multi-industry template system",
+                "Responsive design generation",
+                "Custom CSS/JS generation",
+                "Automatic deployment",
+                "SEO-optimized structure"
+            ],
+            "admin_systems": [
+                "Custom admin panel generation",
+                "Role-based access control",
+                "Business intelligence dashboards",
+                "Automated workflow creation",
+                "Multi-tenant data isolation"
+            ],
+            "security": [
+                "Tenant isolation enforcement",
+                "Marketing access restrictions",
+                "Secure API gateway",
+                "Fault-tolerant sandboxing",
+                "Data synchronization security"
+            ],
+            "automation": [
+                "Automatic system synchronization",
+                "Health monitoring & recovery",
+                "Performance optimization",
+                "Backup & disaster recovery",
+                "Scalability management"
+            ]
+        },
+        "supported_industries": [
+            "ecommerce",
+            "saas", 
+            "agency",
+            "restaurant",
+            "portfolio",
+            "blog",
+            "nonprofit",
+            "education"
+        ],
+        "api_endpoints": {
+            "core_colony_management": "/api/v1/colony/core",
+            "brand_colony_creation": "/api/v1/colony/brands/create",
+            "system_synchronization": "/api/v1/colony/sync",
+            "colony_health_check": "/api/v1/colony/health",
+            "template_management": "/api/v1/colony/templates"
+        }
+    }
+
+@app.post("/api/v1/colony/core/create")
+async def create_core_colony(core_data: dict):
+    """Create a new Core Colony (master system)."""
+    if not settings.COLONY_BUILDER_ENABLED:
+        raise HTTPException(status_code=403, detail="Colony Builder is disabled")
+
+    try:
+        from database.connection import SessionLocal
+        db = SessionLocal()
+
+        core_colony = CoreColony(
+            name=core_data["name"],
+            domain=core_data["domain"],
+            marketing_api_key=core_data.get("marketing_api_key"),
+            total_marketing_budget=core_data.get("total_marketing_budget", 10000)
+        )
+
+        db.add(core_colony)
+        db.commit()
+        db.refresh(core_colony)
+
+        return {
+            "success": True,
+            "core_colony_id": core_colony.id,
+            "name": core_colony.name,
+            "domain": core_colony.domain,
+            "marketing_api_key": core_colony.marketing_api_key,
+            "message": f"Core Colony '{core_colony.name}' created successfully"
+        }
+
+    except Exception as e:
+        logger.error(f"Core Colony creation failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Core Colony creation error: {str(e)}")
+
+@app.post("/api/v1/colony/brands/create")
+async def create_brand_colony(brand_data: dict):
+    """Create a complete Brand Colony system (website + admin panel)."""
+    if not settings.COLONY_BUILDER_ENABLED:
+        raise HTTPException(status_code=403, detail="Colony Builder is disabled")
+
+    global website_generator, admin_panel_generator
+    if not website_generator or not admin_panel_generator:
+        raise HTTPException(status_code=503, detail="Colony Builder not initialized")
+
+    try:
+        from database.connection import SessionLocal
+        db = SessionLocal()
+
+        # Generate website
+        website_result = website_generator.generate_brand_website(brand_data)
+
+        # Generate admin panel
+        admin_result = admin_panel_generator.generate_admin_panel(
+            brand_data, 
+            brand_data.get("features", [])
+        )
+
+        # Create brand colony record
+        brand_colony = BrandColony(
+            name=brand_data["name"],
+            domain=brand_data["domain"],
+            industry=brand_data.get("industry", "general"),
+            core_colony_id=brand_data["core_colony_id"],
+            website_url=website_result["website_url"],
+            admin_panel_url=website_result["admin_panel_url"],
+            config={
+                "website_data": website_result,
+                "admin_data": admin_result,
+                "features": brand_data.get("features", []),
+                "marketing_restricted": True  # Enforce marketing restrictions
+            }
+        )
+
+        db.add(brand_colony)
+        db.commit()
+        db.refresh(brand_colony)
+
+        logger.info(f"Brand Colony system created: {brand_data['name']}")
+
+        return {
+            "success": True,
+            "brand_colony_id": brand_colony.id,
+            "website_url": website_result["website_url"],
+            "admin_panel_url": website_result["admin_panel_url"],
+            "build_path": website_result["build_path"],
+            "message": f"Brand Colony '{brand_data['name']}' created successfully"
+        }
+
+    except Exception as e:
+        logger.error(f"Brand Colony creation failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Brand Colony creation error: {str(e)}")
+
+@app.get("/api/v1/colony/core/{core_id}/brands")
+async def get_brand_colonies(core_id: str):
+    """Get all brand colonies for a core colony."""
+    if not settings.COLONY_BUILDER_ENABLED:
+        raise HTTPException(status_code=403, detail="Colony Builder is disabled")
+
+    try:
+        from database.connection import SessionLocal
+        db = SessionLocal()
+
+        brand_colonies = db.query(BrandColony).filter(
+            BrandColony.core_colony_id == core_id
+        ).all()
+
+        return {
+            "core_colony_id": core_id,
+            "brand_colonies": [
+                {
+                    "id": colony.id,
+                    "name": colony.name,
+                    "domain": colony.domain,
+                    "industry": colony.industry,
+                    "website_url": colony.website_url,
+                    "status": "active",
+                    "created_at": colony.created_at.isoformat() if colony.created_at else None
+                }
+                for colony in brand_colonies
+            ]
+        }
+
+    except Exception as e:
+        logger.error(f"Brand colonies retrieval failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Brand colonies retrieval error: {str(e)}")
+
+@app.post("/api/v1/colony/core/{core_id}/marketing/campaigns")
+async def create_marketing_campaign(core_id: str, campaign_data: dict):
+    """Create marketing campaign (Core Colony only - brands cannot access this)."""
+    if not settings.COLONY_BUILDER_ENABLED:
+        raise HTTPException(status_code=403, detail="Colony Builder is disabled")
+
+    try:
+        from database.connection import SessionLocal
+        db = SessionLocal()
+
+        marketing_service = CoreMarketingService(db, core_id)
+        campaign = marketing_service.create_campaign_for_brand(
+            campaign_data["brand_colony_id"],
+            campaign_data
+        )
+
+        return {
+            "success": True,
+            "campaign_id": campaign.id,
+            "name": campaign.name,
+            "brand_colony_id": campaign.brand_colony_id,
+            "status": campaign.status,
+            "message": f"Marketing campaign '{campaign.name}' created successfully"
+        }
+
+    except Exception as e:
+        logger.error(f"Marketing campaign creation failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Marketing campaign creation error: {str(e)}")
+
+@app.get("/api/v1/colony/brands/{brand_id}/marketing/campaigns")
+async def get_brand_marketing_campaigns(brand_id: str, request: Request):
+    """Get marketing campaigns for brand (read-only, restricted access)."""
+    if not settings.COLONY_BUILDER_ENABLED:
+        raise HTTPException(status_code=403, detail="Colony Builder is disabled")
+
+    global tenant_security
+    if not tenant_security:
+        raise HTTPException(status_code=503, detail="Security system not initialized")
+
+    try:
+        from database.connection import SessionLocal
+        db = SessionLocal()
+
+        # Verify brand colony access
+        if not tenant_security.check_marketing_access(request, db, brand_id):
+            raise HTTPException(status_code=403, detail="Marketing access denied for brand colony")
+
+        marketing_service = CoreMarketingService(db, "core_colony_id_placeholder")
+        campaigns = marketing_service.get_brand_campaigns(brand_id, include_sensitive=False)
+
+        # Filter sensitive data for brand view
+        filtered_campaigns = []
+        for campaign in campaigns:
+            filtered_campaigns.append({
+                "id": campaign.id,
+                "brand_visible_name": campaign.brand_visible_name,
+                "status": campaign.status,
+                "launched_at": campaign.launched_at.isoformat() if campaign.launched_at else None
+            })
+
+        return {
+            "brand_colony_id": brand_id,
+            "campaigns": filtered_campaigns,
+            "access_level": "brand_restricted"
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Marketing campaigns retrieval failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Marketing campaigns retrieval error: {str(e)}")
+
+@app.post("/api/v1/colony/sync/all")
+async def sync_all_colonies():
+    """Sync data from all brand colonies to core colonies."""
+    if not settings.COLONY_BUILDER_ENABLED:
+        raise HTTPException(status_code=403, detail="Colony Builder is disabled")
+
+    global sync_manager
+    if not sync_manager:
+        raise HTTPException(status_code=503, detail="Sync Manager not initialized")
+
+    try:
+        results = sync_manager.sync_all_colonies()
+
+        return {
+            "success": True,
+            "sync_operation": "complete",
+            "results": results,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+
+    except Exception as e:
+        logger.error(f"Colony synchronization failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Colony synchronization error: {str(e)}")
+
+@app.get("/api/v1/colony/health/{brand_id}")
+async def check_colony_health(brand_id: str):
+    """Check health of a specific brand colony."""
+    if not settings.COLONY_BUILDER_ENABLED:
+        raise HTTPException(status_code=403, detail="Colony Builder is disabled")
+
+    global sandbox_manager
+    if not sandbox_manager:
+        raise HTTPException(status_code=503, detail="Sandbox Manager not initialized")
+
+    try:
+        health_status = sandbox_manager.health_check_colony(brand_id)
+
+        return {
+            "brand_colony_id": brand_id,
+            "health_status": health_status,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+
+    except Exception as e:
+        logger.error(f"Health check failed for colony {brand_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Health check error: {str(e)}")
+
+@app.get("/api/v1/colony/templates")
+async def get_available_templates():
+    """Get available website templates."""
+    if not settings.COLONY_BUILDER_ENABLED:
+        raise HTTPException(status_code=403, detail="Colony Builder is disabled")
+
+    global website_generator
+    if not website_generator:
+        raise HTTPException(status_code=503, detail="Website Generator not initialized")
+
+    try:
+        return {
+            "templates": website_generator.available_templates,
+            "total_templates": len(website_generator.available_templates),
+            "industries_supported": list(website_generator.available_templates.keys())
+        }
+
+    except Exception as e:
+        logger.error(f"Template retrieval failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Template retrieval error: {str(e)}")
+
+# Colony Builder Admin Dashboard
+@app.get("/admin/colony/dashboard")
+async def colony_admin_dashboard():
+    """Colony Builder Admin Dashboard - Overview of all colonies."""
+    if not settings.COLONY_BUILDER_ENABLED:
+        raise HTTPException(status_code=403, detail="Colony Builder is disabled")
+
+    try:
+        from database.connection import SessionLocal
+        db = SessionLocal()
+
+        core_colonies = db.query(CoreColony).all()
+        brand_colonies = db.query(BrandColony).all()
+
+        dashboard_html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Colony Builder - Admin Dashboard</title>
+            <style>
+                body {{ font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }}
+                .header {{ background: #2c3e50; color: white; padding: 1rem 2rem; margin-bottom: 2rem; }}
+                .stats-grid {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem; }}
+                .stat-card {{ background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }}
+                .colonies-grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }}
+                .colony-card {{ background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }}
+                .btn {{ background: #3498db; color: white; padding: 0.5rem 1rem; border: none; border-radius: 4px; cursor: pointer; }}
+                .btn-success {{ background: #27ae60; }}
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>🏛️ Colony Builder - Administration</h1>
+                <p>AI-Powered Brand System Generation</p>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Core Colonies</h3>
+                    <p class="stat-number">{len(core_colonies)}</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Brand Colonies</h3>
+                    <p class="stat-number">{len(brand_colonies)}</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Active Systems</h3>
+                    <p class="stat-number">{len([b for b in brand_colonies if b.website_url])}</p>
+                </div>
+                <div class="stat-card">
+                    <h3>System Health</h3>
+                    <p class="stat-number">100%</p>
+                </div>
+            </div>
+            
+            <div class="actions">
+                <button class="btn btn-success" onclick="createNewColony()">+ Create New Colony System</button>
+                <button class="btn" onclick="syncAllColonies()">🔄 Sync All Colonies</button>
+            </div>
+            
+            <h2>Core Colonies</h2>
+            <div class="colonies-grid">
+                {"".join([generate_core_colony_card(core) for core in core_colonies])}
+            </div>
+            
+            <h2>Brand Colonies</h2>
+            <div class="colonies-grid">
+                {"".join([generate_brand_colony_card(brand) for brand in brand_colonies])}
+            </div>
+            
+            <script>
+                function createNewColony() {{
+                    window.location.href = '/admin/colony/create';
+                }}
+                
+                function syncAllColonies() {{
+                    fetch('/api/v1/colony/sync/all', {{ method: 'POST' }})
+                        .then(response => response.json())
+                        .then(data => alert('Sync completed: ' + data.results.total_colonies + ' colonies processed'));
+                }}
+                
+                function viewColonyDetails(colonyId, type) {{
+                    if (type === 'core') {{
+                        window.location.href = '/admin/colony/core/' + colonyId;
+                    }} else {{
+                        window.location.href = '/admin/colony/brand/' + colonyId;
+                    }}
+                }}
+            </script>
+        </body>
+        </html>
+        """
+
+        return HTMLResponse(dashboard_html)
+
+    except Exception as e:
+        logger.error(f"Admin dashboard generation failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Dashboard error: {str(e)}")
+
+def generate_core_colony_card(core: CoreColony):
+    """Generate HTML card for a core colony."""
+    return f"""
+    <div class="colony-card">
+        <h3>🏛️ {core.name}</h3>
+        <p><strong>Domain:</strong> {core.domain}</p>
+        <p><strong>Marketing Budget:</strong> ${core.total_marketing_budget}</p>
+        <p><strong>Status:</strong> <span style="color: green;">Active</span></p>
+        <div class="actions">
+            <button class="btn" onclick="viewColonyDetails('{core.id}', 'core')">Manage</button>
+            <button class="btn" onclick="window.open('{core.domain}', '_blank')">Visit</button>
+        </div>
+    </div>
+    """
+
+def generate_brand_colony_card(brand: BrandColony):
+    """Generate HTML card for a brand colony."""
+    return f"""
+    <div class="colony-card">
+        <h3>🏢 {brand.name}</h3>
+        <p><strong>Industry:</strong> {brand.industry}</p>
+        <p><strong>Website:</strong> {brand.website_url or "Not deployed"}</p>
+        <p><strong>Status:</strong> <span style="color: green;">Active</span></p>
+        <div class="actions">
+            <button class="btn" onclick="viewColonyDetails('{brand.id}', 'brand')">Manage</button>
+            <button class="btn" onclick="window.open('{brand.website_url}', '_blank')" {'' if brand.website_url else 'disabled'}>Visit Website</button>
+        </div>
+    </div>
+    """
+# ======= END COLONY BUILDER ENDPOINTS =======
 
 # ======= SOCIAL MEDIA MANAGER ENDPOINTS =======
 @app.get("/api/v1/social/status")
@@ -1851,7 +2966,9 @@ async def ai_capabilities():
         "scout_engine_integrated": settings.SCOUT_ENGINE_ENABLED,
         "mission_systems_integrated": settings.UNSTOPPABLE_MISSION_ENABLED,
         "social_media_manager_integrated": settings.SOCIAL_MEDIA_MANAGER_ENABLED,
-        "ai_ceo_integrated": settings.AI_CEO_ENABLED
+        "ai_ceo_integrated": settings.AI_CEO_ENABLED,
+        "innovation_engine_integrated": settings.INNOVATION_ENGINE_ENABLED,
+        "colony_builder_integrated": settings.COLONY_BUILDER_ENABLED
     }
 
     return capabilities
@@ -1883,7 +3000,9 @@ async def ai_status():
                 "scout_engine_active": settings.SCOUT_ENGINE_ENABLED,
                 "mission_systems_active": settings.UNSTOPPABLE_MISSION_ENABLED,
                 "social_media_manager_active": settings.SOCIAL_MEDIA_MANAGER_ENABLED,
-                "ai_ceo_active": settings.AI_CEO_ENABLED
+                "ai_ceo_active": settings.AI_CEO_ENABLED,
+                "innovation_engine_active": settings.INNOVATION_ENGINE_ENABLED,
+                "colony_builder_active": settings.COLONY_BUILDER_ENABLED
             }
 
             return status
@@ -2150,6 +3269,21 @@ app.include_router(dashboard_router)
 app.include_router(reception_router)
 app.include_router(brand_router)
 app.include_router(one_time_router)
+
+# ======= INNOVATION ENGINE ROUTER REGISTRATION =======
+if settings.INNOVATION_ENGINE_ENABLED and INNOVATION_ENGINE_AVAILABLE:
+    try:
+        # Register the main innovation API router
+        app.include_router(innovation_api_router, prefix="/api/v1/innovation", tags=["Innovation Engine"])
+        logger.info("Innovation Engine API router registered successfully")
+    except Exception as e:
+        logger.error(f"Failed to register Innovation Engine router: {str(e)}")
+# ======= END INNOVATION ENGINE ROUTER REGISTRATION =======
+
+# ======= COLONY BUILDER ROUTER REGISTRATION =======
+# Note: Colony Builder doesn't have a separate router in the provided code
+# We've implemented all endpoints directly above
+# ======= END COLONY BUILDER ROUTER REGISTRATION =======
 
 # ======= SOCIAL MEDIA MANAGER & AI CEO ROUTER REGISTRATION =======
 if settings.SOCIAL_MEDIA_MANAGER_ENABLED and SOCIAL_MEDIA_MANAGER_AVAILABLE:
@@ -2455,6 +3589,46 @@ if settings.AI_ENGINE_ENABLED or settings.V16_AI_MODULES_ENABLED or settings.V17
         # Let other exceptions be handled by the default handler
         raise exc
 
+# ======= INNOVATION ENGINE EXCEPTION HANDLER =======
+if settings.INNOVATION_ENGINE_ENABLED:
+    @app.exception_handler(Exception)
+    async def innovation_exception_handler(request, exc):
+        """Handle Innovation Engine-related exceptions gracefully."""
+        if request.url.path.startswith('/api/v1/innovation/'):
+            logger.error(f"Innovation Engine error in {request.url.path}: {str(exc)}")
+            return {
+                "success": False,
+                "error": {
+                    "code": "INNOVATION_ENGINE_ERROR",
+                    "message": "Innovation Engine service temporarily unavailable",
+                    "timestamp": time.time(),
+                    "innovation_engine_enabled": settings.INNOVATION_ENGINE_ENABLED,
+                    "suggestion": "Check Innovation Engine status at /api/v1/innovation/status"
+                }
+            }
+        raise exc
+# ======= END INNOVATION ENGINE EXCEPTION HANDLER =======
+
+# ======= COLONY BUILDER EXCEPTION HANDLER =======
+if settings.COLONY_BUILDER_ENABLED:
+    @app.exception_handler(Exception)
+    async def colony_builder_exception_handler(request, exc):
+        """Handle Colony Builder-related exceptions gracefully."""
+        if request.url.path.startswith('/api/v1/colony/') or request.url.path.startswith('/admin/colony/'):
+            logger.error(f"Colony Builder error in {request.url.path}: {str(exc)}")
+            return {
+                "success": False,
+                "error": {
+                    "code": "COLONY_BUILDER_ERROR",
+                    "message": "Colony Builder service temporarily unavailable",
+                    "timestamp": time.time(),
+                    "colony_builder_enabled": settings.COLONY_BUILDER_ENABLED,
+                    "suggestion": "Check Colony Builder status at /api/v1/colony/status"
+                }
+            }
+        raise exc
+# ======= END COLONY BUILDER EXCEPTION HANDLER =======
+
 # ======= SOCIAL MEDIA MANAGER & AI CEO EXCEPTION HANDLERS =======
 if settings.SOCIAL_MEDIA_MANAGER_ENABLED:
     @app.exception_handler(Exception)
@@ -2628,6 +3802,46 @@ async def _get_v17_capabilities_list():
         "Enterprise Scalability",
         "Cross-Region Deployment"
     ]
+
+# ======= INNOVATION ENGINE HELPER FUNCTIONS =======
+async def _get_innovation_capabilities_list():
+    """Get list of Innovation Engine capabilities."""
+    if not settings.INNOVATION_ENGINE_ENABLED:
+        return []
+
+    return [
+        "Autonomous Feature Proposal Generation",
+        "Cryptographic Founder Approval System",
+        "Immutable Private Ledger Audit Trail",
+        "AI Task Breakdown & Skill Tagging",
+        "Expert Recruitment & NDA Workflows",
+        "Ephemeral CI/CD Pipeline",
+        "Comprehensive Security Scanning",
+        "Site Registry & Tenant Isolation",
+        "Multi-Environment Deployment",
+        "Real-time Innovation Tracking"
+    ]
+# ======= END INNOVATION ENGINE HELPER FUNCTIONS =======
+
+# ======= COLONY BUILDER HELPER FUNCTIONS =======
+async def _get_colony_capabilities_list():
+    """Get list of Colony Builder capabilities."""
+    if not settings.COLONY_BUILDER_ENABLED:
+        return []
+
+    return [
+        "AI-Powered Website Generation",
+        "Custom Admin Panel Creation",
+        "Multi-Tenant Security & Isolation", 
+        "Brand Colony Sandbox Management",
+        "Automatic System Synchronization",
+        "Marketing Restriction Enforcement",
+        "Template-Based System Generation",
+        "Fault-Tolerant Colony Deployment",
+        "Core Colony Management",
+        "Brand Colony Orchestration"
+    ]
+# ======= END COLONY BUILDER HELPER FUNCTIONS =======
 
 # ======= SOCIAL MEDIA MANAGER & AI CEO HELPER FUNCTIONS =======
 async def _get_social_media_capabilities_list():
@@ -2958,1271 +4172,3 @@ from scout.contracts.fair_value import FairValueCalculator
 scout_engine = None
 social_connector = None
 fair_value_calculator = None
-
-# ======= INNOVATION ENGINE INTEGRATION START =======
-"""
-AUTONOMOUS INNOVATION ENGINE (AIE) "FORGE"
-Complete integration of AI-driven feature development with secure human gating.
-"""
-
-    INNOVATION_ENGINE_AVAILABLE = True
-    logger.info("Innovation Engine components imported successfully")
-except ImportError as e:
-    INNOVATION_ENGINE_AVAILABLE = False
-    logger.warning(f"Innovation Engine components not available: {str(e)}")
-
-# Global Innovation Engine instances
-innovation_engine = None
-private_ledger = None
-innovation_key_manager = None
-innovation_task_manager = None
-innovation_recruiter = None
-innovation_ci_runner = None
-site_registry = None
-
-async def _initialize_innovation_engine():
-    """Initialize the Autonomous Innovation Engine (AIE)"""
-    global innovation_engine, private_ledger, innovation_key_manager
-    global innovation_task_manager, innovation_recruiter, innovation_ci_runner, site_registry
-    
-    try:
-        # Initialize core components
-        private_ledger = PrivateLedger()
-        innovation_key_manager = KeyManager()
-        innovation_task_manager = InnovationTaskManager()
-        innovation_recruiter = InnovationRecruiter()
-        innovation_ci_runner = InnovationCIRunner()
-        site_registry = SiteRegistry()
-        
-        # Initialize main engine
-        innovation_engine = AutonomousInnovationEngine()
-        
-        logger.info("✅ AUTONOMOUS INNOVATION ENGINE (AIE) INITIALIZED")
-        logger.info("🎯 Mission: AI-driven feature development with secure human gating")
-        
-        innovation_capabilities = [
-            "Cryptographic Founder Approval Gates",
-            "Private Ledger with Immutable Audit Trail",
-            "Automated Task Breakdown & Skill Tagging",
-            "AI Expert Recruitment & NDA Workflows",
-            "Ephemeral CI/CD Pipeline with Security Scanning",
-            "Site Registry with Tenant Isolation",
-            "Secure Code Merging & Production Deployment",
-            "Real-time Innovation Proposal Tracking"
-        ]
-        
-        for capability in innovation_capabilities:
-            logger.info(f"  🔧 {capability}")
-            
-    except Exception as e:
-        logger.error(f"Innovation Engine initialization failed: {str(e)}")
-
-# Innovation Engine startup initialization
-if settings.INNOVATION_ENGINE_ENABLED and INNOVATION_ENGINE_AVAILABLE:
-    try:
-        # Add to startup event
-        @app.on_event("startup")
-        async def startup_innovation_engine():
-            await _initialize_innovation_engine()
-            
-        logger.info("Innovation Engine scheduled for startup initialization")
-    except Exception as e:
-        logger.error(f"Innovation Engine startup scheduling failed: {str(e)}")
-
-# Innovation Engine API Endpoints
-@app.get("/api/v1/innovation/status")
-async def innovation_engine_status():
-    """Get Innovation Engine system status."""
-    if not settings.INNOVATION_ENGINE_ENABLED:
-        raise HTTPException(status_code=403, detail="Innovation Engine is disabled")
-    
-    global innovation_engine
-    if not innovation_engine:
-        raise HTTPException(status_code=503, detail="Innovation Engine not initialized")
-    
-    try:
-        return {
-            "innovation_engine": "active",
-            "version": "1.0.0",
-            "active_proposals": len(innovation_engine.active_proposals),
-            "ledger_entries": len(private_ledger.ledger_chain) if private_ledger else 0,
-            "registered_sites": len(site_registry.sites) if site_registry else 0,
-            "components_healthy": all([
-                innovation_engine is not None,
-                private_ledger is not None,
-                innovation_key_manager is not None,
-                innovation_task_manager is not None,
-                innovation_recruiter is not None,
-                innovation_ci_runner is not None,
-                site_registry is not None
-            ])
-        }
-    except Exception as e:
-        logger.error(f"Innovation Engine status check failed: {str(e)}")
-        raise HTTPException(status_code=503, detail="Innovation Engine temporarily unavailable")
-
-@app.get("/api/v1/innovation/capabilities")
-async def innovation_engine_capabilities():
-    """Get Innovation Engine capabilities."""
-    if not settings.INNOVATION_ENGINE_ENABLED:
-        raise HTTPException(status_code=403, detail="Innovation Engine is disabled")
-    
-    return {
-        "innovation_engine": "Autonomous Innovation Engine (AIE) 'Forge'",
-        "version": "1.0.0",
-        "status": "active",
-        "mission": "AI-driven feature development with secure human gating",
-        "capabilities": {
-            "core_engine": [
-                "Autonomous feature proposal generation",
-                "Cryptographic founder approval system",
-                "Immutable private ledger audit trail",
-                "Secure code scanning and prototyping"
-            ],
-            "development": [
-                "AI task breakdown with skill tagging",
-                "Expert recruitment with automated NDA workflows",
-                "Ephemeral CI/CD pipeline with security scanning",
-                "Multi-environment deployment management"
-            ],
-            "security": [
-                "Founder cryptographic signature verification",
-                "Tenant isolation with encrypted keys",
-                "Comprehensive security scanning (SAST, DAST, container)",
-                "Immutable audit trail for all activities"
-            ],
-            "deployment": [
-                "Staging environment auto-provisioning",
-                "Production deployment with founder approval",
-                "Site registry with domain management",
-                "Rollback and recovery systems"
-            ]
-        },
-        "api_endpoints": {
-            "proposal_management": "/api/v1/innovation/propose",
-            "task_management": "/api/v1/innovation/proposal/{id}/tasks",
-            "recruitment": "/api/v1/innovation/proposal/{id}/recruit",
-            "ci_cd": "/api/v1/innovation/branch/{branch}/staging_report",
-            "approval": "/api/v1/innovation/proposal/{id}/request-approval",
-            "deployment": "/api/v1/innovation/proposal/{id}/approve"
-        }
-    }
-
-@app.post("/api/v1/innovation/propose")
-async def propose_innovation_feature(feature_spec: dict):
-    """Propose a new feature for autonomous development."""
-    if not settings.INNOVATION_ENGINE_ENABLED:
-        raise HTTPException(status_code=403, detail="Innovation Engine is disabled")
-    
-    global innovation_engine
-    if not innovation_engine:
-        raise HTTPException(status_code=503, detail="Innovation Engine not initialized")
-    
-    try:
-        result = await innovation_engine.generate_feature_proposal(feature_spec)
-        return {
-            "success": True,
-            "proposal_id": result.get("proposal_id"),
-            "summary": result.get("summary"),
-            "cost_estimate": result.get("cost_estimate"),
-            "tasks": result.get("tasks", []),
-            "next_steps": ["task_breakdown", "candidate_recruitment"]
-        }
-    except Exception as e:
-        logger.error(f"Feature proposal failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Feature proposal error: {str(e)}")
-
-@app.get("/api/v1/innovation/proposal/{proposal_id}")
-async def get_innovation_proposal(proposal_id: str):
-    """Get innovation proposal details and status."""
-    if not settings.INNOVATION_ENGINE_ENABLED:
-        raise HTTPException(status_code=403, detail="Innovation Engine is disabled")
-    
-    global innovation_engine
-    if not innovation_engine:
-        raise HTTPException(status_code=503, detail="Innovation Engine not initialized")
-    
-    try:
-        if proposal_id not in innovation_engine.active_proposals:
-            raise HTTPException(status_code=404, detail="Proposal not found")
-        
-        proposal = innovation_engine.active_proposals[proposal_id]
-        return {
-            "proposal_id": proposal_id,
-            "summary": proposal.summary,
-            "status": proposal.status,
-            "cost_estimate": proposal.cost_estimate,
-            "created_at": proposal.created_at.isoformat(),
-            "tasks": proposal.tasks
-        }
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Proposal retrieval failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Proposal retrieval error: {str(e)}")
-
-@app.post("/api/v1/innovation/proposal/{proposal_id}/recruit")
-async def recruit_innovation_experts(proposal_id: str, criteria: dict):
-    """Recruit experts for innovation proposal tasks."""
-    if not settings.INNOVATION_ENGINE_ENABLED:
-        raise HTTPException(status_code=403, detail="Innovation Engine is disabled")
-    
-    global innovation_engine
-    if not innovation_engine:
-        raise HTTPException(status_code=503, detail="Innovation Engine not initialized")
-    
-    try:
-        # Create task bundle first
-        task_bundle = await innovation_engine.create_task_bundle(proposal_id)
-        
-        # Recruit experts
-        candidates = await innovation_engine.recruit_experts(
-            task_bundle['task_ids'],
-            criteria
-        )
-        
-        return {
-            "success": True,
-            "proposal_id": proposal_id,
-            "tasks_created": len(task_bundle['task_ids']),
-            "candidates_found": len(candidates.get('candidates', [])),
-            "candidates": candidates.get('candidates', [])
-        }
-    except Exception as e:
-        logger.error(f"Expert recruitment failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Recruitment error: {str(e)}")
-
-@app.get("/api/v1/innovation/branch/{branch_name}/staging_report")
-async def get_innovation_staging_report(branch_name: str):
-    """Get CI/CD staging report for innovation branch."""
-    if not settings.INNOVATION_ENGINE_ENABLED:
-        raise HTTPException(status_code=403, detail="Innovation Engine is disabled")
-    
-    global innovation_engine
-    if not innovation_engine:
-        raise HTTPException(status_code=503, detail="Innovation Engine not initialized")
-    
-    try:
-        pipeline_results = await innovation_engine.run_staging_pipeline(branch_name)
-        return {
-            "branch": branch_name,
-            "pipeline_status": "completed",
-            "tests_passed": pipeline_results.get('tests_passed', False),
-            "security_passed": pipeline_results.get('security_report', {}).get('security_passed', False),
-            "performance_passed": pipeline_results.get('perf_report', {}).get('performance_passed', False),
-            "detailed_reports": {
-                "security": pipeline_results.get('security_report', {}),
-                "performance": pipeline_results.get('perf_report', {}),
-                "tests": pipeline_results.get('tests_passed', False)
-            }
-        }
-    except Exception as e:
-        logger.error(f"Staging report failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Staging report error: {str(e)}")
-
-@app.post("/api/v1/innovation/proposal/{proposal_id}/request-approval")
-async def request_innovation_approval(proposal_id: str):
-    """Request founder approval for production deployment."""
-    if not settings.INNOVATION_ENGINE_ENABLED:
-        raise HTTPException(status_code=403, detail="Innovation Engine is disabled")
-    
-    global innovation_engine
-    if not innovation_engine:
-        raise HTTPException(status_code=503, detail="Innovation Engine not initialized")
-    
-    try:
-        approval_request = await innovation_engine.request_production_approval(proposal_id)
-        return {
-            "success": True,
-            "status": "approval_requested",
-            "proposal_id": proposal_id,
-            "approval_required": True,
-            "founder_signature_required": True,
-            "approval_hash": approval_request.get('approval_hash')
-        }
-    except Exception as e:
-        logger.error(f"Approval request failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Approval request error: {str(e)}")
-
-@app.post("/api/v1/innovation/proposal/{proposal_id}/approve")
-async def approve_innovation_proposal(proposal_id: str, approval_data: dict):
-    """Approve innovation proposal with founder signature."""
-    if not settings.INNOVATION_ENGINE_ENABLED:
-        raise HTTPException(status_code=403, detail="Innovation Engine is disabled")
-    
-    global innovation_engine
-    if not innovation_engine:
-        raise HTTPException(status_code=503, detail="Innovation Engine not initialized")
-    
-    try:
-        founder_signature = approval_data.get("founder_signature")
-        if not founder_signature:
-            raise HTTPException(status_code=400, detail="Founder signature required")
-        
-        result = await innovation_engine.apply_founder_approval(proposal_id, founder_signature)
-        return {
-            "success": True,
-            "proposal_id": proposal_id,
-            "merged": result.get('merged', False),
-            "deployed": result.get('deployed', False),
-            "status": "approved_and_deployed"
-        }
-    except SecurityError as e:
-        raise HTTPException(status_code=401, detail=str(e))
-    except Exception as e:
-        logger.error(f"Proposal approval failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Approval error: {str(e)}")
-
-# Site Registry Endpoints
-@app.post("/api/v1/sites/register")
-async def register_client_site(site_data: dict):
-    """Register a new client site with encrypted tenant isolation."""
-    if not settings.INNOVATION_ENGINE_ENABLED:
-        raise HTTPException(status_code=403, detail="Innovation Engine is disabled")
-    
-    global site_registry
-    if not site_registry:
-        raise HTTPException(status_code=503, detail="Site Registry not initialized")
-    
-    try:
-        result = await site_registry.register_site(
-            owner=site_data.get("owner"),
-            domain=site_data.get("domain"),
-            deployment_target=site_data.get("deployment_target", "cloudflare")
-        )
-        return {
-            "success": True,
-            "site_id": result.get("site_id"),
-            "tenant_id": result.get("tenant_id"),
-            "staging_domain": result.get("staging_domain"),
-            "status": result.get("status"),
-            "next_steps": result.get("next_steps", [])
-        }
-    except Exception as e:
-        logger.error(f"Site registration failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Site registration error: {str(e)}")
-
-@app.post("/api/v1/sites/{site_id}/scaffold")
-async def scaffold_client_site(site_id: str, template: str = "default"):
-    """Scaffold website structure for client site."""
-    if not settings.INNOVATION_ENGINE_ENABLED:
-        raise HTTPException(status_code=403, detail="Innovation Engine is disabled")
-    
-    global site_registry
-    if not site_registry:
-        raise HTTPException(status_code=503, detail="Site Registry not initialized")
-    
-    try:
-        result = await site_registry.scaffold_site(site_id, template)
-        return {
-            "success": True,
-            "site_id": site_id,
-            "scaffold_complete": result.get("scaffold_complete", False),
-            "repo_url": result.get("repo_url"),
-            "template_used": result.get("template_used")
-        }
-    except Exception as e:
-        logger.error(f"Site scaffolding failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Scaffolding error: {str(e)}")
-
-@app.post("/api/v1/sites/{site_id}/deploy/staging")
-async def deploy_to_staging(site_id: str):
-    """Deploy site to staging environment."""
-    if not settings.INNOVATION_ENGINE_ENABLED:
-        raise HTTPException(status_code=403, detail="Innovation Engine is disabled")
-    
-    global site_registry
-    if not site_registry:
-        raise HTTPException(status_code=503, detail="Site Registry not initialized")
-    
-    try:
-        result = await site_registry.deploy_to_staging(site_id)
-        return {
-            "success": True,
-            "site_id": site_id,
-            "staging_url": result.get("staging_url"),
-            "deployment_id": result.get("deployment_id"),
-            "status": "staging_deployed"
-        }
-    except Exception as e:
-        logger.error(f"Staging deployment failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Staging deployment error: {str(e)}")
-
-@app.post("/api/v1/sites/{site_id}/deploy/production/request")
-async def request_production_deployment(site_id: str):
-    """Request production deployment requiring founder approval."""
-    if not settings.INNOVATION_ENGINE_ENABLED:
-        raise HTTPException(status_code=403, detail="Innovation Engine is disabled")
-    
-    global site_registry
-    if not site_registry:
-        raise HTTPException(status_code=503, detail="Site Registry not initialized")
-    
-    try:
-        result = await site_registry.request_production_deployment(site_id)
-        return {
-            "success": True,
-            "site_id": site_id,
-            "approval_required": True,
-            "approval_hash": result.get("approval_hash"),
-            "founder_signature_required": True
-        }
-    except Exception as e:
-        logger.error(f"Production deployment request failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Deployment request error: {str(e)}")
-
-# Innovation Ledger Endpoints
-@app.get("/api/v1/innovation/ledger/verify")
-async def verify_innovation_ledger():
-    """Verify the integrity of the innovation ledger."""
-    if not settings.INNOVATION_ENGINE_ENABLED:
-        raise HTTPException(status_code=403, detail="Innovation Engine is disabled")
-    
-    global private_ledger
-    if not private_ledger:
-        raise HTTPException(status_code=503, detail="Private Ledger not initialized")
-    
-    try:
-        integrity_report = await private_ledger.verify_ledger_integrity()
-        return {
-            "ledger_integrity": integrity_report.get('valid', False),
-            "total_entries": integrity_report.get('total_entries', 0),
-            "issues": integrity_report.get('issues', []),
-            "last_verified": integrity_report.get('last_verified').isoformat()
-        }
-    except Exception as e:
-        logger.error(f"Ledger verification failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Ledger verification error: {str(e)}")
-
-@app.get("/api/v1/innovation/proposal/{proposal_id}/history")
-async def get_innovation_proposal_history(proposal_id: str):
-    """Get complete audit history for an innovation proposal."""
-    if not settings.INNOVATION_ENGINE_ENABLED:
-        raise HTTPException(status_code=403, detail="Innovation Engine is disabled")
-    
-    global private_ledger
-    if not private_ledger:
-        raise HTTPException(status_code=503, detail="Private Ledger not initialized")
-    
-    try:
-        history = await private_ledger.get_proposal_history(proposal_id)
-        return history
-    except Exception as e:
-        logger.error(f"History retrieval failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"History retrieval error: {str(e)}")
-
-# Innovation Engine Router Registration
-if settings.INNOVATION_ENGINE_ENABLED and INNOVATION_ENGINE_AVAILABLE:
-    try:
-        # Register the main innovation API router
-        app.include_router(innovation_api_router, prefix="/api/v1/innovation", tags=["Innovation Engine"])
-        logger.info("Innovation Engine API router registered successfully")
-    except Exception as e:
-        logger.error(f"Failed to register Innovation Engine router: {str(e)}")
-
-# Innovation Engine Health Check Integration
-@app.get("/health")
-async def health_check_with_innovation():
-    """Comprehensive health check including Innovation Engine."""
-    health_data = await health_check()
-    
-    # Add Innovation Engine health check
-    if settings.INNOVATION_ENGINE_ENABLED and INNOVATION_ENGINE_AVAILABLE:
-        try:
-            if innovation_engine and private_ledger:
-                health_data["checks"]["innovation_engine"] = "healthy"
-                health_data["innovation_engine_active"] = True
-                health_data["innovation_proposals_active"] = len(innovation_engine.active_proposals)
-                health_data["ledger_entries"] = len(private_ledger.ledger_chain)
-            else:
-                health_data["checks"]["innovation_engine"] = "unhealthy: not initialized"
-        except Exception as e:
-            health_data["checks"]["innovation_engine"] = f"unhealthy: {str(e)}"
-            logger.warning(f"Innovation Engine health check warning: {str(e)}")
-    else:
-        health_data["checks"]["innovation_engine"] = "disabled"
-    
-    return health_data
-
-# Innovation Engine System Info Integration
-@app.get("/system/info")
-async def system_info_with_innovation():
-    """Get system information including Innovation Engine."""
-    system_info_data = await system_info()
-    
-    # Add Innovation Engine information
-    if settings.INNOVATION_ENGINE_ENABLED:
-        system_info_data["innovation_engine_enabled"] = True
-        system_info_data["innovation_capabilities"] = await _get_innovation_capabilities_list()
-        
-        # Add Innovation Engine features
-        system_info_data["features"]["autonomous_feature_development"] = True
-        system_info_data["features"]["founder_approval_gates"] = True
-        system_info_data["features"]["innovation_ledger"] = True
-        system_info_data["features"]["ai_expert_recruitment"] = True
-        system_info_data["features"]["secure_ci_cd_pipeline"] = True
-        system_info_data["features"]["site_registry_management"] = True
-        
-        # Add Innovation Engine security
-        system_info_data["security"]["cryptographic_approval_required"] = True
-        system_info_data["security"]["immutable_audit_trail"] = True
-        system_info_data["security"]["tenant_isolation"] = True
-        system_info_data["security"]["automated_security_scanning"] = True
-        
-        # Add Innovation Engine performance
-        system_info_data["performance"]["innovation_pipeline_speed"] = "accelerated"
-        system_info_data["performance"]["automated_testing_coverage"] = "comprehensive"
-        system_info_data["performance"]["security_scanning_integrated"] = "real-time"
-    
-    return system_info_data
-
-# Innovation Engine Helper Functions
-async def _get_innovation_capabilities_list():
-    """Get list of Innovation Engine capabilities."""
-    if not settings.INNOVATION_ENGINE_ENABLED:
-        return []
-    
-    return [
-        "Autonomous Feature Proposal Generation",
-        "Cryptographic Founder Approval System",
-        "Immutable Private Ledger Audit Trail",
-        "AI Task Breakdown & Skill Tagging",
-        "Expert Recruitment & NDA Workflows",
-        "Ephemeral CI/CD Pipeline",
-        "Comprehensive Security Scanning",
-        "Site Registry & Tenant Isolation",
-        "Multi-Environment Deployment",
-        "Real-time Innovation Tracking"
-    ]
-
-# Innovation Engine Exception Handler
-if settings.INNOVATION_ENGINE_ENABLED:
-    @app.exception_handler(Exception)
-    async def innovation_exception_handler(request, exc):
-        """Handle Innovation Engine-related exceptions gracefully."""
-        if request.url.path.startswith('/api/v1/innovation/'):
-            logger.error(f"Innovation Engine error in {request.url.path}: {str(exc)}")
-            return {
-                "success": False,
-                "error": {
-                    "code": "INNOVATION_ENGINE_ERROR",
-                    "message": "Innovation Engine service temporarily unavailable",
-                    "timestamp": time.time(),
-                    "innovation_engine_enabled": settings.INNOVATION_ENGINE_ENABLED,
-                    "suggestion": "Check Innovation Engine status at /api/v1/innovation/status"
-                }
-            }
-        raise exc
-
-# Innovation Engine Shutdown Cleanup
-@app.on_event("shutdown")
-async def shutdown_innovation_engine():
-    """Cleanup Innovation Engine resources on shutdown."""
-    if settings.INNOVATION_ENGINE_ENABLED and INNOVATION_ENGINE_AVAILABLE:
-        try:
-            # Add any Innovation Engine cleanup logic if needed
-            logger.info("Innovation Engine shutdown complete")
-        except Exception as e:
-            logger.warning(f"Innovation Engine shutdown warning: {str(e)}")
-
-# ======= INNOVATION ENGINE INTEGRATION END =======
-
-
-
-# ======= COLONY BUILDER INTEGRATION START =======
-"""
-COLONY BUILDER - AI-Powered Website & System Generator
-Complete integration of autonomous brand system generation with multi-tenant isolation.
-"""
-
-try:
-    from colony_builder.system_builder.website_generator import WebsiteGenerator
-    from colony_builder.system_builder.admin_panel_generator import AdminPanelGenerator
-    from colony_builder.system_builder.template_engine import TemplateEngine
-    from colony_builder.models.core import CoreColony, BrandColony, MarketingCampaign
-    from colony_builder.schemas.colony_schemas import BrandColonyCreate, MarketingCampaignCreate
-    from colony_builder.security.tenant_isolation import TenantSecurity, SandboxManager
-    from colony_builder.services.core_marketing_service import CoreMarketingService
-    from colony_builder.services.sync_manager import SyncManager
-    
-    COLONY_BUILDER_AVAILABLE = True
-    logger.info("Colony Builder components imported successfully")
-except ImportError as e:
-    COLONY_BUILDER_AVAILABLE = False
-    logger.warning(f"Colony Builder components not available: {str(e)}")
-
-# Global Colony Builder instances
-website_generator = None
-admin_panel_generator = None 
-template_engine = None
-tenant_security = None
-sandbox_manager = None
-sync_manager = None
-
-async def _initialize_colony_builder():
-    """Initialize the Colony Builder system"""
-    global website_generator, admin_panel_generator, template_engine
-    global tenant_security, sandbox_manager, sync_manager
-
-    try:
-        # Initialize core components
-        website_generator = WebsiteGenerator()
-        admin_panel_generator = AdminPanelGenerator()
-        template_engine = TemplateEngine()
-        tenant_security = TenantSecurity()
-        sandbox_manager = SandboxManager()
-        
-        # Initialize sync manager with database
-        from database.connection import SessionLocal
-        db = SessionLocal()
-        sync_manager = SyncManager(db)
-
-        logger.info("✅ COLONY BUILDER SYSTEM INITIALIZED")
-        logger.info("🎯 Mission: Autonomous brand system generation with multi-tenant isolation")
-
-        colony_capabilities = [
-            "AI-Powered Website Generation",
-            "Custom Admin Panel Creation", 
-            "Multi-Tenant Security & Isolation",
-            "Brand Colony Sandbox Management",
-            "Automatic System Synchronization",
-            "Marketing Restriction Enforcement",
-            "Template-Based System Generation",
-            "Fault-Tolerant Colony Deployment"
-        ]
-
-        for capability in colony_capabilities:
-            logger.info(f"  🏗️  {capability}")
-
-    except Exception as e:
-        logger.error(f"Colony Builder initialization failed: {str(e)}")
-
-# Colony Builder startup initialization
-if settings.COLONY_BUILDER_ENABLED and COLONY_BUILDER_AVAILABLE:
-    try:
-        # Add to startup event
-        @app.on_event("startup")
-        async def startup_colony_builder():
-            await _initialize_colony_builder()
-
-        logger.info("Colony Builder scheduled for startup initialization")
-    except Exception as e:
-        logger.error(f"Colony Builder startup scheduling failed: {str(e)}")
-
-# Colony Builder API Endpoints
-@app.get("/api/v1/colony/status")
-async def colony_builder_status():
-    """Get Colony Builder system status."""
-    if not settings.COLONY_BUILDER_ENABLED:
-        raise HTTPException(status_code=403, detail="Colony Builder is disabled")
-
-    global website_generator, admin_panel_generator
-    if not website_generator or not admin_panel_generator:
-        raise HTTPException(status_code=503, detail="Colony Builder not initialized")
-
-    try:
-        return {
-            "colony_builder": "active",
-            "version": "1.0.0",
-            "templates_loaded": len(website_generator.available_templates),
-            "components_healthy": all([
-                website_generator is not None,
-                admin_panel_generator is not None,
-                template_engine is not None,
-                tenant_security is not None,
-                sandbox_manager is not None,
-                sync_manager is not None
-            ]),
-            "capabilities": await _get_colony_capabilities_list()
-        }
-    except Exception as e:
-        logger.error(f"Colony Builder status check failed: {str(e)}")
-        raise HTTPException(status_code=503, detail="Colony Builder temporarily unavailable")
-
-@app.get("/api/v1/colony/capabilities")
-async def colony_builder_capabilities():
-    """Get Colony Builder capabilities."""
-    if not settings.COLONY_BUILDER_ENABLED:
-        raise HTTPException(status_code=403, detail="Colony Builder is disabled")
-
-    return {
-        "colony_builder": "AI-Powered Brand System Generator",
-        "version": "1.0.0",
-        "status": "active",
-        "mission": "Autonomous brand system generation with multi-tenant isolation",
-        "capabilities": {
-            "website_generation": [
-                "Multi-industry template system",
-                "Responsive design generation",
-                "Custom CSS/JS generation",
-                "Automatic deployment",
-                "SEO-optimized structure"
-            ],
-            "admin_systems": [
-                "Custom admin panel generation",
-                "Role-based access control",
-                "Business intelligence dashboards",
-                "Automated workflow creation",
-                "Multi-tenant data isolation"
-            ],
-            "security": [
-                "Tenant isolation enforcement",
-                "Marketing access restrictions",
-                "Secure API gateway",
-                "Fault-tolerant sandboxing",
-                "Data synchronization security"
-            ],
-            "automation": [
-                "Automatic system synchronization",
-                "Health monitoring & recovery",
-                "Performance optimization",
-                "Backup & disaster recovery",
-                "Scalability management"
-            ]
-        },
-        "supported_industries": [
-            "ecommerce",
-            "saas", 
-            "agency",
-            "restaurant",
-            "portfolio",
-            "blog",
-            "nonprofit",
-            "education"
-        ],
-        "api_endpoints": {
-            "core_colony_management": "/api/v1/colony/core",
-            "brand_colony_creation": "/api/v1/colony/brands/create",
-            "system_synchronization": "/api/v1/colony/sync",
-            "colony_health_check": "/api/v1/colony/health",
-            "template_management": "/api/v1/colony/templates"
-        }
-    }
-
-@app.post("/api/v1/colony/core/create")
-async def create_core_colony(core_data: dict):
-    """Create a new Core Colony (master system)."""
-    if not settings.COLONY_BUILDER_ENABLED:
-        raise HTTPException(status_code=403, detail="Colony Builder is disabled")
-
-    try:
-        from database.connection import SessionLocal
-        db = SessionLocal()
-        
-        core_colony = CoreColony(
-            name=core_data["name"],
-            domain=core_data["domain"],
-            marketing_api_key=core_data.get("marketing_api_key"),
-            total_marketing_budget=core_data.get("total_marketing_budget", 10000)
-        )
-        
-        db.add(core_colony)
-        db.commit()
-        db.refresh(core_colony)
-        
-        return {
-            "success": True,
-            "core_colony_id": core_colony.id,
-            "name": core_colony.name,
-            "domain": core_colony.domain,
-            "marketing_api_key": core_colony.marketing_api_key,
-            "message": f"Core Colony '{core_colony.name}' created successfully"
-        }
-        
-    except Exception as e:
-        logger.error(f"Core Colony creation failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Core Colony creation error: {str(e)}")
-
-@app.post("/api/v1/colony/brands/create")
-async def create_brand_colony(brand_data: dict):
-    """Create a complete Brand Colony system (website + admin panel)."""
-    if not settings.COLONY_BUILDER_ENABLED:
-        raise HTTPException(status_code=403, detail="Colony Builder is disabled")
-
-    global website_generator, admin_panel_generator
-    if not website_generator or not admin_panel_generator:
-        raise HTTPException(status_code=503, detail="Colony Builder not initialized")
-
-    try:
-        from database.connection import SessionLocal
-        db = SessionLocal()
-
-        # Generate website
-        website_result = website_generator.generate_brand_website(brand_data)
-        
-        # Generate admin panel
-        admin_result = admin_panel_generator.generate_admin_panel(
-            brand_data, 
-            brand_data.get("features", [])
-        )
-
-        # Create brand colony record
-        brand_colony = BrandColony(
-            name=brand_data["name"],
-            domain=brand_data["domain"],
-            industry=brand_data.get("industry", "general"),
-            core_colony_id=brand_data["core_colony_id"],
-            website_url=website_result["website_url"],
-            admin_panel_url=website_result["admin_panel_url"],
-            config={
-                "website_data": website_result,
-                "admin_data": admin_result,
-                "features": brand_data.get("features", []),
-                "marketing_restricted": True  # Enforce marketing restrictions
-            }
-        )
-
-        db.add(brand_colony)
-        db.commit()
-        db.refresh(brand_colony)
-
-        logger.info(f"Brand Colony system created: {brand_data['name']}")
-
-        return {
-            "success": True,
-            "brand_colony_id": brand_colony.id,
-            "website_url": website_result["website_url"],
-            "admin_panel_url": website_result["admin_panel_url"],
-            "build_path": website_result["build_path"],
-            "message": f"Brand Colony '{brand_data['name']}' created successfully"
-        }
-
-    except Exception as e:
-        logger.error(f"Brand Colony creation failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Brand Colony creation error: {str(e)}")
-
-@app.get("/api/v1/colony/core/{core_id}/brands")
-async def get_brand_colonies(core_id: str):
-    """Get all brand colonies for a core colony."""
-    if not settings.COLONY_BUILDER_ENABLED:
-        raise HTTPException(status_code=403, detail="Colony Builder is disabled")
-
-    try:
-        from database.connection import SessionLocal
-        db = SessionLocal()
-        
-        brand_colonies = db.query(BrandColony).filter(
-            BrandColony.core_colony_id == core_id
-        ).all()
-        
-        return {
-            "core_colony_id": core_id,
-            "brand_colonies": [
-                {
-                    "id": colony.id,
-                    "name": colony.name,
-                    "domain": colony.domain,
-                    "industry": colony.industry,
-                    "website_url": colony.website_url,
-                    "status": "active",
-                    "created_at": colony.created_at.isoformat() if colony.created_at else None
-                }
-                for colony in brand_colonies
-            ]
-        }
-        
-    except Exception as e:
-        logger.error(f"Brand colonies retrieval failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Brand colonies retrieval error: {str(e)}")
-
-@app.post("/api/v1/colony/core/{core_id}/marketing/campaigns")
-async def create_marketing_campaign(core_id: str, campaign_data: dict):
-    """Create marketing campaign (Core Colony only - brands cannot access this)."""
-    if not settings.COLONY_BUILDER_ENABLED:
-        raise HTTPException(status_code=403, detail="Colony Builder is disabled")
-
-    try:
-        from database.connection import SessionLocal
-        db = SessionLocal()
-        
-        marketing_service = CoreMarketingService(db, core_id)
-        campaign = marketing_service.create_campaign_for_brand(
-            campaign_data["brand_colony_id"],
-            campaign_data
-        )
-        
-        return {
-            "success": True,
-            "campaign_id": campaign.id,
-            "name": campaign.name,
-            "brand_colony_id": campaign.brand_colony_id,
-            "status": campaign.status,
-            "message": f"Marketing campaign '{campaign.name}' created successfully"
-        }
-        
-    except Exception as e:
-        logger.error(f"Marketing campaign creation failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Marketing campaign creation error: {str(e)}")
-
-@app.get("/api/v1/colony/brands/{brand_id}/marketing/campaigns")
-async def get_brand_marketing_campaigns(brand_id: str, request: Request):
-    """Get marketing campaigns for brand (read-only, restricted access)."""
-    if not settings.COLONY_BUILDER_ENABLED:
-        raise HTTPException(status_code=403, detail="Colony Builder is disabled")
-
-    global tenant_security
-    if not tenant_security:
-        raise HTTPException(status_code=503, detail="Security system not initialized")
-
-    try:
-        from database.connection import SessionLocal
-        db = SessionLocal()
-        
-        # Verify brand colony access
-        if not tenant_security.check_marketing_access(request, db, brand_id):
-            raise HTTPException(status_code=403, detail="Marketing access denied for brand colony")
-        
-        marketing_service = CoreMarketingService(db, "core_colony_id_placeholder")
-        campaigns = marketing_service.get_brand_campaigns(brand_id, include_sensitive=False)
-        
-        # Filter sensitive data for brand view
-        filtered_campaigns = []
-        for campaign in campaigns:
-            filtered_campaigns.append({
-                "id": campaign.id,
-                "brand_visible_name": campaign.brand_visible_name,
-                "status": campaign.status,
-                "launched_at": campaign.launched_at.isoformat() if campaign.launched_at else None
-            })
-        
-        return {
-            "brand_colony_id": brand_id,
-            "campaigns": filtered_campaigns,
-            "access_level": "brand_restricted"
-        }
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Marketing campaigns retrieval failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Marketing campaigns retrieval error: {str(e)}")
-
-@app.post("/api/v1/colony/sync/all")
-async def sync_all_colonies():
-    """Sync data from all brand colonies to core colonies."""
-    if not settings.COLONY_BUILDER_ENABLED:
-        raise HTTPException(status_code=403, detail="Colony Builder is disabled")
-
-    global sync_manager
-    if not sync_manager:
-        raise HTTPException(status_code=503, detail="Sync Manager not initialized")
-
-    try:
-        results = sync_manager.sync_all_colonies()
-        
-        return {
-            "success": True,
-            "sync_operation": "complete",
-            "results": results,
-            "timestamp": datetime.utcnow().isoformat()
-        }
-        
-    except Exception as e:
-        logger.error(f"Colony synchronization failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Colony synchronization error: {str(e)}")
-
-@app.get("/api/v1/colony/health/{brand_id}")
-async def check_colony_health(brand_id: str):
-    """Check health of a specific brand colony."""
-    if not settings.COLONY_BUILDER_ENABLED:
-        raise HTTPException(status_code=403, detail="Colony Builder is disabled")
-
-    global sandbox_manager
-    if not sandbox_manager:
-        raise HTTPException(status_code=503, detail="Sandbox Manager not initialized")
-
-    try:
-        health_status = sandbox_manager.health_check_colony(brand_id)
-        
-        return {
-            "brand_colony_id": brand_id,
-            "health_status": health_status,
-            "timestamp": datetime.utcnow().isoformat()
-        }
-        
-    except Exception as e:
-        logger.error(f"Health check failed for colony {brand_id}: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Health check error: {str(e)}")
-
-@app.get("/api/v1/colony/templates")
-async def get_available_templates():
-    """Get available website templates."""
-    if not settings.COLONY_BUILDER_ENABLED:
-        raise HTTPException(status_code=403, detail="Colony Builder is disabled")
-
-    global website_generator
-    if not website_generator:
-        raise HTTPException(status_code=503, detail="Website Generator not initialized")
-
-    try:
-        return {
-            "templates": website_generator.available_templates,
-            "total_templates": len(website_generator.available_templates),
-            "industries_supported": list(website_generator.available_templates.keys())
-        }
-        
-    except Exception as e:
-        logger.error(f"Template retrieval failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Template retrieval error: {str(e)}")
-
-# Colony Builder Admin Dashboard
-@app.get("/admin/colony/dashboard")
-async def colony_admin_dashboard():
-    """Colony Builder Admin Dashboard - Overview of all colonies."""
-    if not settings.COLONY_BUILDER_ENABLED:
-        raise HTTPException(status_code=403, detail="Colony Builder is disabled")
-
-    try:
-        from database.connection import SessionLocal
-        db = SessionLocal()
-        
-        core_colonies = db.query(CoreColony).all()
-        brand_colonies = db.query(BrandColony).all()
-        
-        dashboard_html = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Colony Builder - Admin Dashboard</title>
-            <style>
-                body {{ font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }}
-                .header {{ background: #2c3e50; color: white; padding: 1rem 2rem; margin-bottom: 2rem; }}
-                .stats-grid {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem; }}
-                .stat-card {{ background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }}
-                .colonies-grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }}
-                .colony-card {{ background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }}
-                .btn {{ background: #3498db; color: white; padding: 0.5rem 1rem; border: none; border-radius: 4px; cursor: pointer; }}
-                .btn-success {{ background: #27ae60; }}
-            </style>
-        </head>
-        <body>
-            <div class="header">
-                <h1>🏛️ Colony Builder - Administration</h1>
-                <p>AI-Powered Brand System Generation</p>
-            </div>
-            
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <h3>Core Colonies</h3>
-                    <p class="stat-number">{len(core_colonies)}</p>
-                </div>
-                <div class="stat-card">
-                    <h3>Brand Colonies</h3>
-                    <p class="stat-number">{len(brand_colonies)}</p>
-                </div>
-                <div class="stat-card">
-                    <h3>Active Systems</h3>
-                    <p class="stat-number">{len([b for b in brand_colonies if b.website_url])}</p>
-                </div>
-                <div class="stat-card">
-                    <h3>System Health</h3>
-                    <p class="stat-number">100%</p>
-                </div>
-            </div>
-            
-            <div class="actions">
-                <button class="btn btn-success" onclick="createNewColony()">+ Create New Colony System</button>
-                <button class="btn" onclick="syncAllColonies()">🔄 Sync All Colonies</button>
-            </div>
-            
-            <h2>Core Colonies</h2>
-            <div class="colonies-grid">
-                {"".join([generate_core_colony_card(core) for core in core_colonies])}
-            </div>
-            
-            <h2>Brand Colonies</h2>
-            <div class="colonies-grid">
-                {"".join([generate_brand_colony_card(brand) for brand in brand_colonies])}
-            </div>
-            
-            <script>
-                function createNewColony() {{
-                    window.location.href = '/admin/colony/create';
-                }}
-                
-                function syncAllColonies() {{
-                    fetch('/api/v1/colony/sync/all', {{ method: 'POST' }})
-                        .then(response => response.json())
-                        .then(data => alert('Sync completed: ' + data.results.total_colonies + ' colonies processed'));
-                }}
-                
-                function viewColonyDetails(colonyId, type) {{
-                    if (type === 'core') {{
-                        window.location.href = '/admin/colony/core/' + colonyId;
-                    }} else {{
-                        window.location.href = '/admin/colony/brand/' + colonyId;
-                    }}
-                }}
-            </script>
-        </body>
-        </html>
-        """
-        
-        return HTMLResponse(dashboard_html)
-        
-    except Exception as e:
-        logger.error(f"Admin dashboard generation failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Dashboard error: {str(e)}")
-
-def generate_core_colony_card(core: CoreColony):
-    """Generate HTML card for a core colony."""
-    return f"""
-    <div class="colony-card">
-        <h3>🏛️ {core.name}</h3>
-        <p><strong>Domain:</strong> {core.domain}</p>
-        <p><strong>Marketing Budget:</strong> ${core.total_marketing_budget}</p>
-        <p><strong>Status:</strong> <span style="color: green;">Active</span></p>
-        <div class="actions">
-            <button class="btn" onclick="viewColonyDetails('{core.id}', 'core')">Manage</button>
-            <button class="btn" onclick="window.open('{core.domain}', '_blank')">Visit</button>
-        </div>
-    </div>
-    """
-
-def generate_brand_colony_card(brand: BrandColony):
-    """Generate HTML card for a brand colony."""
-    return f"""
-    <div class="colony-card">
-        <h3>🏢 {brand.name}</h3>
-        <p><strong>Industry:</strong> {brand.industry}</p>
-        <p><strong>Website:</strong> {brand.website_url or "Not deployed"}</p>
-        <p><strong>Status:</strong> <span style="color: green;">Active</span></p>
-        <div class="actions">
-            <button class="btn" onclick="viewColonyDetails('{brand.id}', 'brand')">Manage</button>
-            <button class="btn" onclick="window.open('{brand.website_url}', '_blank')" {'' if brand.website_url else 'disabled'}>Visit Website</button>
-        </div>
-    </div>
-    """
-
-# Colony Builder Health Check Integration
-@app.get("/health")
-async def health_check_with_colony_builder():
-    """Comprehensive health check including Colony Builder."""
-    health_data = await health_check()
-
-    # Add Colony Builder health check
-    if settings.COLONY_BUILDER_ENABLED and COLONY_BUILDER_AVAILABLE:
-        try:
-            if website_generator and admin_panel_generator:
-                health_data["checks"]["colony_builder"] = "healthy"
-                health_data["colony_builder_active"] = True
-                health_data["colony_templates_loaded"] = len(website_generator.available_templates)
-                health_data["colony_components_healthy"] = all([
-                    website_generator is not None,
-                    admin_panel_generator is not None,
-                    template_engine is not None,
-                    tenant_security is not None,
-                    sandbox_manager is not None,
-                    sync_manager is not None
-                ])
-            else:
-                health_data["checks"]["colony_builder"] = "unhealthy: not initialized"
-        except Exception as e:
-            health_data["checks"]["colony_builder"] = f"unhealthy: {str(e)}"
-            logger.warning(f"Colony Builder health check warning: {str(e)}")
-    else:
-        health_data["checks"]["colony_builder"] = "disabled"
-
-    return health_data
-
-# Colony Builder System Info Integration
-@app.get("/system/info")
-async def system_info_with_colony_builder():
-    """Get system information including Colony Builder."""
-    system_info_data = await system_info()
-
-    # Add Colony Builder information
-    if settings.COLONY_BUILDER_ENABLED:
-        system_info_data["colony_builder_enabled"] = True
-        system_info_data["colony_capabilities"] = await _get_colony_capabilities_list()
-
-        # Add Colony Builder features
-        system_info_data["features"]["autonomous_website_generation"] = True
-        system_info_data["features"]["brand_admin_panel_creation"] = True
-        system_info_data["features"]["multi_tenant_isolation"] = True
-        system_info_data["features"]["marketing_restriction_enforcement"] = True
-        system_info_data["features"]["automatic_system_synchronization"] = True
-        system_info_data["features"]["template_based_generation"] = True
-
-        # Add Colony Builder security
-        system_info_data["security"]["tenant_access_isolation"] = True
-        system_info_data["security"]["brand_marketing_restrictions"] = True
-        system_info_data["security"]["secure_colony_synchronization"] = True
-        system_info_data["security"]["fault_tolerant_sandboxing"] = True
-
-        # Add Colony Builder performance
-        system_info_data["performance"]["website_generation_speed"] = "under_5_seconds"
-        system_info_data["performance"]["admin_panel_generation"] = "under_3_seconds"
-        system_info_data["performance"]["colony_synchronization"] = "real_time"
-        system_info_data["performance"]["template_rendering"] = "optimized"
-
-    return system_info_data
-
-# Colony Builder Helper Functions
-async def _get_colony_capabilities_list():
-    """Get list of Colony Builder capabilities."""
-    if not settings.COLONY_BUILDER_ENABLED:
-        return []
-
-    return [
-        "AI-Powered Website Generation",
-        "Custom Admin Panel Creation",
-        "Multi-Tenant Security & Isolation", 
-        "Brand Colony Sandbox Management",
-        "Automatic System Synchronization",
-        "Marketing Restriction Enforcement",
-        "Template-Based System Generation",
-        "Fault-Tolerant Colony Deployment",
-        "Core Colony Management",
-        "Brand Colony Orchestration"
-    ]
-
-# Colony Builder Exception Handler
-if settings.COLONY_BUILDER_ENABLED:
-    @app.exception_handler(Exception)
-    async def colony_builder_exception_handler(request, exc):
-        """Handle Colony Builder-related exceptions gracefully."""
-        if request.url.path.startswith('/api/v1/colony/') or request.url.path.startswith('/admin/colony/'):
-            logger.error(f"Colony Builder error in {request.url.path}: {str(exc)}")
-            return {
-                "success": False,
-                "error": {
-                    "code": "COLONY_BUILDER_ERROR",
-                    "message": "Colony Builder service temporarily unavailable",
-                    "timestamp": time.time(),
-                    "colony_builder_enabled": settings.COLONY_BUILDER_ENABLED,
-                    "suggestion": "Check Colony Builder status at /api/v1/colony/status"
-                }
-            }
-        raise exc
-
-# Colony Builder Shutdown Cleanup
-@app.on_event("shutdown")
-async def shutdown_colony_builder():
-    """Cleanup Colony Builder resources on shutdown."""
-    if settings.COLONY_BUILDER_ENABLED and COLONY_BUILDER_AVAILABLE:
-        try:
-            # Add any Colony Builder cleanup logic if needed
-            logger.info("Colony Builder shutdown complete")
-        except Exception as e:
-            logger.warning(f"Colony Builder shutdown warning: {str(e)}")
-
-# Colony Builder Settings Configuration
-# Add these to your config/settings.py
-"""
-# Colony Builder Settings
-COLONY_BUILDER_ENABLED = os.getenv("COLONY_BUILDER_ENABLED", "True").lower() == "true"
-COLONY_BUILDER_TEMPLATE_PATH = os.getenv("COLONY_BUILDER_TEMPLATE_PATH", "frontend/templates")
-COLONY_BUILDER_BUILD_PATH = os.getenv("COLONY_BUILDER_BUILD_PATH", "frontend/build")
-COLONY_BUILDER_DEPLOYMENT_TARGET = os.getenv("COLONY_BUILDER_DEPLOYMENT_TARGET", "cloudflare")  # cloudflare, netlify, vercel, s3
-"""
-
-# Colony Builder Requirements
-# Add these to your requirements.txt
-"""
-jinja2==3.1.2
-python-multipart==0.0.6
-pathlib==1.0.1
-"""
-
-# ======= COLONY BUILDER INTEGRATION END =======
