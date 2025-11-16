@@ -4172,3 +4172,96 @@ from scout.contracts.fair_value import FairValueCalculator
 scout_engine = None
 social_connector = None
 fair_value_calculator = None
+
+# Add to main.py imports
+try:
+    from ai.hybrid_legal_financial_counsel import HybridLegalFinancialCounsel
+    from routers.legal_financial_router import router as legal_financial_router
+    LEGAL_FINANCIAL_COUNSEL_AVAILABLE = True
+except ImportError as e:
+    LEGAL_FINANCIAL_COUNSEL_AVAILABLE = False
+    logger.warning(f"Legal-Financial Counsel not available: {str(e)}")
+
+# Add to global instances
+legal_financial_counsel = None
+
+# Add to startup initialization
+async def _initialize_legal_financial_counsel():
+    """Initialize the Hybrid Legal-Financial Counsel"""
+    global legal_financial_counsel
+    
+    try:
+        legal_financial_counsel = HybridLegalFinancialCounsel()
+        
+        logger.info("✅ HYBRID LEGAL-FINANCIAL COUNSEL INITIALIZED")
+        logger.info("🎯 Mission: Total legal compliance, financial optimization, and partner protection")
+        
+        counsel_capabilities = [
+            "24/7 AI Legal Compliance Monitoring",
+            "Financial Deal Structuring & Optimization", 
+            "Asset Intelligence & Valuation",
+            "Partner Risk Profiling",
+            "Compensation Hybrid System Design",
+            "Weekly Intelligence Reporting",
+            "Critical Alert System to Nexgen",
+            "Global Jurisdiction Compliance"
+        ]
+        
+        for capability in counsel_capabilities:
+            logger.info(f"  ⚖️  {capability}")
+            
+    except Exception as e:
+        logger.error(f"Legal-Financial Counsel initialization failed: {str(e)}")
+
+# Add to startup event
+if settings.LEGAL_FINANCIAL_COUNSEL_ENABLED and LEGAL_FINANCIAL_COUNSEL_AVAILABLE:
+    try:
+        @app.on_event("startup")
+        async def startup_legal_financial():
+            await _initialize_legal_financial_counsel()
+        
+        logger.info("Legal-Financial Counsel scheduled for startup initialization")
+    except Exception as e:
+        logger.error(f"Legal-Financial Counsel startup scheduling failed: {str(e)}")
+
+# Add router registration
+if settings.LEGAL_FINANCIAL_COUNSEL_ENABLED and LEGAL_FINANCIAL_COUNSEL_AVAILABLE:
+    try:
+        app.include_router(legal_financial_router, prefix="/api/v1/legal-financial", tags=["Legal-Financial Counsel"])
+        logger.info("Legal-Financial Counsel router registered successfully")
+    except Exception as e:
+        logger.error(f"Failed to register Legal-Financial Counsel router: {str(e)}")
+
+# Add to health check
+if settings.LEGAL_FINANCIAL_COUNSEL_ENABLED and LEGAL_FINANCIAL_COUNSEL_AVAILABLE:
+    try:
+        if legal_financial_counsel:
+            health_data["checks"]["legal_financial_counsel"] = "healthy"
+            health_data["legal_financial_active"] = True
+            health_data["legal_alerts"] = len(legal_financial_counsel.compliance_alerts)
+        else:
+            health_data["checks"]["legal_financial_counsel"] = "unhealthy: not initialized"
+    except Exception as e:
+        health_data["checks"]["legal_financial_counsel"] = f"unhealthy: {str(e)}"
+
+# Add to system info
+if settings.LEGAL_FINANCIAL_COUNSEL_ENABLED:
+    system_info_data["legal_financial_counsel_enabled"] = True
+    system_info_data["legal_financial_capabilities"] = await _get_legal_financial_capabilities_list()
+
+# Add helper function
+async def _get_legal_financial_capabilities_list():
+    """Get list of Legal-Financial Counsel capabilities"""
+    if not settings.LEGAL_FINANCIAL_COUNSEL_ENABLED:
+        return []
+    
+    return [
+        "24/7 AI Legal Compliance Monitoring",
+        "Financial Deal Structuring & Optimization",
+        "Asset Intelligence & Valuation", 
+        "Partner Risk Profiling",
+        "Compensation Hybrid System Design",
+        "Weekly Intelligence Reporting",
+        "Critical Alert System",
+        "Global Jurisdiction Compliance"
+    ]
